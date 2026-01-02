@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "npx wrangler pages dev ./ --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding BASIC_USER=admin --binding BASIC_PASS=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data"
+  },
+  "devDependencies": {
+    "wrangler": "^4.24.0"
+  }
+}
