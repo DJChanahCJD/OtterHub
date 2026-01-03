@@ -1,5 +1,5 @@
 import { isDev, buildKeyId, getFileExt, ok, getFileIdFromKey, fail } from "./common";
-import { FileMetadata, FileType, CF } from "./types";
+import { FileMetadata, FileType, CF, ApiResponse } from "./types";
 
 // 存储适配器接口定义
 export interface DBAdapter {
@@ -106,43 +106,44 @@ export class TGAdapter implements DBAdapter {
     const fileName = metadata.fileName;
     const fileExtension = getFileExt(fileName);
 
-    const telegramFormData = new FormData();
-    telegramFormData.append("chat_id", this.env.TG_Chat_ID);
+    const tgFormData = new FormData();
+    tgFormData.append("chat_id", this.env.TG_Chat_ID);
 
     // 根据文件类型选择合适的上传方式
     let apiEndpoint: string;
     let fileType: FileType;
     if (file.type.startsWith('image/')) {
-      telegramFormData.append("photo", file);
+      tgFormData.append("photo", file);
       apiEndpoint = 'sendPhoto';
       fileType = FileType.Image;
     } else if (file.type.startsWith('audio/')) {
-      telegramFormData.append("audio", file);
+      tgFormData.append("audio", file);
       apiEndpoint = 'sendAudio';
       fileType = FileType.Audio;
     } else if (file.type.startsWith('video/')) {
-      telegramFormData.append("video", file);
+      tgFormData.append("video", file);
       apiEndpoint = 'sendVideo';
       fileType = FileType.Video;
     } else {
-      telegramFormData.append("document", file);
+      tgFormData.append("document", file);
       apiEndpoint = 'sendDocument';
       fileType = FileType.Document;
     }
 
-    const result = await this.sendToTelegram(telegramFormData, apiEndpoint);
+    const result = await this.sendToTelegram(tgFormData, apiEndpoint);
+    console.log('Telegram upload result:', result);
 
     if (!result.success) {
-      throw new Error(result.error);
+      throw new Error(result.message);
     }
 
-    const telegramFileId = this.getFileId(result.data);
+    const tgFileId = this.getFileId(result.data);
 
-    if (!telegramFileId) {
+    if (!tgFileId) {
       throw new Error('Failed to get file ID');
     }
     
-    const fullFileId = `${telegramFileId}.${fileExtension}`;
+    const fullFileId = `${tgFileId}.${fileExtension}`;
     const key = buildKeyId(fileType, fullFileId);
     
     // TODO: 默认元数据
@@ -182,7 +183,7 @@ export class TGAdapter implements DBAdapter {
     }
   }
 
-  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 2): Promise<{ success: boolean; data?: any; error?: string }> {
+  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 2): Promise<ApiResponse<any>> {
     const apiUrl = `https://api.telegram.org/bot${this.env.TG_Bot_Token}/${apiEndpoint}`;
 
     try {
@@ -204,7 +205,7 @@ export class TGAdapter implements DBAdapter {
 
       return {
         success: false,
-        error: responseData.description || 'Upload to Telegram failed'
+        message: 'Upload to Telegram failed'
       };
     } catch (error: any) {
       console.error('Network error:', error);
@@ -212,7 +213,7 @@ export class TGAdapter implements DBAdapter {
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount)));
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
-      return { success: false, error: 'Network error occurred' };
+      return { success: false, message: 'Network error occurred' };
     }
   }
 

@@ -1,3 +1,4 @@
+// utils/common.ts
 import { FileType, ApiResponse } from "./types";
 
 // 判断是否为开发环境
@@ -32,7 +33,7 @@ export function getUniqueFileId(): string {
 function json(body: any, status: number, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { ...headers, "Content-Type": "application/json" },
   });
 }
 

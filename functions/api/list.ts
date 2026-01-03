@@ -1,3 +1,4 @@
+// functions/api/list.ts
 import { CF } from "../utils/types";
 import { ok, fail } from "../utils/common";
 
@@ -45,6 +46,6 @@ export async function onRequestGet(context: any) {
     });
   } catch (error: any) {
     console.error("List files error:", error);
-    return error("Failed to fetch files", 500);
+    return fail("Failed to fetch files", 500);
   }
 }
