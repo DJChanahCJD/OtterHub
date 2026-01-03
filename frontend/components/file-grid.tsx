@@ -1,18 +1,20 @@
 "use client"
 
-import { useFileStore } from "@/lib/store"
+import { useBucketItems, useFileStore } from "@/lib/store"
 import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { AudioPlayerView } from "@/components/audio-player-view"
+import { FileType } from "@/lib/types"
 
 export function FileGrid() {
-  const files = useFileStore((state) => state.files)
-  const activeFilter = useFileStore((state) => state.activeFilter)
+  const allFiles = useFileStore((state) => state.allFiles)
+  const activeType = useFileStore((state) => state.activeType)
   const viewMode = useFileStore((state) => state.viewMode)
 
-  const filteredFiles = activeFilter === "all" ? files : files.filter((f) => f.type === activeFilter)
+  const filteredFiles = useFileStore((state) =>
+    activeType === FileType.All ? state.allFiles : state.buckets[activeType].items)
 
-  if (activeFilter === "audio") {
+  if (activeType === FileType.Audio) {
     return <AudioPlayerView />
   }
 
@@ -28,13 +30,13 @@ export function FileGrid() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredFiles.map((file) => (
-            <FileCard key={file.id} file={file} />
+            <FileCard key={file.name} file={file} />
           ))}
         </div>
       ) : (
         <div className="space-y-2">
           {filteredFiles.map((file) => (
-            <FileCard key={file.id} file={file} listView />
+            <FileCard key={file.name} file={file} listView />
           ))}
         </div>
       )}

@@ -44,7 +44,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             </Button>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-2xl">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-2xl">
                 🦦
               </div>
               <div>
@@ -71,7 +71,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
             <Button
               onClick={handleUploadClick}
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium"
+              className="bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium"
             >
               <Upload className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Upload</span>

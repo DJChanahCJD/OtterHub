@@ -1,19 +1,18 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, Download, Trash2 } from "lucide-react"
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { useFileStore, type FileItem } from "@/lib/store"
+import { useBucketItems, useFileStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { FileItem, FileType } from "@/lib/types"
+import { getFileUrl } from "@/lib/api"
 
 export function AudioPlayerView() {
-  const files = useFileStore((state) => state.files)
-  const moveToTrash = useFileStore((state) => state.moveToTrash)
-  const toggleSelection = useFileStore((state) => state.toggleSelection)
-  const selectedFiles = useFileStore((state) => state.selectedFiles)
+  const audioFiles = useBucketItems(FileType.Audio)
+  const selectedKeys = useFileStore((s) => s.selectedKeys)
 
-  const audioFiles = files.filter((f) => f.type === "audio")
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -26,6 +25,11 @@ export function AudioPlayerView() {
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const currentTrack = audioFiles[currentTrackIndex]
+  useEffect(() => {
+    if (currentTrackIndex >= audioFiles.length) {
+      setCurrentTrackIndex(0)
+    }
+  }, [audioFiles.length])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -114,7 +118,7 @@ export function AudioPlayerView() {
 
   const handleDownload = (track: FileItem) => {
     const link = document.createElement("a")
-    link.href = track.url
+    link.href = getFileUrl(track.name)
     link.download = track.name
     link.click()
   }
@@ -134,11 +138,11 @@ export function AudioPlayerView() {
   return (
     <div className="space-y-6">
       {/* Now Playing Section */}
-      <div className="backdrop-blur-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-white/10 rounded-2xl p-8">
+      <div className="backdrop-blur-xl bg-linear-to-br from-emerald-500/10 to-teal-500/10 border border-white/10 rounded-2xl p-8">
         <div className="flex flex-col lg:flex-row gap-8 items-center">
           {/* Album Art */}
-          <div className="w-full lg:w-64 aspect-square rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 animate-pulse" />
+          <div className="w-full lg:w-64 aspect-square rounded-xl bg-linear-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-linear-to-br from-emerald-400/20 to-teal-400/20 animate-pulse" />
             <div className="relative z-10">
               <Volume2 className="h-24 w-24 text-emerald-300" />
             </div>
@@ -148,7 +152,7 @@ export function AudioPlayerView() {
           <div className="flex-1 w-full">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-1 text-balance">{currentTrack?.name || "No track"}</h2>
-              <p className="text-emerald-300/80">{currentTrack?.metadata?.artist || "Unknown Artist"}</p>
+              <p className="text-emerald-300/80">{"Unknown Artist"}</p>
             </div>
 
             {/* Progress Bar */}
@@ -189,7 +193,7 @@ export function AudioPlayerView() {
               <Button
                 size="icon"
                 onClick={togglePlay}
-                className="h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                className="h-14 w-14 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
               >
                 {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
               </Button>
@@ -236,7 +240,7 @@ export function AudioPlayerView() {
         </div>
 
         {/* Hidden Audio Element */}
-        {currentTrack && <audio ref={audioRef} src={currentTrack.url} />}
+        {currentTrack && <audio ref={audioRef} src={getFileUrl(currentTrack.name)} />}
       </div>
 
       {/* Playlist */}
@@ -246,11 +250,11 @@ export function AudioPlayerView() {
         <div className="space-y-2">
           {audioFiles.map((track, index) => {
             const isCurrentTrack = index === currentTrackIndex
-            const isSelected = selectedFiles.includes(track.id)
+            const isSelected = selectedKeys.includes(track.name)
 
             return (
               <div
-                key={track.id}
+                key={track.name}
                 onClick={() => {
                   setCurrentTrackIndex(index)
                   setIsPlaying(true)
@@ -280,7 +284,7 @@ export function AudioPlayerView() {
                   <p className={cn("text-sm font-medium truncate", isCurrentTrack ? "text-emerald-300" : "text-white")}>
                     {track.name}
                   </p>
-                  <p className="text-xs text-white/40">{track.metadata?.artist || "Unknown Artist"}</p>
+                  <p className="text-xs text-white/40">{"Unknown Artist"}</p>
                 </div>
 
                 {/* Duration */}
@@ -302,21 +306,6 @@ export function AudioPlayerView() {
                     <Download className="h-4 w-4" />
                   </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-red-500/10"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      moveToTrash(track.id)
-                      if (index === currentTrackIndex) {
-                        setCurrentTrackIndex(0)
-                        setIsPlaying(false)
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             )

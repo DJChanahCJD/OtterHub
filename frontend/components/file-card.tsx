@@ -3,37 +3,39 @@
 import type React from "react"
 
 import { useState } from "react"
-import { MoreVertical, Download, Trash2, ImageIcon, Music, Video, FileText, Check } from "lucide-react"
+import { MoreVertical, Download, Trash2, FileIcon, ImageIcon, Music, Video, FileText, Check, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useFileStore, type FileItem } from "@/lib/store"
+import { useFileStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { FileItem, FileType } from "@/lib/types"
+import { getFileUrl } from "@/lib/api"
 
 interface FileCardProps {
   file: FileItem
+  activeType?: FileType
   listView?: boolean
 }
 
-export function FileCard({ file, listView = false }: FileCardProps) {
+export function FileCard({ file, activeType: activeType, listView = false }: FileCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const selectedFiles = useFileStore((state) => state.selectedFiles)
+  const selectedKeys = useFileStore((state) => state.selectedKeys)
   const toggleSelection = useFileStore((state) => state.toggleSelection)
-  const moveToTrash = useFileStore((state) => state.moveToTrash)
 
-  const isSelected = selectedFiles.includes(file.id)
+  const isSelected = selectedKeys.includes(file.name)
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation()
-    toggleSelection(file.id)
+    toggleSelection(file.name)
   }
 
   const handleDelete = () => {
-    moveToTrash(file.id)
+    // TODO
   }
 
   const handleDownload = () => {
     const link = document.createElement("a")
-    link.href = file.url
+    link.href = getFileUrl(file.name)
     link.download = file.name
     link.click()
   }
@@ -45,14 +47,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   }
 
   const getFileIcon = () => {
-    switch (file.type) {
-      case "image":
+    switch (activeType) {
+      case FileType.Image:
         return ImageIcon
-      case "audio":
+      case FileType.Audio:
         return Music
-      case "video":
+      case FileType.Video:
         return Video
-      case "document":
+      case FileType.Document:
         return FileText
     }
   }
@@ -83,26 +85,26 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         </div>
 
         {/* File Icon/Preview */}
-        <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
-          {file.type === "image" && file.thumbnailUrl ? (
+        <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0">
+          {activeType === FileType.Image ? (
             <img
-              src={file.thumbnailUrl || "/placeholder.svg"}
+              src={getFileUrl(file.name) || "/placeholder.svg"}
               alt={file.name}
               className="w-full h-full object-cover rounded"
             />
           ) : (
-            <FileIcon className="h-6 w-6 text-emerald-400" />
+            <File className="h-6 w-6 text-emerald-400" />
           )}
         </div>
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-white truncate">{file.name}</p>
-          <p className="text-xs text-white/40">{formatFileSize(file.size)}</p>
+          <p className="text-xs text-white/40">{formatFileSize(file.metadata.fileSize || 0)}</p>
         </div>
 
         {/* Date */}
-        <div className="hidden md:block text-xs text-white/40">{file.uploadedAt.toLocaleDateString()}</div>
+        <div className="hidden md:block text-xs text-white/40">{file.metadata.uploadedAt?.toLocaleString() || "N/A"}</div>
 
         {/* Actions */}
         <DropdownMenu>
@@ -191,27 +193,27 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
       {/* File Content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {file.type === "image" && file.thumbnailUrl ? (
-          <img src={file.thumbnailUrl || "/placeholder.svg"} alt={file.name} className="w-full h-full object-cover" />
-        ) : file.type === "video" ? (
-          <div className="relative w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+        {activeType === FileType.Image ? (
+          <img src={getFileUrl(file.name) || "/placeholder.svg"} alt={file.name} className="w-full h-full object-cover" />
+        ) : activeType === FileType.Video ? (
+          <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
             <Video className="h-12 w-12 text-purple-300" />
           </div>
-        ) : file.type === "audio" ? (
-          <div className="relative w-full h-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
+        ) : activeType === FileType.Audio ? (
+          <div className="relative w-full h-full bg-linear-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
             <Music className="h-12 w-12 text-emerald-300" />
           </div>
         ) : (
-          <div className="relative w-full h-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+          <div className="relative w-full h-full bg-linear-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
             <FileText className="h-12 w-12 text-amber-300" />
           </div>
         )}
       </div>
 
       {/* File Info Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
         <p className="text-sm font-medium text-white truncate">{file.name}</p>
-        <p className="text-xs text-white/60">{formatFileSize(file.size)}</p>
+        <p className="text-xs text-white/60">{formatFileSize(file.metadata.fileSize || 0)}</p>
       </div>
     </div>
   )

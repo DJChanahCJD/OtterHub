@@ -1,33 +1,34 @@
 "use client"
 
-import { ImageIcon, Music, Video, FileText } from "lucide-react"
+import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useFileStore } from "@/lib/store"
+import { FileType } from "@/lib/types"
 
 const fileTypes = [
-  { id: "all", label: "All", icon: null },
-  { id: "image", label: "Images", icon: ImageIcon },
-  { id: "audio", label: "Audio", icon: Music },
-  { id: "video", label: "Videos", icon: Video },
-  { id: "document", label: "Documents", icon: FileText },
+  { id: FileType.All, label: "All", icon: Layers},
+  { id: FileType.Image, label: "Images", icon: ImageIcon },
+  { id: FileType.Audio, label: "Audio", icon: Music },
+  { id: FileType.Video, label: "Videos", icon: Video },
+  { id: FileType.Document, label: "Documents", icon: FileText },
 ] as const
 
 export function FileTypeTabs() {
-  const activeFilter = useFileStore((state) => state.activeFilter)
-  const setActiveFilter = useFileStore((state) => state.setActiveFilter)
+  const activeType = useFileStore((state) => state.activeType)
+  const setActiveType = useFileStore((state) => state.setActiveType)
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {fileTypes.map((type) => {
         const Icon = type.icon
-        const isActive = activeFilter === type.id
+        const isActive = activeType === type.id
 
         return (
           <Button
             key={type.id}
             variant="ghost"
             size="sm"
-            onClick={() => setActiveFilter(type.id)}
+            onClick={() => setActiveType(type.id)}
             className={`
               transition-all duration-200
               ${

@@ -7,62 +7,34 @@ import { FileUploadZone } from "@/components/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
 import { EmptyState } from "@/components/empty-state"
-import { TrashView } from "@/components/trash-view"
-import { useFileStore, type FileType } from "@/lib/store"
+import { useFileStore } from "@/lib/store"
+import { getFileList } from "@/lib/api"
 
-type ViewType = "files" | "recent" | "trash"
+type ViewType = "files"
 
 export default function OtterHubPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [currentView, setCurrentView] = useState<ViewType>("files")
 
-  const files = useFileStore((state) => state.files)
-  const selectedFiles = useFileStore((state) => state.selectedFiles)
-  const addFile = useFileStore((state) => state.addFile)
+  const allFiles = useFileStore((state) => state.allFiles)
+  const selectedKeys = useFileStore((state) => state.selectedKeys)
 
+  // 从后端获取文件列表
   useEffect(() => {
-    const handleUploadEvent = (e: CustomEvent) => {
-      const files = e.detail.files as FileList
-
-      Array.from(files).forEach((file) => {
-        const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        const detectFileType = (mimeType: string): FileType => {
-          if (mimeType.startsWith("image/")) return "image"
-          if (mimeType.startsWith("audio/")) return "audio"
-          if (mimeType.startsWith("video/")) return "video"
-          return "document"
-        }
-
-        const fileType = detectFileType(file.type)
-        const fileUrl = URL.createObjectURL(file)
-
-        addFile({
-          id: fileId,
-          name: file.name,
-          type: fileType,
-          size: file.size,
-          uploadedAt: new Date(),
-          url: fileUrl,
-          thumbnailUrl: fileType === "image" ? fileUrl : undefined,
-        })
-      })
+    const fetchFiles = async () => {
+      try {
+        const fileList = await getFileList()
+        // TODO: 需要根据fileList的结构来更新store
+        console.log("Fetched files:", fileList)
+      } catch (error) {
+        console.error("Error fetching files:", error)
+      }
     }
-
-    const handleViewChange = (e: CustomEvent) => {
-      setCurrentView(e.detail.view)
-    }
-
-    window.addEventListener("otterhub-upload", handleUploadEvent as EventListener)
-    window.addEventListener("otterhub-view-change", handleViewChange as EventListener)
-
-    return () => {
-      window.removeEventListener("otterhub-upload", handleUploadEvent as EventListener)
-      window.removeEventListener("otterhub-view-change", handleViewChange as EventListener)
-    }
-  }, [addFile])
+    
+    fetchFiles()
+  }, [])
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white overflow-hidden">
+    <div className="relative min-h-screen bg-linear-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
@@ -76,19 +48,13 @@ export default function OtterHubPage() {
           <Sidebar isOpen={sidebarOpen} />
 
           <main className="flex-1 overflow-auto p-6 md:p-8">
-            {currentView === "trash" ? (
-              <TrashView />
-            ) : (
-              <>
-                {currentView === "files" && <FileUploadZone />}
+            <FileUploadZone />
 
-                {files.length === 0 && currentView === "files" ? <EmptyState /> : <FileGrid />}
-              </>
-            )}
+            {allFiles.length === 0 ? <EmptyState /> : <FileGrid />}
           </main>
         </div>
 
-        {selectedFiles.length > 0 && currentView !== "trash" && <BatchOperationsBar />}
+        {selectedKeys.length > 0 && <BatchOperationsBar />}
       </div>
     </div>
   )
