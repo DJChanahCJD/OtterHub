@@ -25,6 +25,7 @@ export type ApiResponse<T = any> = {
 export type FileItem = {
   name: string; //  KV中的key
   metadata: FileMetadata;
+  expiration?: number;
 }
 
 // 文件元数据类型
@@ -32,18 +33,25 @@ export type FileMetadata = {
   fileName: string;
   fileSize: number;
   uploadedAt: number;   // 时间戳
-  duration?: number;    // 可选：音视频时长（秒）
+  liked?: boolean;      // 是否被收藏
+  duration?: number;    // 音视频时长（秒）
 };
 
-// TODO: 分页参数
-export type Pagination = {
-  limit: number;
-  cursor: number;
+// Cloudflare KV list参数
+// https://developers.cloudflare.com/kv/api/list-keys/#list-method
+export type ListOptions = {
+  // 前缀过滤
+  prefix?: string;
+  // 分页参数
+  limit?: string; // 默认且最大为1000
+  cursor?: string; // Cloudflare KV的cursor是字符串类型
 }
 
 // kv list的结果
-type ListFilesResponse = {
+// response: Promise<{ keys: { name: string, expiration?: number, metadata?: object }[], list_complete: boolean, cursor: string }>
+export type ListFilesResponse = {
   keys: FileItem[];
-  list_complete: true;
+  list_complete: boolean;
+  cursor?: string;
   cacheStatus: null;
 }

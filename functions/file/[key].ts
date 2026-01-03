@@ -36,7 +36,7 @@ async function handleTelegramFile(context: any) {
     const filePath = await getFilePath(env, tgFileId);
     
     if (!filePath) {
-        return error(`File not found for ID: ${params.key}`, 404);
+        return error(`File not found for key: ${params.key}`, 404);
     }
     
     const fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;

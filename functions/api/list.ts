@@ -1,11 +1,29 @@
 import { CF } from "../utils/types";
 import { success, error } from "../utils/common";
 
+// https://developers.cloudflare.com/kv/api/list-keys/
 export async function onRequest(context: any) {
   try {
-    const { env } = context;
-    const value = await env[CF.KV_NAME].list();
+    const { request, env } = context;
+    // 从URL查询参数中获取分页相关参数
+    const url = new URL(request.url);
+    const fileType = url.searchParams.get("fileType") || "all";
+    const limit = url.searchParams.get("limit");
+    const cursor = url.searchParams.get("cursor");
     
+    // 构建KV list参数
+    //  TODO: 限制最大1000, 无法应付较大数据量时的搜索
+    // TODO: 考虑用D1数据库？
+    const options = {
+      prefix: fileType === "all" ? "" : `${fileType}_`,
+      limit: limit === null ? "1000" : Math.min(Math.max(1, parseInt(limit)), 1000),
+      cursor,
+    };
+
+    console.log("List options:", options);
+    
+    const value = await env[CF.KV_NAME].list(options);
+
     /*
     {
       keys: [
@@ -13,13 +31,18 @@ export async function onRequest(context: any) {
         { name: 'img_1767360224212-jdtcgze38.jpg', metadata: [Object] }
       ],
       list_complete: true,
+      cursor: "next-cursor-value", // 分页游标
       cacheStatus: null
     }
     */
-    console.log(value);
+    console.log("List result:", value);
 
-    
-    return success(value.keys, "Files fetched successfully");
+    // 返回完整的分页结果
+    return success({
+      keys: value.keys,
+      list_complete: value.list_complete,
+      cursor: value.cursor,
+    });
   } catch (error: any) {
     console.error("List files error:", error);
     return error("Failed to fetch files", 500);

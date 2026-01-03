@@ -9,7 +9,7 @@ export async function onRequest(context: any) {
     const metadata: FileMetadata = value.metadata;
 
     // 如果记录不存在
-    if (!metadata) return new Response(`File metadata not found for ID: ${params.key}`, { status: 404 });
+    if (!metadata) return new Response(`File metadata not found for key: ${params.key}`, { status: 404 });
 
     // 更新文件名
     metadata.fileName = params.name;
