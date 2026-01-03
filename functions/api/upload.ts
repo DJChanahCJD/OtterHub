@@ -1,5 +1,6 @@
 import { DBAdapterFactory } from '../utils/db-adapter';
 import { FileMetadata } from '../utils/types';
+import { success, error } from '../utils/common';
 
 export async function onRequestPost(context: any) {
     const { request, env } = context;
@@ -10,7 +11,7 @@ export async function onRequestPost(context: any) {
 
         const uploadFile = formData.get('file');
         if (!uploadFile) {
-            throw new Error('No file uploaded');
+            return error('No file uploaded', 400);
         }
 
         const fileName = uploadFile.name;
@@ -22,27 +23,15 @@ export async function onRequestPost(context: any) {
         const metadata : FileMetadata = {
             fileName,
             fileSize,
-            uploadTime: Date.now(),
+            uploadedAt: Date.now(),
         }
 
         // 上传文件
         const key = await dbAdapter.upload(uploadFile, metadata);
 
-        return new Response(
-            JSON.stringify([{ 'src': `/file/${key}` }]),
-            {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
+        return success(`/file/${key}`, 'File uploaded successfully');
     } catch (error: any) {
         console.error('Upload error:', error);
-        return new Response(
-            JSON.stringify({ error: error.message }),
-            {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
+        return error(`Failed to upload file: ${error.message}`, 500);
     }
 }

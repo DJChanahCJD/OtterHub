@@ -1,4 +1,4 @@
-import { getFileIdFromKey } from '../utils/common';
+import { getFileIdFromKey, error } from '../utils/common';
 import { DBAdapterFactory } from '../utils/db-adapter';
 import { CF } from '../utils/types';
 
@@ -21,13 +21,7 @@ export async function onRequest(context: any) {
         return await handleTelegramFile(context);
     } catch (error: any) {
         console.error('File access error:', error);
-        return new Response(
-            JSON.stringify({ error: error.message }),
-            {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
+        return error(`Failed to access file: ${error.message}`, 500);
     }
 }
 
@@ -40,6 +34,11 @@ async function handleTelegramFile(context: any) {
     const key = url.pathname.split('.')[0].split('/')[2];
     const tgFileId = getFileIdFromKey(key);
     const filePath = await getFilePath(env, tgFileId);
+    
+    if (!filePath) {
+        return error(`File not found for ID: ${params.key}`, 404);
+    }
+    
     const fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
 
     const response = await fetch(fileUrl, {
@@ -54,7 +53,7 @@ async function handleTelegramFile(context: any) {
     // 检查KV存储是否可用
     if (!env[CF.KV_NAME]) {
         console.error("KV storage not available");
-        return new Response("oh_file_url KV storage not configured", { status: 500 });
+        return error("oh_file_url KV storage not configured", 500);
     }
 
     let record = await env[CF.KV_NAME].getWithMetadata(params.key);

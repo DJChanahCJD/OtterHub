@@ -1,19 +1,27 @@
 import { CF } from "../utils/types";
+import { success, error } from "../utils/common";
 
 export async function onRequest(context: any) {
-  // Contents of context object
-  const {
-    request, // same as existing Worker API
-    env, // same as existing Worker API
-    params, // if filename includes [id] or [[path]]
-    waitUntil, // same as ctx.waitUntil in existing Worker API
-    next, // used for middleware or to fetch assets
-    data, // arbitrary space for passing data between middlewares
-  } = context;
-  const value = await env[CF.KV_NAME].list();
+  try {
+    const { env } = context;
+    const value = await env[CF.KV_NAME].list();
+    
+    /*
+    {
+      keys: [
+        { name: 'audio_1767359508183-etm647xv8.mp3', metadata: [Object] },
+        { name: 'img_1767360224212-jdtcgze38.jpg', metadata: [Object] }
+      ],
+      list_complete: true,
+      cacheStatus: null
+    }
+    */
+    console.log(value);
 
-  console.log(value)
-
-  return new Response(JSON.stringify(value.keys));
-
+    
+    return success(value.keys, "Files fetched successfully");
+  } catch (error: any) {
+    console.error("List files error:", error);
+    return error("Failed to fetch files", 500);
+  }
 }

@@ -1,4 +1,4 @@
-import { isDev, buildKeyId, getFileExt } from "./common";
+import { isDev, buildKeyId, getFileExt, success } from "./common";
 import { FileMetadata, FileType, CF } from "./types";
 
 // 存储适配器接口定义

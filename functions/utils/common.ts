@@ -1,4 +1,4 @@
-import { FileType } from "./types";
+import { FileType, ApiResponse } from "./types";
 
 // 判断是否为开发环境
 export function isDev(env: any): boolean {
@@ -15,7 +15,6 @@ export function getFileExt(fileName: string): string {
 // 构建存储键
 export function buildKeyId(fileType: FileType, fullFileId: string): string {
   return `${fileType}_${fullFileId}`;
-
 }
 
 // 从存储键提取文件ID
@@ -28,4 +27,44 @@ export function getFileIdFromKey(key: string): string {
 // 当前只给R2用，TG的文件ID由TG API返回
 export function getUniqueFileId(): string {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
+
+/**
+ * 生成成功响应
+ * @param data 响应数据
+ * @param message 提示消息
+ * @param status HTTP状态码，默认为200
+ */
+export function success<T>(data?: T, message?: string, status: number = 200): Response {
+  const response: ApiResponse<T> = {
+    success: true,
+    data,
+    message
+  };
+  
+  return new Response(JSON.stringify(response), {
+    status,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+/**
+ * 生成错误响应
+ * @param error 错误信息
+ * @param status HTTP状态码，默认为500
+ */
+export function error(error: string, status: number = 500): Response {
+  const response: ApiResponse = {
+    success: false,
+    message: error
+  };
+  
+  return new Response(JSON.stringify(response), {
+    status,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
 }

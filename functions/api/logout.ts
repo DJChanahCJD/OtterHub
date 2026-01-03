@@ -1,3 +1,5 @@
+import { error } from "../utils/common";
+
 export async function onRequest(context: any) {
-  return new Response("Logged out.", { status: 401 });
+  return error("Logged out.", 401);
 }
