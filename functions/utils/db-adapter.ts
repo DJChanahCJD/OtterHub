@@ -1,4 +1,5 @@
-import { isDev, FileType, buildKeyId, FileMetadata, getFileExt } from "./common";
+import { isDev, buildKeyId, getFileExt } from "./common";
+import { FileMetadata, FileType, CF } from "./types";
 
 // 存储适配器接口定义
 export interface DBAdapter {
@@ -6,7 +7,7 @@ export interface DBAdapter {
   upload(file: File | Blob, metadata: any): Promise<string>;
   
   // 获取文件
-  get(key: string): Promise<Response | null>;
+  get(key: string, context?: any): Promise<Response | null>;
   
   // 删除文件
   delete(key: string): Promise<boolean>;
@@ -33,13 +34,13 @@ export class R2Adapter implements DBAdapter {
     // 根据文件类型确定前缀
     let fileType: FileType;
     if (file.type.startsWith('image/')) {
-      fileType = FileType.image;
+      fileType = FileType.Image;
     } else if (file.type.startsWith('audio/')) {
-      fileType = FileType.audio;
+      fileType = FileType.Audio;
     } else if (file.type.startsWith('video/')) {
-      fileType = FileType.video;
+      fileType = FileType.Video;
     } else {
-      fileType = FileType.document;
+      fileType = FileType.Document;
     }
     
     // 构建带有前缀的完整fileId
@@ -94,7 +95,7 @@ export class R2Adapter implements DBAdapter {
 }
 
 // Telegram存储适配器实现
-export class TelegramAdapter implements DBAdapter {
+export class TGAdapter implements DBAdapter {
   private env: any;
   private kvName: string;
 
@@ -116,19 +117,19 @@ export class TelegramAdapter implements DBAdapter {
     if (file.type.startsWith('image/')) {
       telegramFormData.append("photo", file);
       apiEndpoint = 'sendPhoto';
-      fileType = FileType.image;
+      fileType = FileType.Image;
     } else if (file.type.startsWith('audio/')) {
       telegramFormData.append("audio", file);
       apiEndpoint = 'sendAudio';
-      fileType = FileType.audio;
+      fileType = FileType.Audio;
     } else if (file.type.startsWith('video/')) {
       telegramFormData.append("video", file);
       apiEndpoint = 'sendVideo';
-      fileType = FileType.video;
+      fileType = FileType.Video;
     } else {
       telegramFormData.append("document", file);
       apiEndpoint = 'sendDocument';
-      fileType = FileType.document;
+      fileType = FileType.Document;
     }
 
     const result = await this.sendToTelegram(telegramFormData, apiEndpoint);
@@ -163,7 +164,7 @@ export class TelegramAdapter implements DBAdapter {
     return key;
   }
 
-  async get(key: string): Promise<Response | null> {
+  async get(key: string, context: any): Promise<Response | null> {
     // Telegram API不支持直接获取文件内容，需要通过URL访问
     // 这里返回null，实际获取逻辑在file/[id].js中处理
     return null;
@@ -257,10 +258,10 @@ export class DBAdapterFactory {
     let adapter: DBAdapter;
     switch (type.toLowerCase()) {
       case DBAdapterType.R2:
-        adapter = new R2Adapter(env, 'oh_file_r2', 'oh_file_url');
+        adapter = new R2Adapter(env, CF.R2_BUCKET, CF.KV_NAME);
         break;
       case DBAdapterType.TG:
-        adapter = new TelegramAdapter(env, 'oh_file_url');
+        adapter = new TGAdapter(env, CF.KV_NAME);
         break;
       default:
         throw new Error(`Unsupported storage adapter type: ${type}`);
@@ -277,9 +278,9 @@ export class DBAdapterFactory {
     
     switch (type.toLowerCase()) {
       case DBAdapterType.R2:
-        return new R2Adapter(env, 'oh_file_r2', 'oh_file_url');
+        return new R2Adapter(env, CF.R2_BUCKET, CF.KV_NAME);
       case DBAdapterType.TG:
-        return new TelegramAdapter(env, 'oh_file_url');
+        return new TGAdapter(env, CF.KV_NAME);
       default:
         throw new Error(`Unsupported storage adapter type: ${type}`);
     }

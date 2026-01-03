@@ -1,5 +1,5 @@
-import { FileMetadata } from '../utils/common';
 import { DBAdapterFactory } from '../utils/db-adapter';
+import { FileMetadata } from '../utils/types';
 
 export async function onRequestPost(context: any) {
     const { request, env } = context;

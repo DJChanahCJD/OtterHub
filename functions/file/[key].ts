@@ -1,5 +1,6 @@
 import { getFileIdFromKey } from '../utils/common';
 import { DBAdapterFactory } from '../utils/db-adapter';
+import { CF } from '../utils/types';
 
 export async function onRequest(context: any) {
     const { request, env, params } = context;
@@ -30,18 +31,16 @@ export async function onRequest(context: any) {
     }
 }
 
-// 原有Telegram文件处理逻辑
+// Telegram Bot API 文件处理逻辑
+// 原Telegraph API: 'https://telegra.ph/' + url.pathname + url.search;
 async function handleTelegramFile(context: any) {
     const { request, env, params } = context;
     const url = new URL(request.url);
-    let fileUrl = 'https://telegra.ph/' + url.pathname + url.search;
     
-    if (url.pathname.length > 39) { // 路径长度大于39位，说明是Telegram Bot API上传的文件
-        const key = url.pathname.split('.')[0].split('/')[2];
-        const tgFileId = getFileIdFromKey(key);
-        const filePath = await getFilePath(env, tgFileId);
-        fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
-    }
+    const key = url.pathname.split('.')[0].split('/')[2];
+    const tgFileId = getFileIdFromKey(key);
+    const filePath = await getFilePath(env, tgFileId);
+    const fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
 
     const response = await fetch(fileUrl, {
         method: request.method,
@@ -53,27 +52,27 @@ async function handleTelegramFile(context: any) {
     if (!response.ok) return response;
 
     // 检查KV存储是否可用
-    if (!env.oh_file_url) {
+    if (!env[CF.KV_NAME]) {
         console.error("KV storage not available");
         return new Response("oh_file_url KV storage not configured", { status: 500 });
     }
 
-    let record = await env.oh_file_url.getWithMetadata(params.id);
+    let record = await env[CF.KV_NAME].getWithMetadata(params.key);
     if (!record || !record.metadata) {
         // 如果元数据不存在，初始化它
         console.log("metadata not found, initializing...");
         record = {
             metadata: {}
         };
-        await env.oh_file_url.put(params.id, "", { metadata: record.metadata });
+        await env[CF.KV_NAME].put(params.key, "", { metadata: record.metadata });
     }
 
     return response;
 }
 
-async function getFilePath(env: any, file_id: string) {
+async function getFilePath(env: any, fileId: string) {
     try {
-        const url = `https://api.telegram.org/bot${env.TG_Bot_Token}/getFile?file_id=${file_id}`;
+        const url = `https://api.telegram.org/bot${env.TG_Bot_Token}/getFile?file_id=${fileId}`;
         const res = await fetch(url, {
             method: 'GET',
         });
