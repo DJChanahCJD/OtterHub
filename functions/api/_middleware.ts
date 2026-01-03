@@ -1,3 +1,5 @@
+import { fail } from "../utils/common";
+
 // 解析Basic Authentication请求头
 function parseBasicAuth(authHeader: string | null): { username: string; password: string } | null {
   if (!authHeader || !authHeader.startsWith("Basic ")) {
@@ -32,12 +34,9 @@ async function basicAuthentication(request: Request, env: any): Promise<Response
 
   if (!credentials || credentials.username !== env.BASIC_USER || credentials.password !== env.BASIC_PASS) {
     // 认证失败，返回401状态码，浏览器自动弹出登录对话框
-    return new Response("Unauthorized", {
-      status: 401,
-      headers: {
-        "WWW-Authenticate": "Basic realm=\"OtterHub Admin\", charset=\"UTF-8\""
-      }
-    });
+    return fail("Unauthorized", 401, {
+      "WWW-Authenticate": "Basic realm=\"OtterHub Admin\", charset=\"UTF-8\""
+    })
   }
 
   // 认证成功

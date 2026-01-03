@@ -1,6 +1,6 @@
 import { DBAdapterFactory } from '../utils/db-adapter';
 import { FileMetadata } from '../utils/types';
-import { success, error } from '../utils/common';
+import { ok, fail } from '../utils/common';
 
 export async function onRequestPost(context: any) {
     const { request, env } = context;
@@ -11,7 +11,7 @@ export async function onRequestPost(context: any) {
 
         const uploadFile = formData.get('file');
         if (!uploadFile) {
-            return error('No file uploaded', 400);
+            return fail('No file uploaded', 400);
         }
 
         const fileName = uploadFile.name;
@@ -29,7 +29,7 @@ export async function onRequestPost(context: any) {
         // 上传文件
         const key = await dbAdapter.upload(uploadFile, metadata);
 
-        return success(`/file/${key}`, 'File uploaded successfully');
+        return ok(`/file/${key}`, 'File uploaded successfully');
     } catch (error: any) {
         console.error('Upload error:', error);
         return error(`Failed to upload file: ${error.message}`, 500);

@@ -1,4 +1,4 @@
-import { isDev, buildKeyId, getFileExt, success } from "./common";
+import { isDev, buildKeyId, getFileExt, ok, getFileIdFromKey, fail } from "./common";
 import { FileMetadata, FileType, CF } from "./types";
 
 // 存储适配器接口定义
@@ -65,16 +65,14 @@ export class R2Adapter implements DBAdapter {
   async get(key: string): Promise<Response | null> {
     const object = await this.env[this.bucketName].get(key);
     if (!object) {
-      return null;
+      return fail(`File not found for key: ${key}`, 404);
     }
 
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set('etag', object.httpEtag);
 
-    return new Response(object.body, {
-      headers
-    });
+    return ok(object.body, "", 200, headers);
   }
 
   async delete(key: string): Promise<boolean> {
@@ -165,9 +163,8 @@ export class TGAdapter implements DBAdapter {
   }
 
   async get(key: string, context: any): Promise<Response | null> {
-    // Telegram API不支持直接获取文件内容，需要通过URL访问
-    // 这里返回null，实际获取逻辑在file/[id].js中处理
-    return null;
+    const fileId = getFileIdFromKey(key);
+    return await this.getTgFile(fileId);
   }
 
   async delete(key: string): Promise<boolean> {
@@ -233,6 +230,31 @@ export class TGAdapter implements DBAdapter {
     if (result.audio) return result.audio.file_id;
 
     return null;
+  }
+
+  // Telegram Bot API 文件处理逻辑
+  // 原Telegraph API: 'https://telegra.ph/' + url.pathname + url.search;
+  private async getTgFile(key: string) {
+    const fileId = getFileIdFromKey(key);
+    const filePath = await this.getTgFilePath(fileId);
+
+    if (!filePath) {
+      return fail(`File not found: ${key}`, 404);
+    }
+
+    const url = `https://api.telegram.org/file/bot${this.env.TG_Bot_Token}/${filePath}`;
+    return fetch(url);
+  }
+
+  private async getTgFilePath(fileId: string): Promise<string | null> {
+    // TODO: 考虑缓存url
+    const url = `https://api.telegram.org/bot${this.env.TG_Bot_Token}/getFile?file_id=${fileId}`;
+    const res = await fetch(url);
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data?.ok ? data.result.file_path : null;
   }
 }
 

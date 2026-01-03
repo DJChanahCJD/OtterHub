@@ -18,7 +18,7 @@ export function buildKeyId(fileType: FileType, fullFileId: string): string {
 }
 
 // 从存储键提取文件ID
-const FILE_PREFIX_REG = new RegExp(`^(${Object.values(FileType).join('|')})_`);
+const FILE_PREFIX_REG = new RegExp(`^(${Object.values(FileType).join("|")})_`);
 export function getFileIdFromKey(key: string): string {
   return key.replace(FILE_PREFIX_REG, "");
 }
@@ -26,7 +26,14 @@ export function getFileIdFromKey(key: string): string {
 // 生成唯一文件ID
 // 当前只给R2用，TG的文件ID由TG API返回
 export function getUniqueFileId(): string {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function json(body: any, status: number, headers?: HeadersInit): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...headers },
+  });
 }
 
 /**
@@ -35,36 +42,25 @@ export function getUniqueFileId(): string {
  * @param message 提示消息
  * @param status HTTP状态码，默认为200
  */
-export function success<T>(data?: T, message?: string, status: number = 200): Response {
+export function ok<T>(data?: T, message?: string, status = 200, headers?: HeadersInit): Response {
   const response: ApiResponse<T> = {
     success: true,
     data,
-    message
+    message,
   };
-  
-  return new Response(JSON.stringify(response), {
-    status,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
+  return json(response, status, headers);
 }
 
 /**
  * 生成错误响应
- * @param error 错误信息
+ * @param message 错误信息
  * @param status HTTP状态码，默认为500
  */
-export function error(error: string, status: number = 500): Response {
-  const response: ApiResponse = {
+export function fail(message: string, status = 500, headers?: HeadersInit): Response {
+  const response: ApiResponse<null> = {
     success: false,
-    message: error
+    data: null,
+    message,
   };
-  
-  return new Response(JSON.stringify(response), {
-    status,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
+  return json(response, status, headers);
 }

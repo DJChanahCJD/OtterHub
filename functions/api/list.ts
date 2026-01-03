@@ -1,8 +1,8 @@
 import { CF } from "../utils/types";
-import { success, error } from "../utils/common";
+import { ok, fail } from "../utils/common";
 
 // https://developers.cloudflare.com/kv/api/list-keys/
-export async function onRequest(context: any) {
+export async function onRequestGet(context: any) {
   try {
     const { request, env } = context;
     // 从URL查询参数中获取分页相关参数
@@ -38,7 +38,7 @@ export async function onRequest(context: any) {
     console.log("List result:", value);
 
     // 返回完整的分页结果
-    return success({
+    return ok({
       keys: value.keys,
       list_complete: value.list_complete,
       cursor: value.cursor,

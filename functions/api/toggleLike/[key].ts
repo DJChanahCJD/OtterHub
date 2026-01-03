@@ -1,8 +1,8 @@
-import { success } from "../../utils/common";
+import { fail, ok } from "../../utils/common";
 import { CF, FileMetadata } from "../../utils/types";
 
 // 修改文件名
-export async function onRequest(context: any) {
+export async function onRequestPost(context: any) {
   const { params, env } = context;
 
   // 获取元数据
@@ -11,9 +11,7 @@ export async function onRequest(context: any) {
 
   // 如果记录不存在
   if (!metadata)
-    return new Response(`File metadata not found for key: ${params.key}`, {
-      status: 404,
-    });
+    return fail(`File metadata not found for key: ${params.key}`, 404);
 
   // 切换 liked 状态
   metadata.liked = !metadata.liked;
@@ -21,5 +19,5 @@ export async function onRequest(context: any) {
 
   console.log("Updated metadata:", metadata);
 
-  return success(metadata.liked);
+  return ok({ liked: metadata.liked });
 }
