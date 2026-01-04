@@ -1,13 +1,12 @@
 import { fail, ok } from "../utils/common";
 import { DBAdapterFactory } from "../utils/db-adapter";
 
-// https://developers.cloudflare.com/pages/functions/api-reference/#onrequests
-export async function onRequestGet({ env, params }: any) {
+// https:// https://developers.cloudflare.com/pages/functions/api-reference/#onrequests
+export async function onRequestGet({ env, params, request }: any) {
   const key = params.key;
   const db = DBAdapterFactory.getAdapter(env);
 
-  const file = await db.get(key);
-  return file;
+  return await db.get(key, request);
 }
 
 export async function onRequestDelete({ env, params }: any) {

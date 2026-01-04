@@ -62,7 +62,7 @@ export class R2Adapter implements DBAdapter {
     return key;
   }
 
-  async get(key: string): Promise<Response> {
+  async get(key: string, req?: Request): Promise<Response> {
     const object = await this.env[this.bucketName].get(key);
     if (!object) {
       return fail(`File not found for key: ${key}`, 404);
@@ -71,7 +71,47 @@ export class R2Adapter implements DBAdapter {
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set('etag', object.httpEtag);
+    headers.set('Accept-Ranges', 'bytes');
 
+    const size = object.size;
+    const range = req?.headers.get('Range');
+
+    // ===== 处理 Range 请求 =====
+    if (range) {
+      // 只支持单段 Range：bytes=start-end
+      const match = /bytes=(\d+)-(\d+)?/.exec(range);
+      if (!match) {
+        return new Response('Invalid Range', { status: 416 });
+      }
+
+      const start = Number(match[1]);
+      const end = match[2] ? Number(match[2]) : size - 1;
+
+      if (start >= size || end < start) {
+        return new Response('Range Not Satisfiable', { status: 416 });
+      }
+
+      const partial = await this.env[this.bucketName].get(key, {
+        range: { start, end }
+      });
+
+      headers.set(
+        'Content-Range',
+        `bytes ${start}-${end}/${size}`
+      );
+      headers.set(
+        'Content-Length',
+        String(end - start + 1)
+      );
+
+      return new Response(partial.body, {
+        status: 206,
+        headers
+      });
+    }
+
+    // ===== 非 Range：返回完整文件 =====
+    headers.set('Content-Length', String(size));
     return new Response(object.body, {
       status: 200,
       headers,
