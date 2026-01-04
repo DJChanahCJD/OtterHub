@@ -6,8 +6,8 @@ export interface DBAdapter {
   // 上传文件
   upload(file: File | Blob, metadata: any): Promise<string>;
   
-  // 获取文件
-  get(key: string, context?: any): Promise<Response | null>;
+  // 获取文件，永远返回Response
+  get(key: string, req?: Request): Promise<Response>;
   
   // 删除文件
   delete(key: string): Promise<boolean>;
@@ -62,7 +62,7 @@ export class R2Adapter implements DBAdapter {
     return key;
   }
 
-  async get(key: string): Promise<Response | null> {
+  async get(key: string): Promise<Response> {
     const object = await this.env[this.bucketName].get(key);
     if (!object) {
       return fail(`File not found for key: ${key}`, 404);
@@ -72,7 +72,10 @@ export class R2Adapter implements DBAdapter {
     object.writeHttpMetadata(headers);
     headers.set('etag', object.httpEtag);
 
-    return ok(object.body, "", 200, headers);
+    return new Response(object.body, {
+      status: 200,
+      headers,
+    });
   }
 
   async delete(key: string): Promise<boolean> {
@@ -163,9 +166,19 @@ export class TGAdapter implements DBAdapter {
     return key;
   }
 
-  async get(key: string, context: any): Promise<Response | null> {
-    const fileId = getFileIdFromKey(key);
-    return await this.getTgFile(fileId);
+  async get(key: string): Promise<Response> {
+    try {
+      const fileId = getFileIdFromKey(key);
+      const file = await this.getTgFile(fileId);
+      
+      return new Response(file.body, {
+        status: file.status,
+        headers: file.headers,
+      });
+    } catch (error) {
+      console.error('Failed to fetch Telegram file:', error);
+      return fail(`File not found for key: ${key}`, 404);
+    }
   }
 
   async delete(key: string): Promise<boolean> {

@@ -63,8 +63,8 @@ export const onRequest = [
   errorHandling,
   async (context: any) => {
     const { request, env } = context;
-    // const auth = await basicAuthentication(request, env);
-    // if (auth) return auth;
+    const auth = await basicAuthentication(request, env);
+    if (auth) return auth;
     return context.next();
   },
 ];
