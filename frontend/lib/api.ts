@@ -28,7 +28,7 @@ export function getFileUrl(key: string): string {
 }
 
 export function deleteFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/delete/${key}`, {
+  return request<boolean>(`${API_URL}/api/${key}`, {
     method: 'DELETE',
   })
 }
