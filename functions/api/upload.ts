@@ -24,12 +24,13 @@ export async function onRequestPost(context: any) {
             fileName,
             fileSize,
             uploadedAt: Date.now(),
+            liked: false,
         }
 
         // 上传文件
         const key = await dbAdapter.upload(uploadFile, metadata);
 
-        return ok(`/file/${key}`, 'File uploaded successfully');
+        return ok(key, 'File uploaded successfully');
     } catch (error: any) {
         console.error('Upload error:', error);
         return error(`Failed to upload file: ${error.message}`, 500);
