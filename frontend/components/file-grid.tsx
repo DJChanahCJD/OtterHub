@@ -7,12 +7,10 @@ import { AudioPlayerView } from "@/components/audio-player-view"
 import { FileType } from "@/lib/types"
 
 export function FileGrid() {
-  const allFiles = useFileStore((state) => state.allFiles)
   const activeType = useFileStore((state) => state.activeType)
   const viewMode = useFileStore((state) => state.viewMode)
 
-  const filteredFiles = useFileStore((state) =>
-    activeType === FileType.All ? state.allFiles : state.buckets[activeType].items)
+  const filteredFiles = useBucketItems(activeType)
 
   if (activeType === FileType.Audio) {
     return <AudioPlayerView />

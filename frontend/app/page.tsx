@@ -7,24 +7,20 @@ import { FileUploadZone } from "@/components/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
 import { EmptyState } from "@/components/empty-state"
-import { useFileStore } from "@/lib/store"
-import { getFileList } from "@/lib/api"
-
-type ViewType = "files"
+import { useActiveItems, useFileStore } from "@/lib/store"
 
 export default function OtterHubPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  const allFiles = useFileStore((state) => state.allFiles)
+  const activeItems = useActiveItems()
   const selectedKeys = useFileStore((state) => state.selectedKeys)
+  const fetchNextPage = useFileStore((state) => state.fetchNextPage)
 
   // 从后端获取文件列表
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const fileList = await getFileList()
-        // TODO: 需要根据fileList的结构来更新store
-        console.log("Fetched files:", fileList)
+        await fetchNextPage()
       } catch (error) {
         console.error("Error fetching files:", error)
       }
@@ -50,7 +46,7 @@ export default function OtterHubPage() {
           <main className="flex-1 overflow-auto p-6 md:p-8">
             <FileUploadZone />
 
-            {allFiles.length === 0 ? <EmptyState /> : <FileGrid />}
+            {activeItems.length === 0 ? <EmptyState /> : <FileGrid />}
           </main>
         </div>
 

@@ -2,26 +2,23 @@
 
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFileStore } from "@/lib/store";
+import { useActiveItems, useFileStore } from "@/lib/store";
 import { getFileUrl } from "@/lib/api";
+import { downloadFile } from "@/lib/utils";
 
 export function BatchOperationsBar() {
-  const allFiles = useFileStore((s) => s.allFiles)
   const selectedKeys = useFileStore((s) => s.selectedKeys)
   const clearSelection = useFileStore((s) => s.clearSelection)
 
+  const items = useActiveItems()
   const handleDownloadAll = () => {
     selectedKeys.forEach((name) => {
-      const file = allFiles.find((f) => f.name === name)
+      const file = items.find((f) => f.name === name)
       if (!file) return
 
-      const link = document.createElement("a")
-      link.href = getFileUrl(file.name)
-      link.download = file.name
-      link.click()
+      downloadFile(getFileUrl(file.name), file.metadata.fileName)
     })
   }
-
 
   return (
     <>

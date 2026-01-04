@@ -14,7 +14,6 @@ export enum ViewMode {
 
 // 文件类型
 export enum FileType {
-  All = "all", // 所有文件
   Image = "img",
   Audio = "audio",
   Video = "video",

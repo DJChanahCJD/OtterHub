@@ -5,8 +5,9 @@ import type React from "react"
 import { useCallback, useRef, useState } from "react"
 import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 import { uploadFile } from "@/lib/api"
-import { getFileType } from "@/lib/utils"
+import { buildTmpFileKey, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/store"
 
 export function FileUploadZone() {
@@ -14,10 +15,12 @@ export function FileUploadZone() {
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   // 文件上传配置
+  // TODO: 分片上传
   const uploadConfig = {
-    maxSize: 20 * 1024 * 1024, // 20MB - Telegram可分发的最大文件大小
+    maxSize: 20 * 1024 * 1024, // 20MB - Telegram可分发的最大文件大小 
     maxConcurrent: 3, // 最大并发上传数
   }
 
@@ -36,16 +39,20 @@ export function FileUploadZone() {
 
       // 显示错误信息
       if (invalid.length) {
-        alert(`文件超过${uploadConfig.maxSize / 1024 / 1024}MB: \n${invalid.map(f => f.name).join('\n')}`)
+        toast({
+          title: "文件大小超过限制",
+          description: `文件超过${uploadConfig.maxSize / 1024 / 1024}MB: ${invalid.map(f => f.name).join(', ')}`,
+          variant: "destructive",
+        })
       }
       if (!valid.length) {
-        alert('没有符合条件的文件')
+        toast({
+          title: "没有符合条件的文件",
+          variant: "destructive",
+        })
         return
       }
 
-      // 确认上传
-      const confirmed = confirm(`确定要上传这 ${valid.length} 个文件吗?`)
-      if (!confirmed) return
 
       // 上传状态
       let successCount = 0
@@ -55,13 +62,13 @@ export function FileUploadZone() {
 
       // 单个文件上传函数
       const uploadSingleFile = async (file: File) => {
-        const tmpId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-        uploadProgressMap[tmpId] = 0
+        const tmpKey = buildTmpFileKey(file)
+        uploadProgressMap[tmpKey] = 0
         setUploadProgress({ ...uploadProgressMap })
 
         try {
           await uploadFile(file)
-          uploadProgressMap[tmpId] = 100
+          uploadProgressMap[tmpKey] = 100
           setUploadProgress({ ...uploadProgressMap })
 
           // 获取文件类型
@@ -69,7 +76,7 @@ export function FileUploadZone() {
 
           // 添加到文件存储
           const fileItem = {
-            name: file.name,
+            name: tmpKey,
             metadata: {
               fileName: file.name,
               fileSize: file.size,
@@ -85,7 +92,7 @@ export function FileUploadZone() {
         } finally {
           // 移除进度显示
           setTimeout(() => {
-            delete uploadProgressMap[tmpId]
+            delete uploadProgressMap[tmpKey]
             setUploadProgress({ ...uploadProgressMap })
           }, 500)
         }
@@ -99,10 +106,18 @@ export function FileUploadZone() {
 
       // 显示上传结果
       if (successCount > 0) {
-        alert(`成功上传 ${successCount} 个文件`)
+        toast({
+          title: "上传成功",
+          description: `成功上传 ${successCount} 个文件`,
+          variant: "default",
+        })
       }
       if (failed.length > 0) {
-        alert(`上传失败: ${failed.join(', ')}`)
+        toast({
+          title: "部分文件上传失败",
+          description: failed.join(', '),
+          variant: "destructive",
+        })
       }
     },
     [addFile],

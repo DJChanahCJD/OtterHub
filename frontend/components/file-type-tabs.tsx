@@ -6,7 +6,6 @@ import { useFileStore } from "@/lib/store"
 import { FileType } from "@/lib/types"
 
 const fileTypes = [
-  { id: FileType.All, label: "All", icon: Layers},
   { id: FileType.Image, label: "Images", icon: ImageIcon },
   { id: FileType.Audio, label: "Audio", icon: Music },
   { id: FileType.Video, label: "Videos", icon: Video },

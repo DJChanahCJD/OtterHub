@@ -2,12 +2,12 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { MoreVertical, Download, Trash2, FileIcon, ImageIcon, Music, Video, FileText, Check, File } from "lucide-react"
+import { useMemo } from "react"
+import { MoreVertical, Download, Trash2, ImageIcon, Music, Video, FileText, Check, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useFileStore } from "@/lib/store"
-import { cn } from "@/lib/utils"
+import { cn, getFileTypeFromKey, formatFileSize, downloadFile } from "@/lib/utils"
 import { FileItem, FileType } from "@/lib/types"
 import { getFileUrl } from "@/lib/api"
 
@@ -17,12 +17,60 @@ interface FileCardProps {
   listView?: boolean
 }
 
-export function FileCard({ file, activeType: activeType, listView = false }: FileCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
+// 文件类型到图标的映射
+const FILE_TYPE_ICON_MAP: Record<FileType, React.FC<any>> = {
+  [FileType.Image]: ImageIcon,
+  [FileType.Audio]: Music,
+  [FileType.Video]: Video,
+  [FileType.Document]: FileText,
+}
+
+// 文件操作菜单组件
+function FileActions({
+  onDownload,
+  onDelete,
+}: {
+  onDownload: () => void
+  onDelete: () => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-white/60 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10">
+        <DropdownMenuItem onClick={onDownload} className="text-white hover:bg-white/10">
+          <Download className="h-4 w-4 mr-2" />
+          Download
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDelete} className="text-red-400 hover:bg-red-500/10">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function FileCard({ file, listView = false }: FileCardProps) {
   const selectedKeys = useFileStore((state) => state.selectedKeys)
   const toggleSelection = useFileStore((state) => state.toggleSelection)
+  const deleteFile = useFileStore((state) => state.deleteFile)
 
   const isSelected = selectedKeys.includes(file.name)
+
+  // 只计算一次文件类型，提高性能
+  const fileType = useMemo(
+    () => getFileTypeFromKey(file.name),
+    [file.name]
+  )
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -30,36 +78,15 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
   }
 
   const handleDelete = () => {
-    // TODO
+    const confirmDelete = confirm(`确定要删除文件 ${file.metadata.fileName} 吗?`)
+    if (!confirmDelete) return
+    deleteFile(file.name)
   }
 
   const handleDownload = () => {
-    const link = document.createElement("a")
-    link.href = getFileUrl(file.name)
-    link.download = file.name
-    link.click()
+    const url = getFileUrl(file.name)
+    downloadFile(url, file.metadata.fileName)
   }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  const getFileIcon = () => {
-    switch (activeType) {
-      case FileType.Image:
-        return ImageIcon
-      case FileType.Audio:
-        return Music
-      case FileType.Video:
-        return Video
-      case FileType.Document:
-        return FileText
-    }
-  }
-
-  const FileIcon = getFileIcon()
 
   if (listView) {
     return (
@@ -70,8 +97,6 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
             ? "bg-emerald-500/20 border-emerald-400/50"
             : "bg-white/5 border-white/10 hover:border-emerald-400/30 hover:bg-white/10",
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         onClick={handleSelect}
       >
         {/* Checkbox */}
@@ -86,9 +111,9 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
 
         {/* File Icon/Preview */}
         <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0">
-          {activeType === FileType.Image ? (
+          {fileType === FileType.Image ? (
             <img
-              src={getFileUrl(file.name) || "/placeholder.svg"}
+              src={getFileUrl(file.name)}
               alt={file.name}
               className="w-full h-full object-cover rounded"
             />
@@ -99,7 +124,7 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{file.name}</p>
+          <p className="text-sm font-medium text-white truncate">{file.metadata.fileName}</p>
           <p className="text-xs text-white/40">{formatFileSize(file.metadata.fileSize || 0)}</p>
         </div>
 
@@ -107,31 +132,7 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
         <div className="hidden md:block text-xs text-white/40">{file.metadata.uploadedAt?.toLocaleString() || "N/A"}</div>
 
         {/* Actions */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "text-white/60 hover:text-white hover:bg-white/10",
-                !isHovered && "opacity-0 group-hover:opacity-100",
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10">
-            <DropdownMenuItem onClick={handleDownload} className="text-white hover:bg-white/10">
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/10">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <FileActions onDownload={handleDownload} onDelete={handleDelete} />
       </div>
     )
   }
@@ -144,8 +145,6 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
           ? "bg-emerald-500/20 border-emerald-400/50 ring-2 ring-emerald-400/50"
           : "bg-white/10 border-white/10 hover:border-emerald-400/50",
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={handleSelect}
     >
       {/* Checkbox */}
@@ -164,42 +163,18 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
 
       {/* Actions Menu */}
       <div className="absolute top-3 right-3 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 h-8 w-8",
-                !isHovered && "opacity-0 group-hover:opacity-100",
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10">
-            <DropdownMenuItem onClick={handleDownload} className="text-white hover:bg-white/10">
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/10">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <FileActions onDownload={handleDownload} onDelete={handleDelete} />
       </div>
 
       {/* File Content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {activeType === FileType.Image ? (
-          <img src={getFileUrl(file.name) || "/placeholder.svg"} alt={file.name} className="w-full h-full object-cover" />
-        ) : activeType === FileType.Video ? (
+        {fileType === FileType.Image ? (
+          <img src={getFileUrl(file.name)} alt={file.name} className="w-full h-full object-cover" />
+        ) : fileType === FileType.Video ? (
           <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
             <Video className="h-12 w-12 text-purple-300" />
           </div>
-        ) : activeType === FileType.Audio ? (
+        ) : fileType === FileType.Audio ? (
           <div className="relative w-full h-full bg-linear-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
             <Music className="h-12 w-12 text-emerald-300" />
           </div>
@@ -212,7 +187,7 @@ export function FileCard({ file, activeType: activeType, listView = false }: Fil
 
       {/* File Info Overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
-        <p className="text-sm font-medium text-white truncate">{file.name}</p>
+        <p className="text-sm font-medium text-white truncate">{file.metadata.fileName || file.name}</p>
         <p className="text-xs text-white/60">{formatFileSize(file.metadata.fileSize || 0)}</p>
       </div>
     </div>

@@ -1,6 +1,5 @@
 // store.ts
 import { create } from "zustand"
-import { shallow } from "zustand/shallow"
 import { FileItem, FileType, ListFilesRequest, ViewMode } from "./types"
 import { getFileList } from "./api"
 
@@ -18,17 +17,13 @@ interface FileStore {
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>
-  
-  // 所有文件的聚合，每次buckets变化时同步更新
-  allFiles: FileItem[]
 
   // selection 全局，暂不考虑分桶
   selectedKeys: string[]
 
   // actions
-  setActiveType: (type: FileType) => void
+  setActiveType: (type: FileType) => Promise<void>
   fetchNextPage: () => Promise<void>
-  resetType: (type: FileType) => void
   setViewMode: (mode: ViewMode) => void
 
   addFile: (file: FileItem, fileType: FileType) => void
@@ -46,35 +41,32 @@ const emptyBucket = (): FileBucket => ({
 })
 
 export const useFileStore = create<FileStore>((set, get) => ({
-  activeType: FileType.All,
+  activeType: FileType.Image,
   viewMode: ViewMode.Grid,
 
   buckets: {
-    [FileType.All]: emptyBucket(),
     [FileType.Image]: emptyBucket(),
     [FileType.Audio]: emptyBucket(),
     [FileType.Video]: emptyBucket(),
     [FileType.Document]: emptyBucket(),
   },
-  
-  // 初始状态下，allFiles是空数组
-  allFiles: [],
 
   selectedKeys: [],
 
-  setActiveType: (type) => set({ activeType: type }),
+  setActiveType: async (type) => {
+    // 先设置activeType
+    set((state) => ({
+      activeType: type,
+    }))
+    
+    // 检查该类型的bucketItems是否为空，为空时才fetch数据
+    const bucket = get().buckets[type]
+    if (bucket.items.length === 0) {
+      await get().fetchNextPage()
+    }
+  },
 
-  resetType: (type) =>
-    set((state) => {
-      const newBuckets = {
-        ...state.buckets,
-        [type]: emptyBucket(),
-      }
-      return {
-        buckets: newBuckets,
-        allFiles: Object.values(newBuckets).flatMap((b) => b.items),
-      }
-    }),
+
 
   fetchNextPage: async () => {
     const { activeType, buckets } = get()
@@ -112,7 +104,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       }
       return {
         buckets: newBuckets,
-        allFiles: Object.values(newBuckets).flatMap((b) => b.items),
       }
     })
   },
@@ -129,7 +120,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }
     return {
       buckets: newBuckets,
-      allFiles: Object.values(newBuckets).flatMap((b) => b.items),
     }
   }),
 
@@ -145,7 +135,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
     
     return {
       buckets: newBuckets,
-      allFiles: Object.values(newBuckets).flatMap((b) => b.items),
     }
   }),
 

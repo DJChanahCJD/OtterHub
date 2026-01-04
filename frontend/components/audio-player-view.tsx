@@ -1,126 +1,46 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { useBucketItems, useFileStore } from "@/lib/store"
-import { cn } from "@/lib/utils"
+import { cn, downloadFile, formatTime } from "@/lib/utils"
 import { FileItem, FileType } from "@/lib/types"
 import { getFileUrl } from "@/lib/api"
+import { useAudioPlayer } from "@/hooks/use-audio-player"
 
 export function AudioPlayerView() {
   const audioFiles = useBucketItems(FileType.Audio)
   const selectedKeys = useFileStore((s) => s.selectedKeys)
 
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(0.7)
-  const [isMuted, setIsMuted] = useState(false)
-  const [isRepeat, setIsRepeat] = useState(false)
-  const [isShuffle, setIsShuffle] = useState(false)
+  const {
+    state: {
+      currentTrackIndex,
+      isPlaying,
+      currentTime,
+      duration,
+      volume,
+      isMuted,
+      isRepeat,
+      isShuffle,
+    },
+    controls: {
+      playTrack,
+      togglePlay,
+      handleNext,
+      handlePrevious,
+      handleSeek,
+      handleVolumeChange,
+      toggleRepeat,
+      toggleShuffle,
+      toggleMute,
+    },
+    audioRef,
+    currentFile,
+  } = useAudioPlayer(audioFiles)
 
-  const audioRef = useRef<HTMLAudioElement>(null)
-
-  const currentTrack = audioFiles[currentTrackIndex]
-  useEffect(() => {
-    if (currentTrackIndex >= audioFiles.length) {
-      setCurrentTrackIndex(0)
-    }
-  }, [audioFiles.length])
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const handleDurationChange = () => setDuration(audio.duration)
-    const handleEnded = () => {
-      if (isRepeat) {
-        audio.currentTime = 0
-        audio.play()
-      } else {
-        handleNext()
-      }
-    }
-
-    audio.addEventListener("timeupdate", handleTimeUpdate)
-    audio.addEventListener("durationchange", handleDurationChange)
-    audio.addEventListener("ended", handleEnded)
-
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate)
-      audio.removeEventListener("durationchange", handleDurationChange)
-      audio.removeEventListener("ended", handleEnded)
-    }
-  }, [isRepeat, currentTrackIndex])
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume
-    }
-  }, [volume, isMuted])
-
-  const togglePlay = () => {
-    if (!audioRef.current || !currentTrack) return
-
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      audioRef.current.play()
-    }
-    setIsPlaying(!isPlaying)
-  }
-
-  const handleNext = () => {
-    if (audioFiles.length === 0) return
-
-    if (isShuffle) {
-      const randomIndex = Math.floor(Math.random() * audioFiles.length)
-      setCurrentTrackIndex(randomIndex)
-    } else {
-      setCurrentTrackIndex((prev) => (prev + 1) % audioFiles.length)
-    }
-    setIsPlaying(true)
-  }
-
-  const handlePrevious = () => {
-    if (audioFiles.length === 0) return
-
-    if (currentTime > 3) {
-      if (audioRef.current) audioRef.current.currentTime = 0
-    } else {
-      setCurrentTrackIndex((prev) => (prev - 1 + audioFiles.length) % audioFiles.length)
-      setIsPlaying(true)
-    }
-  }
-
-  const handleSeek = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0]
-      setCurrentTime(value[0])
-    }
-  }
-
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0])
-    setIsMuted(false)
-  }
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return "0:00"
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`
-  }
-
-  const handleDownload = (track: FileItem) => {
-    const link = document.createElement("a")
-    link.href = getFileUrl(track.name)
-    link.download = track.name
-    link.click()
+  const handleDownload = (file: FileItem) => {
+    downloadFile(getFileUrl(file.name), file.metadata.fileName)
   }
 
   if (audioFiles.length === 0) {
@@ -151,7 +71,7 @@ export function AudioPlayerView() {
           {/* Player Controls */}
           <div className="flex-1 w-full">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1 text-balance">{currentTrack?.name || "No track"}</h2>
+              <h2 className="text-2xl font-bold text-white mb-1 text-balance">{currentFile?.metadata?.fileName || "No file"}</h2>
               <p className="text-emerald-300/80">{"Unknown Artist"}</p>
             </div>
 
@@ -175,7 +95,7 @@ export function AudioPlayerView() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsShuffle(!isShuffle)}
+                onClick={toggleShuffle}
                 className={cn("text-white/60 hover:text-white hover:bg-white/10", isShuffle && "text-emerald-400")}
               >
                 <Shuffle className="h-5 w-5" />
@@ -210,7 +130,7 @@ export function AudioPlayerView() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsRepeat(!isRepeat)}
+                onClick={toggleRepeat}
                 className={cn("text-white/60 hover:text-white hover:bg-white/10", isRepeat && "text-emerald-400")}
               >
                 <Repeat className="h-5 w-5" />
@@ -222,7 +142,7 @@ export function AudioPlayerView() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={toggleMute}
                 className="text-white/60 hover:text-white hover:bg-white/10"
               >
                 {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -240,7 +160,7 @@ export function AudioPlayerView() {
         </div>
 
         {/* Hidden Audio Element */}
-        {currentTrack && <audio ref={audioRef} src={getFileUrl(currentTrack.name)} />}
+        {currentFile && <audio ref={audioRef} src={getFileUrl(currentFile.name)} />}
       </div>
 
       {/* Playlist */}
@@ -248,17 +168,14 @@ export function AudioPlayerView() {
         <h3 className="text-lg font-semibold text-white mb-4">Playlist</h3>
 
         <div className="space-y-2">
-          {audioFiles.map((track, index) => {
+          {audioFiles.map((file, index) => {
             const isCurrentTrack = index === currentTrackIndex
-            const isSelected = selectedKeys.includes(track.name)
+            const isSelected = selectedKeys.includes(file.name)
 
             return (
               <div
-                key={track.name}
-                onClick={() => {
-                  setCurrentTrackIndex(index)
-                  setIsPlaying(true)
-                }}
+                key={file.name}
+                onClick={() => playTrack(index)}
                 className={cn(
                   "group flex items-center gap-4 p-3 rounded-lg transition-all cursor-pointer",
                   isCurrentTrack && "bg-emerald-500/20 border border-emerald-400/50",
@@ -282,14 +199,14 @@ export function AudioPlayerView() {
                 {/* Track Info */}
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm font-medium truncate", isCurrentTrack ? "text-emerald-300" : "text-white")}>
-                    {track.name}
+                    {file.metadata.fileName}
                   </p>
                   <p className="text-xs text-white/40">{"Unknown Artist"}</p>
                 </div>
 
                 {/* Duration */}
                 <div className="text-xs text-white/40">
-                  {track.metadata?.duration ? formatTime(track.metadata.duration) : "--:--"}
+                  {file.metadata?.duration ? formatTime(file.metadata.duration) : "--:--"}
                 </div>
 
                 {/* Actions */}
@@ -300,7 +217,7 @@ export function AudioPlayerView() {
                     className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDownload(track)
+                      handleDownload(file)
                     }}
                   >
                     <Download className="h-4 w-4" />
