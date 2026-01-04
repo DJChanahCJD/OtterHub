@@ -2,8 +2,9 @@
 
 import { Grid3x3, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useFileStore } from "@/lib/store"
+import { useFileStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
+import { ViewMode } from "@/lib/types"
 
 export function ViewModeToggle() {
   const viewMode = useFileStore((state) => state.viewMode)
@@ -14,10 +15,10 @@ export function ViewModeToggle() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setViewMode("grid")}
+        onClick={() => setViewMode(ViewMode.Grid)}
         className={cn(
           "h-8 px-3",
-          viewMode === "grid"
+          viewMode === ViewMode.Grid
             ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
             : "text-white/60 hover:text-white hover:bg-white/10",
         )}
@@ -28,10 +29,10 @@ export function ViewModeToggle() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setViewMode("list")}
+        onClick={() => setViewMode(ViewMode.List)}
         className={cn(
           "h-8 px-3",
-          viewMode === "list"
+          viewMode === ViewMode.List
             ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
             : "text-white/60 hover:text-white hover:bg-white/10",
         )}

@@ -30,7 +30,7 @@ export type FileMetadata = {
   fileName: string;
   fileSize: number;
   uploadedAt: number; // 时间戳
-  liked?: boolean; // 是否被收藏
+  liked: boolean; // 是否被收藏
   duration?: number; // 音视频时长（秒）
 };
 

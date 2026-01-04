@@ -3,7 +3,7 @@
 import { Home, Trash2, HardDrive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { useFileStore } from "@/lib/store"
+import { useFileStore } from "@/lib/file-store"
 import { FileType } from "@/lib/types"
 
 interface SidebarProps {

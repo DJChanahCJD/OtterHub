@@ -2,7 +2,7 @@
 
 import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useFileStore } from "@/lib/store"
+import { useFileStore } from "@/lib/file-store"
 import { FileType } from "@/lib/types"
 
 const fileTypes = [
@@ -16,6 +16,7 @@ export function FileTypeTabs() {
   const activeType = useFileStore((state) => state.activeType)
   const setActiveType = useFileStore((state) => state.setActiveType)
 
+  console.log(activeType)
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {fileTypes.map((type) => {

@@ -7,11 +7,12 @@ import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { uploadFile } from "@/lib/api"
-import { buildTmpFileKey, getFileType } from "@/lib/utils"
-import { useFileStore } from "@/lib/store"
+import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
+import { useFileStore } from "@/lib/file-store"
+import { FileItem } from "@/lib/types"
 
 export function FileUploadZone() {
-  const addFile = useFileStore((state) => state.addFile)
+  const addFileLocal = useFileStore((state) => state.addFileLocal)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -41,14 +42,16 @@ export function FileUploadZone() {
       if (invalid.length) {
         toast({
           title: "文件大小超过限制",
-          description: `文件超过${uploadConfig.maxSize / 1024 / 1024}MB: ${invalid.map(f => f.name).join(', ')}`,
+          description: `文件超过${formatFileSize(uploadConfig.maxSize)}: ${invalid.map(f => f.name).join(', ')}`,
           variant: "destructive",
+          duration: 5000,
         })
       }
       if (!valid.length) {
         toast({
           title: "没有符合条件的文件",
           variant: "destructive",
+          duration: 5000,
         })
         return
       }
@@ -67,7 +70,7 @@ export function FileUploadZone() {
         setUploadProgress({ ...uploadProgressMap })
 
         try {
-          await uploadFile(file)
+          const key = await uploadFile(file)
           uploadProgressMap[tmpKey] = 100
           setUploadProgress({ ...uploadProgressMap })
 
@@ -75,16 +78,17 @@ export function FileUploadZone() {
           const fileType = getFileType(file.type)
 
           // 添加到文件存储
-          const fileItem = {
-            name: tmpKey,
+          const fileItem : FileItem = {
+            name: key,
             metadata: {
               fileName: file.name,
               fileSize: file.size,
               uploadedAt: Date.now(),
+              liked: false,
             },
           }
 
-          addFile(fileItem, fileType)
+          addFileLocal(fileItem, fileType)
           successCount++
         } catch (error) {
           console.error(`Error uploading file ${file.name}:`, error)
@@ -120,7 +124,7 @@ export function FileUploadZone() {
         })
       }
     },
-    [addFile],
+    [addFileLocal, toast],
   )
 
   const handleDrop = useCallback(

@@ -7,7 +7,7 @@ import { FileUploadZone } from "@/components/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
 import { EmptyState } from "@/components/empty-state"
-import { useActiveItems, useFileStore } from "@/lib/store"
+import { useActiveItems, useFileStore } from "@/lib/file-store"
 
 export default function OtterHubPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)

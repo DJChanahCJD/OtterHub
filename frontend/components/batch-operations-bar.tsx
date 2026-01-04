@@ -1,24 +1,44 @@
 "use client";
 
-import { Download, X } from "lucide-react";
+import { Download, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useActiveItems, useFileStore } from "@/lib/store";
-import { getFileUrl } from "@/lib/api";
+import { useActiveItems, useFileStore } from "@/lib/file-store";
+import { batchDeleteFiles, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
+import { useToast } from "./ui/use-toast";
 
 export function BatchOperationsBar() {
-  const selectedKeys = useFileStore((s) => s.selectedKeys)
-  const clearSelection = useFileStore((s) => s.clearSelection)
+  const fileStore = useFileStore()
+  const selectedKeys = fileStore.selectedKeys
+  const clearSelection = fileStore.clearSelection
+  const { toast } = useToast()
+
 
   const items = useActiveItems()
-  const handleDownloadAll = () => {
+  const handleBatchDownload = () => {
     selectedKeys.forEach((name) => {
       const file = items.find((f) => f.name === name)
       if (!file) return
 
-      downloadFile(getFileUrl(file.name), file.metadata.fileName)
+      downloadFile(getFileUrl(name), file.metadata.fileName)
     })
   }
+  const handleBatchDelete = async () => {
+    if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return
+    await batchDeleteFiles(selectedKeys).then((success) => {
+      if (success) {
+        fileStore.deleteFilesLocal(selectedKeys)
+        toast({
+          title: "删除成功",
+          description: `${selectedKeys.length} 个文件已删除`,
+        })
+      }
+    })
+    try {
+    } catch (error) {
+      console.error("删除文件失败:", error)
+    }
+  } 
 
   return (
     <>
@@ -34,10 +54,19 @@ export function BatchOperationsBar() {
               size="sm"
               variant="ghost"
               className="text-white hover:bg-white/20"
-              onClick={handleDownloadAll}
+              onClick={handleBatchDownload}
             >
               <Download className="h-4 w-4 mr-2" />
               Download
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              onClick={handleBatchDelete}
+            >
+              <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+              Delete
             </Button>
 
             <div className="w-px h-6 bg-white/20" />

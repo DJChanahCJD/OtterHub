@@ -1,10 +1,10 @@
 "use client"
 
-import { useBucketItems, useFileStore } from "@/lib/store"
+import { useBucketItems, useFileStore } from "@/lib/file-store"
 import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { AudioPlayerView } from "@/components/audio-player-view"
-import { FileType } from "@/lib/types"
+import { FileType, ViewMode } from "@/lib/types"
 
 export function FileGrid() {
   const activeType = useFileStore((state) => state.activeType)
@@ -25,7 +25,7 @@ export function FileGrid() {
         <ViewModeToggle />
       </div>
 
-      {viewMode === "grid" ? (
+      {viewMode === ViewMode.Grid ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredFiles.map((file) => (
             <FileCard key={file.name} file={file} />

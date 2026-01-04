@@ -3,7 +3,7 @@
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { useBucketItems, useFileStore } from "@/lib/store"
+import { useBucketItems, useFileStore } from "@/lib/file-store"
 import { cn, downloadFile, formatTime } from "@/lib/utils"
 import { FileItem, FileType } from "@/lib/types"
 import { getFileUrl } from "@/lib/api"

@@ -2,67 +2,106 @@
 
 import type React from "react"
 
-import { useMemo } from "react"
-import { MoreVertical, Download, Trash2, ImageIcon, Music, Video, FileText, Check, File } from "lucide-react"
+import { useEffect, useMemo } from "react"
+import { MoreVertical, Download, Trash2, ImageIcon, Music, Video, FileText, Check, File, Heart, Eye, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useFileStore } from "@/lib/store"
+import { useFileStore } from "@/lib/file-store"
 import { cn, getFileTypeFromKey, formatFileSize, downloadFile } from "@/lib/utils"
 import { FileItem, FileType } from "@/lib/types"
-import { getFileUrl } from "@/lib/api"
+import { getFileUrl, editFileName, toggleLike } from "@/lib/api"
 
+// TODO: 优化文件操作菜单的样式和交互
+// 💗  ...
+//      查看
+//      编辑
+//      删除
+//      ...
 interface FileCardProps {
   file: FileItem
   activeType?: FileType
   listView?: boolean
 }
 
-// 文件类型到图标的映射
-const FILE_TYPE_ICON_MAP: Record<FileType, React.FC<any>> = {
-  [FileType.Image]: ImageIcon,
-  [FileType.Audio]: Music,
-  [FileType.Video]: Video,
-  [FileType.Document]: FileText,
-}
-
 // 文件操作菜单组件
 function FileActions({
   onDownload,
   onDelete,
+  onView,
+  onEdit,
+  onToggleLike,
+  isLiked,
 }: {
   onDownload: () => void
   onDelete: () => void
+  onView: () => void
+  onEdit: () => void
+  onToggleLike: () => void
+  isLiked: boolean
 }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white/60 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10">
-        <DropdownMenuItem onClick={onDownload} className="text-white hover:bg-white/10">
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} className="text-red-400 hover:bg-red-500/10">
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-1">
+      {/* 收藏按钮 */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggleLike()
+        }}
+      >
+        <Heart 
+          className={`h-4 w-4 transition-colors ${isLiked ? 'text-pink-400 fill-pink-400' : 'text-white/80 hover:text-pink-300'}`} 
+        />
+      </Button>
+      
+      {/* 下拉菜单 */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10">
+          {/* 查看 */}
+          <DropdownMenuItem onClick={onView} className="text-white hover:bg-white/10">
+            <Eye className="h-4 w-4 mr-2" />
+            View
+          </DropdownMenuItem>
+          
+          {/* 编辑 */}
+          <DropdownMenuItem onClick={onEdit} className="text-white hover:bg-white/10">
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </DropdownMenuItem>
+          
+          {/* 下载 */}
+          <DropdownMenuItem onClick={onDownload} className="text-white hover:bg-white/10">
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </DropdownMenuItem>
+          
+          {/* 删除 */}
+          <DropdownMenuItem onClick={onDelete} className="text-red-400 hover:bg-red-500/10">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
   const selectedKeys = useFileStore((state) => state.selectedKeys)
   const toggleSelection = useFileStore((state) => state.toggleSelection)
-  const deleteFile = useFileStore((state) => state.deleteFile)
+  const deleteFile = useFileStore((state) => state.deleteFilesLocal)
 
   const isSelected = selectedKeys.includes(file.name)
 
@@ -78,14 +117,36 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   }
 
   const handleDelete = () => {
-    const confirmDelete = confirm(`确定要删除文件 ${file.metadata.fileName} 吗?`)
-    if (!confirmDelete) return
-    deleteFile(file.name)
+    if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return
+    deleteFile([file.name])
   }
 
   const handleDownload = () => {
     const url = getFileUrl(file.name)
     downloadFile(url, file.metadata.fileName)
+  }
+
+  // 查看文件
+  const handleView = () => {
+    const url = getFileUrl(file.name)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  // 编辑文件名
+  const handleEdit = () => {
+    const newName = prompt('请输入新的文件名：', file.metadata.fileName)
+    if (newName && newName.trim() && newName !== file.metadata.fileName) {
+      editFileName(file.name, newName.trim()).then(() => {
+        file.metadata.fileName = newName.trim()
+      })
+    }
+  }
+
+  // 切换收藏状态
+  const handleToggleLike = () => {
+    toggleLike(file.name).then(() => {
+      file.metadata.liked = !file.metadata.liked
+    })
   }
 
   if (listView) {
@@ -132,7 +193,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         <div className="hidden md:block text-xs text-white/40">{file.metadata.uploadedAt?.toLocaleString() || "N/A"}</div>
 
         {/* Actions */}
-        <FileActions onDownload={handleDownload} onDelete={handleDelete} />
+        <FileActions 
+          onDownload={handleDownload} 
+          onDelete={handleDelete} 
+          onView={handleView} 
+          onEdit={handleEdit} 
+          onToggleLike={handleToggleLike} 
+          isLiked={file.metadata?.liked || false} 
+        />
       </div>
     )
   }
@@ -154,7 +222,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
             "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
             isSelected
               ? "bg-emerald-500 border-emerald-500"
-              : "bg-black/40 border-white/30 opacity-0 group-hover:opacity-100",
+              : "bg-black/50 border-white/50 opacity-0 group-hover:opacity-100",
           )}
         >
           {isSelected && <Check className="h-4 w-4 text-white" />}
@@ -163,7 +231,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
       {/* Actions Menu */}
       <div className="absolute top-3 right-3 z-10">
-        <FileActions onDownload={handleDownload} onDelete={handleDelete} />
+        <FileActions 
+          onDownload={handleDownload} 
+          onDelete={handleDelete} 
+          onView={handleView} 
+          onEdit={handleEdit} 
+          onToggleLike={handleToggleLike} 
+          isLiked={file.metadata?.liked || false} 
+        />
       </div>
 
       {/* File Content */}
@@ -173,6 +248,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         ) : fileType === FileType.Video ? (
           <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
             <Video className="h-12 w-12 text-purple-300" />
+            {/* <video className="w-full h-full object-cover" src={getFileUrl(file.name)} /> */}
           </div>
         ) : fileType === FileType.Audio ? (
           <div className="relative w-full h-full bg-linear-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
