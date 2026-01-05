@@ -1,27 +1,31 @@
-"use client"
+"use client";
 
-import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useFileStore } from "@/lib/file-store"
-import { FileType } from "@/lib/types"
+import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useFileStore } from "@/lib/file-store";
+import { FileType } from "@/lib/types";
+import { STORAGE_KEYS, getFromStorage } from "@/lib/local-storage";
+import { useEffect } from "react";
 
 const fileTypes = [
   { id: FileType.Image, label: "Images", icon: ImageIcon },
   { id: FileType.Audio, label: "Audio", icon: Music },
   { id: FileType.Video, label: "Videos", icon: Video },
   { id: FileType.Document, label: "Documents", icon: FileText },
-] as const
+];
 
 export function FileTypeTabs() {
-  const activeType = useFileStore((state) => state.activeType)
-  const setActiveType = useFileStore((state) => state.setActiveType)
+  const activeType = useFileStore((s) => s.activeType);
+  const setActiveType = useFileStore((s) => s.setActiveType);
 
-  console.log(activeType)
+  useEffect(() => {
+    setActiveType(getFromStorage(STORAGE_KEYS.ACTIVE_TYPE, FileType.Image));
+  }, [setActiveType]);
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {fileTypes.map((type) => {
-        const Icon = type.icon
-        const isActive = activeType === type.id
+        const Icon = type.icon;
 
         return (
           <Button
@@ -32,7 +36,7 @@ export function FileTypeTabs() {
             className={`
               transition-all duration-200
               ${
-                isActive
+                activeType === type.id
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50"
                   : "text-white/60 hover:text-white hover:bg-white/10"
               }
@@ -41,8 +45,8 @@ export function FileTypeTabs() {
             {Icon && <Icon className="h-4 w-4 mr-2" />}
             {type.label}
           </Button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

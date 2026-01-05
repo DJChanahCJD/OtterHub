@@ -5,10 +5,18 @@ import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { AudioPlayerView } from "@/components/audio-player-view"
 import { FileType, ViewMode } from "@/lib/types"
+import { useEffect } from "react"
+import { getFromStorage } from "@/lib/local-storage"
+import { STORAGE_KEYS } from "@/lib/local-storage"
 
 export function FileGrid() {
   const activeType = useFileStore((state) => state.activeType)
   const viewMode = useFileStore((state) => state.viewMode)
+  const setViewMode = useFileStore((state) => state.setViewMode)
+
+  useEffect(() => {
+    setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
+  }, [setViewMode]);
 
   const filteredFiles = useBucketItems(activeType)
 

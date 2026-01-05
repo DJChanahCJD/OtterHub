@@ -42,8 +42,8 @@ const emptyBucket = (): FileBucket => ({
 });
 
 export const useFileStore = create<FileStore>((set, get) => ({
-  activeType: getFromStorage(STORAGE_KEYS.ACTIVE_TYPE, FileType.Image) as FileType,
-  viewMode: getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid) as ViewMode,
+  activeType: FileType.Image,
+  viewMode: ViewMode.Grid,
 
   buckets: {
     [FileType.Image]: emptyBucket(),

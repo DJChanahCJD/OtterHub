@@ -29,9 +29,15 @@ export function BatchOperationsBar() {
       await deleteFile(key).then((success) => {
         if (success) {
           fileStore.deleteFilesLocal([key])
+        } else {
+          toast({
+            title: "删除失败",
+            description: `${key} 删除失败`,
+          })
         }
       })
     })
+    clearSelection()
   } 
 
   return (
