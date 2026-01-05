@@ -14,3 +14,9 @@ ncu --dep dev -u    # 更新开发依赖到最新版本
 ```bash
 npm install
 ```
+
+
+## 参考文档
+
+- [Cloudflare KV API 文档](https://developers.cloudflare.com/kv/api/)
+- [Cloudflare R2 API 文档](https://developers.cloudflare.com/r2/objects)
