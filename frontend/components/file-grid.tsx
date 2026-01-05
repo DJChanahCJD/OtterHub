@@ -20,9 +20,9 @@ export function FileGrid() {
 
   const filteredFiles = useBucketItems(activeType)
 
-  if (activeType === FileType.Audio) {
-    return <AudioPlayerView />
-  }
+  // if (activeType === FileType.Audio) {
+  //   return <AudioPlayerView />
+  // }
 
   return (
     <div>

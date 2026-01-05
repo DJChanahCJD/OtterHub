@@ -30,9 +30,10 @@ import {
   getFileTypeFromKey,
   formatFileSize,
   downloadFile,
+  formatTime,
 } from "@/lib/utils";
 import { FileItem, FileType } from "@/lib/types";
-import { getFileUrl, editFileName, toggleLike } from "@/lib/api";
+import { getFileUrl, editFileName, toggleLike, deleteFile } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 
@@ -169,7 +170,8 @@ export function FileContent({
 export function FileCard({ file, listView = false }: FileCardProps) {
   const selectedKeys = useFileStore((state) => state.selectedKeys);
   const toggleSelection = useFileStore((state) => state.toggleSelection);
-  const deleteFile = useFileStore((state) => state.deleteFilesLocal);
+  const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
+  const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
 
   const isSelected = selectedKeys.includes(file.name);
 
@@ -183,7 +185,9 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   const handleDelete = () => {
     if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
-    deleteFile([file.name]);
+    deleteFile(file.name).then(() => {
+      deleteFileLocal([file.name]);
+    });
   };
 
   const handleDownload = () => {
@@ -208,7 +212,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     const newName = prompt("请输入新的文件名：", file.metadata.fileName);
     if (newName && newName.trim() && newName !== file.metadata.fileName) {
       editFileName(file.name, newName.trim()).then(() => {
-        file.metadata.fileName = newName.trim();
+        updateFileMetadata(file.name, {
+          ...file.metadata,
+          fileName: newName.trim(),
+        });
       });
     }
   };
@@ -216,7 +223,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   // 切换收藏状态
   const handleToggleLike = () => {
     toggleLike(file.name).then(() => {
-      file.metadata.liked = !file.metadata.liked;
+      updateFileMetadata(file.name, {
+        ...file.metadata,
+        liked: !file.metadata.liked,
+      });
     });
   };
 
@@ -252,6 +262,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               alt={file.name}
               className="w-full h-full object-cover rounded"
             />
+          ) : fileType === FileType.Video ? (
+            <Video className="h-6 w-6 text-purple-400" />
+          ) : fileType === FileType.Audio ? (
+            <Music className="h-6 w-6 text-emerald-400" />
           ) : (
             <File className="h-6 w-6 text-emerald-400" />
           )}
@@ -268,8 +282,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         </div>
 
         {/* Date */}
-        <div className="hidden md:block text-xs text-white/40">
-          {file.metadata.uploadedAt?.toLocaleString() || "N/A"}
+        <div className="hidden md:block text-xs text-white/40" title="上传时间">
+          {formatTime(file.metadata.uploadedAt || 0)}
         </div>
 
         {/* Actions */}

@@ -25,7 +25,6 @@ export default function OtterHubPage() {
         console.error("Error fetching files:", error)
       }
     }
-    
     fetchFiles()
   }, [])
 
@@ -41,7 +40,7 @@ export default function OtterHubPage() {
         <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar isOpen={sidebarOpen} />
+          {/* <Sidebar isOpen={sidebarOpen} /> */}
 
           <main className="flex-1 overflow-auto p-6 md:p-8">
             <FileUploadZone />

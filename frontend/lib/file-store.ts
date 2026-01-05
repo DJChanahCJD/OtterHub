@@ -1,6 +1,12 @@
 // file-store.ts
 import { create } from "zustand";
-import { FileItem, FileType, ListFilesRequest, ViewMode } from "./types";
+import {
+  FileItem,
+  FileMetadata,
+  FileType,
+  ListFilesRequest,
+  ViewMode,
+} from "./types";
 import { deleteFile, getFileList } from "./api";
 import { STORAGE_KEYS, getFromStorage, setToStorage } from "./local-storage";
 
@@ -29,6 +35,7 @@ interface FileStore {
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
+  updateFileMetadata: (name: string, metadata: FileMetadata) => void;
   toggleSelection: (name: string) => void;
   selectAll: () => void;
   clearSelection: () => void;
@@ -145,6 +152,29 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return {
         buckets: newBuckets,
       };
+    }),
+
+  updateFileMetadata: (name, metadata) =>
+    set((state) => {
+      const newBuckets = Object.entries(state.buckets).reduce(
+        (acc, [type, bucket]) => {
+          acc[type as FileType] = {
+            ...bucket,
+            items: bucket.items.map((item) =>
+              item.name === name
+                ? {
+                    ...item,
+                    metadata,
+                  }
+                : item
+            ),
+          };
+          return acc;
+        },
+        {} as Record<FileType, FileBucket>
+      );
+
+      return { buckets: newBuckets };
     }),
 
   toggleSelection: (name) =>

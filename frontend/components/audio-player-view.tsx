@@ -4,7 +4,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, 
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { useBucketItems, useFileStore } from "@/lib/file-store"
-import { cn, downloadFile, formatTime } from "@/lib/utils"
+import { cn, downloadFile, formatMediaTime } from "@/lib/utils"
 import { FileItem, FileType } from "@/lib/types"
 import { getFileUrl } from "@/lib/api"
 import { useAudioPlayer } from "@/hooks/use-audio-player"
@@ -85,8 +85,8 @@ export function AudioPlayerView() {
                 className="cursor-pointer"
               />
               <div className="flex items-center justify-between mt-2 text-xs text-white/60">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span>{formatMediaTime(currentTime)}</span>
+                <span>{formatMediaTime(duration)}</span>
               </div>
             </div>
 
@@ -206,7 +206,7 @@ export function AudioPlayerView() {
 
                 {/* Duration */}
                 <div className="text-xs text-white/40">
-                  {file.metadata?.duration ? formatTime(file.metadata.duration) : "--:--"}
+                  {file.metadata?.duration ? formatMediaTime(file.metadata.duration) : "--:--"}
                 </div>
 
                 {/* Actions */}
