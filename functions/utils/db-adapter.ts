@@ -4,7 +4,7 @@ import { FileMetadata, FileType, CF, ApiResponse } from "./types";
 // 存储适配器接口定义
 export interface DBAdapter {
   // 上传文件
-  upload(file: File | Blob, metadata: any): Promise<string>;
+  upload(file: File | Blob, metadata: FileMetadata): Promise<string>;
   
   // 获取文件，永远返回Response
   get(key: string, req?: Request): Promise<Response>;
@@ -150,6 +150,7 @@ export class TGAdapter implements DBAdapter {
 
     const tgFormData = new FormData();
     tgFormData.append("chat_id", this.env.TG_Chat_ID);
+    console.log("chat_id: ", this.env.TG_Chat_ID)
 
     // 根据文件类型选择合适的上传方式
     let apiEndpoint: string;
@@ -172,7 +173,8 @@ export class TGAdapter implements DBAdapter {
       fileType = FileType.Document;
     }
 
-    const result = await this.sendToTelegram(tgFormData, apiEndpoint);
+
+    const result = await this.sendToTelegram(tgFormData, apiEndpoint, 3);
     console.log('Telegram upload result:', result);
 
     if (!result.success) {
@@ -187,18 +189,11 @@ export class TGAdapter implements DBAdapter {
     
     const fullFileId = `${tgFileId}.${fileExtension}`;
     const key = buildKeyId(fileType, fullFileId);
-    
-    // TODO: 默认元数据
-    const defaultMetadata = {
-    };
 
     // 将文件信息保存到KV存储
     if (this.env[this.kvName]) {
       await this.env[this.kvName].put(key, "", {
-        metadata: {
-          ...metadata,
-          ...defaultMetadata,
-        }
+        metadata
       });
     }
 
@@ -233,37 +228,50 @@ export class TGAdapter implements DBAdapter {
     }
   }
 
-  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 2): Promise<ApiResponse<any>> {
+  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 0): Promise<ApiResponse<any>> {
     const apiUrl = `https://api.telegram.org/bot${this.env.TG_Bot_Token}/${apiEndpoint}`;
+    const attempt = retryCount + 1;
+
+    console.log(`Sending to Telegram (Attempt ${attempt}):`, apiUrl);
 
     try {
       const response = await fetch(apiUrl, { method: "POST", body: formData });
       const responseData = await response.json();
-
+      console.log('Telegram response:', responseData);
+      
       if (response.ok) {
         return { success: true, data: responseData };
       }
 
-      // 图片上传失败时转为文档方式重试
-      if (retryCount > 0 && apiEndpoint === 'sendPhoto') {
-        console.log('Retrying image as document...');
-        const newFormData = new FormData();
-        newFormData.append('chat_id', formData.get('chat_id') as string);
-        newFormData.append('document', formData.get('photo') as File);
-        return await this.sendToTelegram(newFormData, 'sendDocument', retryCount - 1);
+      // 所有类型的文件上传失败都重试
+      if (retryCount > 0) {
+        console.log(`Retry ${retryCount} times left. Retrying upload...`);
+        // 图片类型特殊处理：转为文档方式重试
+        if (apiEndpoint === 'sendPhoto') {
+          console.log('Retrying image as document...');
+          const newFormData = new FormData();
+          newFormData.append('chat_id', formData.get('chat_id') as string);
+          newFormData.append('document', formData.get('photo') as File);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retryCount)));
+          return await this.sendToTelegram(newFormData, 'sendDocument', retryCount - 1);
+        }
+        // 其他类型直接重试
+        await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retryCount)));
+        return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
 
       return {
         success: false,
-        message: 'Upload to Telegram failed'
+        message: `Upload to Telegram failed: ${responseData.description || 'Unknown error'}`
       };
     } catch (error: any) {
       console.error('Network error:', error);
       if (retryCount > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount)));
+        console.log(`Retry ${retryCount} times left. Retrying upload...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retryCount)));
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
-      return { success: false, message: 'Network error occurred' };
+      return { success: false, message: `Network error occurred: ${error.message || 'Unknown network error'}` };
     }
   }
 
