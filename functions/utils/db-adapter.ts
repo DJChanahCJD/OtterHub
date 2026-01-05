@@ -10,6 +10,7 @@ export interface DBAdapter {
   get(key: string, req?: Request): Promise<Response>;
   
   // 删除文件
+  // TODO: 是否要在key不存在时直接返回
   delete(key: string): Promise<boolean>;
   
   // 批量删除文件
@@ -126,9 +127,7 @@ export class R2Adapter implements DBAdapter {
       await this.env[this.bucketName].delete(key);
       
       // 从KV存储中删除文件信息
-      if (this.env[this.kvName]) {
-        await this.env[this.kvName].delete(key);
-      }
+      await this.env[this.kvName].delete(key);
       
       return true;
     } catch (error) {
@@ -244,9 +243,7 @@ export class TGAdapter implements DBAdapter {
     try {
       // Telegram API不支持直接删除文件
       // 只从KV存储中删除文件信息
-      if (this.env[this.kvName]) {
-        await this.env[this.kvName].delete(key);
-      }
+      await this.env[this.kvName].delete(key);
       
       return true;
     } catch (error) {

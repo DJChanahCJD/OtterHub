@@ -1,7 +1,7 @@
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 
-export async function onRequestDelete({ env, params, request }: any) {
+export async function onRequestPost({ env, params, request }: any) {
   try {
     const db = DBAdapterFactory.getAdapter(env);
     const isDeleted = await db.delete(params.key);
