@@ -12,9 +12,6 @@ export interface DBAdapter {
   // 删除文件
   // TODO: 是否要在key不存在时直接返回
   delete(key: string): Promise<boolean>;
-  
-  // 批量删除文件
-  bulkDelete(keys: string[]): Promise<boolean>;
 }
 
 // R2存储适配器实现
@@ -135,22 +132,6 @@ export class R2Adapter implements DBAdapter {
       return false;
     }
   }
-
-  async bulkDelete(keys: string[]): Promise<boolean> {
-    try {
-      // 使用R2批量删除功能
-      // https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#bucket-method-definitions
-      await this.env[this.bucketName].delete(keys);
-      
-      // 从KV存储中批量删除文件信息
-      await this.env[this.kvName].bulk_delete(keys)
-      
-      return true;
-    } catch (error) {
-      console.error('R2 bulk delete error:', error);
-      return false;
-    }
-  }
 }
 
 // Telegram存储适配器实现
@@ -248,17 +229,6 @@ export class TGAdapter implements DBAdapter {
       return true;
     } catch (error) {
       console.error('Telegram delete error:', error);
-      return false;
-    }
-  }
-
-  async bulkDelete(keys: string[]): Promise<boolean> {
-    try {
-      // Telegram API不支持批量删除，只能逐个删除
-      await Promise.all(keys.map(key => this.delete(key)));
-      return true;
-    } catch (error) {
-      console.error('Telegram bulk delete error:', error);
       return false;
     }
   }

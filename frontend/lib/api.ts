@@ -28,15 +28,8 @@ export function getFileUrl(key: string): string {
 }
 
 export function deleteFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/file/${key}`, {
-    method: 'DELETE',
-  })
-}
-
-export function batchDeleteFiles(keys: string[]): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/batch/delete`, {
+  return request<boolean>(`${API_URL}/api/delete/${key}`, {
     method: 'POST',
-    body: JSON.stringify({ keys }),
   })
 }
 

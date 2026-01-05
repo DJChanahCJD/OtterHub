@@ -3,7 +3,7 @@
 import { Download, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveItems, useFileStore } from "@/lib/file-store";
-import { batchDeleteFiles, getFileUrl } from "@/lib/api";
+import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { useToast } from "./ui/use-toast";
 
@@ -25,19 +25,13 @@ export function BatchOperationsBar() {
   }
   const handleBatchDelete = async () => {
     if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return
-    await batchDeleteFiles(selectedKeys).then((success) => {
-      if (success) {
-        fileStore.deleteFilesLocal(selectedKeys)
-        toast({
-          title: "删除成功",
-          description: `${selectedKeys.length} 个文件已删除`,
-        })
-      }
+    selectedKeys.forEach(async (key) => {
+      await deleteFile(key).then((success) => {
+        if (success) {
+          fileStore.deleteFilesLocal([key])
+        }
+      })
     })
-    try {
-    } catch (error) {
-      console.error("删除文件失败:", error)
-    }
   } 
 
   return (
