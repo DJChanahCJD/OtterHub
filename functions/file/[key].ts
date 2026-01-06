@@ -1,5 +1,4 @@
 // functions/file/[key].ts
-import { fail, ok } from "../utils/common";
 import { DBAdapterFactory } from "../utils/db-adapter";
 
 // https://developers.cloudflare.com/pages/functions/api-reference/#onrequests

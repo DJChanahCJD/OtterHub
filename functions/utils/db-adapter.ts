@@ -4,7 +4,7 @@ import { FileMetadata, FileType, CF, ApiResponse } from "./types";
 // 存储适配器接口定义
 export interface DBAdapter {
   // 上传文件
-  upload(file: File | Blob, metadata: FileMetadata): Promise<string>;
+  upload(file: File | Blob, metadata: FileMetadata): Promise<Response>;
   
   // 获取文件，永远返回Response
   get(key: string, req?: Request): Promise<Response>;
@@ -26,7 +26,7 @@ export class R2Adapter implements DBAdapter {
     this.kvName = kvName;
   }
 
-  async upload(file: File | Blob, metadata: any): Promise<string> {
+  async upload(file: File | Blob, metadata: FileMetadata): Promise<Response> {
     // 生成唯一的fileId
     const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const fileName = metadata.fileName;
@@ -60,7 +60,7 @@ export class R2Adapter implements DBAdapter {
       await this.env[this.kvName].put(key, "", { metadata });
     }
 
-    return key;
+    return ok(key);
   }
 
   async get(key: string, req?: Request): Promise<Response> {
@@ -144,7 +144,7 @@ export class TGAdapter implements DBAdapter {
     this.kvName = kvName;
   }
 
-  async upload(file: File | Blob, metadata: FileMetadata): Promise<string> {
+  async upload(file: File | Blob, metadata: FileMetadata): Promise<Response> {
     const fileName = metadata.fileName;
     const fileExtension = getFileExt(fileName);
 
@@ -174,8 +174,8 @@ export class TGAdapter implements DBAdapter {
     }
 
 
-    const result = await this.sendToTelegram(tgFormData, apiEndpoint, 3);
-    console.log('Telegram upload result:', result);
+    const result = await this.sendToTelegram(tgFormData, apiEndpoint);
+    // console.log('Telegram upload result:', result);
 
     if (!result.success) {
       throw new Error(result.message);
@@ -197,7 +197,7 @@ export class TGAdapter implements DBAdapter {
       });
     }
 
-    return key;
+    return ok(key, JSON.stringify(result));
   }
 
   async get(key: string): Promise<Response> {
@@ -207,7 +207,7 @@ export class TGAdapter implements DBAdapter {
       
       const headers = new Headers(file.headers);
       headers.set('Content-Disposition', 'inline');
-      
+
       return new Response(file.body, {
         status: file.status,
         headers,
@@ -231,11 +231,8 @@ export class TGAdapter implements DBAdapter {
     }
   }
 
-  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 0): Promise<ApiResponse<any>> {
+  private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 3): Promise<ApiResponse<any>> {
     const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/${apiEndpoint}`;
-    const attempt = retryCount + 1;
-
-    console.log(`Sending to Telegram (Attempt ${attempt}):`, apiUrl);
 
     try {
       const response = await fetch(apiUrl, { method: "POST", body: formData });

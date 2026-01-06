@@ -27,11 +27,8 @@ export async function onRequestPost(context: any) {
             liked: false,
         }
 
-        console.log('Uploading file:', fileName, fileSize);
-        // 上传文件
-        const key = await dbAdapter.upload(uploadFile, metadata);
-
-        return ok(key, 'File uploaded successfully');
+        // console.log('Uploading file:', fileName, fileSize);
+        return await dbAdapter.upload(uploadFile, metadata);
     } catch (error: any) {
         console.error('Upload error:', error);
         return fail(`Failed to upload file: ${error.message}`, 500);
