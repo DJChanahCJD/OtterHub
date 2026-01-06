@@ -1,6 +1,6 @@
 "use client"
 
-import { useBucketItems, useFileStore } from "@/lib/file-store"
+import { useFileStore, useFilteredFiles } from "@/lib/file-store"
 import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { AudioPlayerView } from "@/components/audio-player-view"
@@ -13,12 +13,11 @@ export function FileGrid() {
   const activeType = useFileStore((state) => state.activeType)
   const viewMode = useFileStore((state) => state.viewMode)
   const setViewMode = useFileStore((state) => state.setViewMode)
+  const filteredFiles = useFilteredFiles()
 
   useEffect(() => {
     setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
   }, [setViewMode]);
-
-  const filteredFiles = useBucketItems(activeType)
 
   // if (activeType === FileType.Audio) {
   //   return <AudioPlayerView />

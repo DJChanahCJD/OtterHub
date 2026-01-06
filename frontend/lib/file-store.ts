@@ -21,6 +21,7 @@ interface FileStore {
   // 当前视图状态
   activeType: FileType;
   viewMode: ViewMode;
+  searchQuery: string;
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
@@ -32,6 +33,7 @@ interface FileStore {
   setActiveType: (type: FileType) => Promise<void>;
   fetchNextPage: () => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
+  setSearchQuery: (query: string) => void;
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -51,6 +53,7 @@ const emptyBucket = (): FileBucket => ({
 export const useFileStore = create<FileStore>((set, get) => ({
   activeType: FileType.Image,
   viewMode: ViewMode.Grid,
+  searchQuery: "",
 
   buckets: {
     [FileType.Image]: emptyBucket(),
@@ -119,6 +122,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
     set({ viewMode: mode });
     // 保存到localStorage
     setToStorage(STORAGE_KEYS.VIEW_MODE, mode);
+  },
+
+  setSearchQuery: (query) => {
+    set({ searchQuery: query });
   },
 
   addFileLocal: (file, fileType) =>
@@ -202,3 +209,16 @@ export const useActiveItems = () =>
 
 export const useBucketItems = (type: FileType) =>
   useFileStore((s) => s.buckets[type].items);
+
+export const useFilteredFiles = () => {
+  const searchQuery = useFileStore((s) => s.searchQuery);
+  const items = useActiveItems()
+
+  return items.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    const fileName = item.metadata?.fileName?.toLowerCase() || item.name.toLowerCase();
+    return fileName.includes(query);
+  });
+};

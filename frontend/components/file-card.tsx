@@ -19,8 +19,6 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  Maximize,
-  Minimize,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

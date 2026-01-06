@@ -1,32 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { Upload, Search, Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { FileTypeTabs } from "@/components/file-type-tabs"
-import { useRef } from "react"
+import { Search, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FileTypeTabs } from "@/components/file-type-tabs";
+import { useFileStore } from "@/lib/file-store";
 
 interface HeaderProps {
-  onToggleSidebar: () => void
+  onToggleSidebar: () => void;
 }
 
 export function Header({ onToggleSidebar }: HeaderProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      // Trigger the same upload logic as FileUploadZone
-      const event = new CustomEvent("otterhub-upload", { detail: { files } })
-      window.dispatchEvent(event)
-    }
-  }
+  const searchQuery = useFileStore((state) => state.searchQuery);
+  const setSearchQuery = useFileStore((state) => state.setSearchQuery);
 
   return (
     <header className="relative border-b border-white/10 backdrop-blur-xl bg-white/5">
@@ -49,7 +35,9 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               </div>
               <div>
                 <h1 className="font-bold text-xl text-white">OtterHub</h1>
-                <p className="text-xs text-emerald-300/80">All your resources, one place</p>
+                <p className="text-xs text-emerald-300/80">
+                  All your resources, one place
+                </p>
               </div>
             </div>
           </div>
@@ -65,26 +53,21 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
               <Input
                 placeholder="Search files..."
-                className="pl-10 w-48 md:w-64 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 w-48 md:w-64 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400"
               />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-white/40 hover:text-white hover:bg-white/10"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
             </div>
-
-            <Button
-              onClick={handleUploadClick}
-              className="bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Upload</span>
-            </Button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
-              onChange={handleFileInput}
-              className="hidden"
-            />
           </div>
         </div>
 
@@ -94,5 +77,5 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }
