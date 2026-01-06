@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   MoreVertical,
   Download,
@@ -19,6 +19,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ import { getFileUrl, editFileName, toggleLike, deleteFile } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useToast } from "@/hooks/use-toast";
+import { FileDetailDialog } from "@/components/file-detail-dialog";
 
 interface FileCardProps {
   file: FileItem;
@@ -55,6 +57,7 @@ function FileActions({
   onEdit,
   onToggleLike,
   onCopyLink,
+  onShowDetail,
   isLiked,
 }: {
   onDownload: () => void;
@@ -63,6 +66,7 @@ function FileActions({
   onEdit: () => void;
   onToggleLike: () => void;
   onCopyLink: () => void;
+  onShowDetail: () => void;
   isLiked: boolean;
 }) {
   return (
@@ -119,7 +123,7 @@ function FileActions({
             <Copy className="h-4 w-4 mr-2" />
             Copy Link
           </DropdownMenuItem>
-          
+
           {/* 编辑 */}
           <DropdownMenuItem
             onClick={onEdit}
@@ -136,6 +140,15 @@ function FileActions({
           >
             <Download className="h-4 w-4 mr-2" />
             Download
+          </DropdownMenuItem>
+
+          {/* 详情 */}
+          <DropdownMenuItem
+            onClick={onShowDetail}
+            className="text-white hover:bg-white/10"
+          >
+            <Info className="h-4 w-4 mr-2" />
+            Details
           </DropdownMenuItem>
 
           {/* 删除 */}
@@ -212,6 +225,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const toggleSelection = useFileStore((state) => state.toggleSelection);
   const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
+  const [showDetail, setShowDetail] = useState(false);
 
   const isSelected = selectedKeys.includes(file.name);
 
@@ -337,6 +351,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           onEdit={handleEdit}
           onToggleLike={handleToggleLike}
           onCopyLink={handleCopyLink}
+          onShowDetail={() => setShowDetail(true)}
           isLiked={file.metadata?.liked || false}
         />
       </div>
@@ -344,75 +359,83 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   }
 
   return (
-    <PhotoProvider
-      maskOpacity={0.85}
-      toolbarRender={({ rotate, onRotate, scale, onScale }) => (
-        <div className="flex items-center gap-1">
-          <ToolbarButton onClick={() => onScale(scale + 0.2)}>
-            <ZoomIn className="h-5 w-5" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onScale(scale - 0.2)}>
-            <ZoomOut className="h-5 w-5" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => onRotate(rotate + 90)}>
-            <RotateCw className="h-5 w-5" />
-          </ToolbarButton>
-        </div>
-      )}
-    >
-      <div
-        className={cn(
-          "group relative aspect-square rounded-xl overflow-hidden backdrop-blur-xl border transition-all cursor-pointer",
-          isSelected
-            ? "bg-emerald-500/20 border-emerald-400/50 ring-2 ring-emerald-400/50"
-            : "bg-white/10 border-white/10 hover:border-emerald-400/50"
+    <>
+      <PhotoProvider
+        maskOpacity={0.85}
+        toolbarRender={({ rotate, onRotate, scale, onScale }) => (
+          <div className="flex items-center gap-1">
+            <ToolbarButton onClick={() => onScale(scale + 0.2)}>
+              <ZoomIn className="h-5 w-5" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => onScale(scale - 0.2)}>
+              <ZoomOut className="h-5 w-5" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => onRotate(rotate + 90)}>
+              <RotateCw className="h-5 w-5" />
+            </ToolbarButton>
+          </div>
         )}
       >
-        {/* Checkbox */}
-        <div className="absolute top-3 left-3 z-10">
-          <div
-            className={cn(
-              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
-              isSelected
-                ? "bg-emerald-500 border-emerald-500"
-                : "bg-black/50 border-white/50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-            )}
-            onClick={handleSelect}
-          >
-            {isSelected && <Check className="h-4 w-4 text-white" />}
+        <div
+          className={cn(
+            "group relative aspect-square rounded-xl overflow-hidden backdrop-blur-xl border transition-all cursor-pointer",
+            isSelected
+              ? "bg-emerald-500/20 border-emerald-400/50 ring-2 ring-emerald-400/50"
+              : "bg-white/10 border-white/10 hover:border-emerald-400/50"
+          )}
+        >
+          {/* Checkbox */}
+          <div className="absolute top-3 left-3 z-10">
+            <div
+              className={cn(
+                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
+                isSelected
+                  ? "bg-emerald-500 border-emerald-500"
+                  : "bg-black/50 border-white/50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              )}
+              onClick={handleSelect}
+            >
+              {isSelected && <Check className="h-4 w-4 text-white" />}
+            </div>
+          </div>
+
+          {/* Actions Menu */}
+          <div className="absolute top-3 right-3 z-10">
+            <FileActions
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+              onView={handleView}
+              onEdit={handleEdit}
+              onToggleLike={handleToggleLike}
+              onCopyLink={handleCopyLink}
+              onShowDetail={() => setShowDetail(true)}
+              isLiked={file.metadata?.liked || false}
+            />
+          </div>
+
+          {/* File Content */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+              <FileContent fileType={fileType} fileKey={file.name} />
+            </div>
+          </div>
+
+          {/* File Info Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
+            <p className="text-sm font-medium text-white truncate">
+              {file.metadata.fileName || file.name}
+            </p>
+            <p className="text-xs text-white/60">
+              {formatFileSize(file.metadata.fileSize || 0)}
+            </p>
           </div>
         </div>
-
-        {/* Actions Menu */}
-        <div className="absolute top-3 right-3 z-10">
-          <FileActions
-            onDownload={handleDownload}
-            onDelete={handleDelete}
-            onView={handleView}
-            onEdit={handleEdit}
-            onToggleLike={handleToggleLike}
-            onCopyLink={handleCopyLink}
-            isLiked={file.metadata?.liked || false}
-          />
-        </div>
-
-        {/* File Content */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-            <FileContent fileType={fileType} fileKey={file.name} />
-          </div>
-        </div>
-
-        {/* File Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
-          <p className="text-sm font-medium text-white truncate">
-            {file.metadata.fileName || file.name}
-          </p>
-          <p className="text-xs text-white/60">
-            {formatFileSize(file.metadata.fileSize || 0)}
-          </p>
-        </div>
-      </div>
-    </PhotoProvider>
+      </PhotoProvider>
+      <FileDetailDialog
+        file={file}
+        open={showDetail}
+        onOpenChange={setShowDetail}
+      />
+    </>
   );
 }
