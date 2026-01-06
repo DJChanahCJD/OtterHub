@@ -289,72 +289,79 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   if (listView) {
     return (
-      <div
-        className={cn(
-          "group flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl border transition-all cursor-pointer",
-          isSelected
-            ? "bg-emerald-500/20 border-emerald-400/50"
-            : "bg-white/5 border-white/10 hover:border-emerald-400/30 hover:bg-white/10"
-        )}
-        // onClick={handleSelect}
-      >
-        {/* Checkbox */}
+      <>
         <div
           className={cn(
-            "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+            "group flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl border transition-all cursor-pointer",
             isSelected
-              ? "bg-emerald-500 border-emerald-500"
-              : "border-white/30 group-hover:border-emerald-400/50"
+              ? "bg-emerald-500/20 border-emerald-400/50"
+              : "bg-white/5 border-white/10 hover:border-emerald-400/30 hover:bg-white/10"
           )}
-          onClick={handleSelect}
+          // onClick={handleSelect}
         >
-          {isSelected && <Check className="h-3 w-3 text-white" />}
-        </div>
+          {/* Checkbox */}
+          <div
+            className={cn(
+              "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+              isSelected
+                ? "bg-emerald-500 border-emerald-500"
+                : "border-white/30 group-hover:border-emerald-400/50"
+            )}
+            onClick={handleSelect}
+          >
+            {isSelected && <Check className="h-3 w-3 text-white" />}
+          </div>
 
-        {/* File Icon/Preview */}
-        <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0">
-          {fileType === FileType.Image ? (
-            <img
-              src={getFileUrl(file.name)}
-              alt={file.name}
-              className="w-full h-full object-cover rounded"
-            />
-          ) : fileType === FileType.Video ? (
-            <Video className="h-6 w-6 text-purple-400" />
-          ) : fileType === FileType.Audio ? (
-            <Music className="h-6 w-6 text-emerald-400" />
-          ) : (
-            <File className="h-6 w-6 text-emerald-400" />
-          )}
-        </div>
+          {/* File Icon/Preview */}
+          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0">
+            {fileType === FileType.Image ? (
+              <img
+                src={getFileUrl(file.name)}
+                alt={file.name}
+                className="w-full h-full object-cover rounded"
+              />
+            ) : fileType === FileType.Video ? (
+              <Video className="h-6 w-6 text-purple-400" />
+            ) : fileType === FileType.Audio ? (
+              <Music className="h-6 w-6 text-emerald-400" />
+            ) : (
+              <File className="h-6 w-6 text-emerald-400" />
+            )}
+          </div>
 
-        {/* File Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">
-            {file.metadata.fileName}
-          </p>
-          <p className="text-xs text-white/40">
-            {formatFileSize(file.metadata.fileSize || 0)}
-          </p>
-        </div>
+          {/* File Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">
+              {file.metadata.fileName}
+            </p>
+            <p className="text-xs text-white/40">
+              {formatFileSize(file.metadata.fileSize || 0)}
+            </p>
+          </div>
 
-        {/* Date */}
-        <div className="hidden md:block text-xs text-white/40" title="上传时间">
-          {formatTime(file.metadata.uploadedAt || 0)}
-        </div>
+          {/* Date */}
+          <div className="hidden md:block text-xs text-white/40" title="上传时间">
+            {formatTime(file.metadata.uploadedAt || 0)}
+          </div>
 
-        {/* Actions */}
-        <FileActions
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-          onView={handleView}
-          onEdit={handleEdit}
-          onToggleLike={handleToggleLike}
-          onCopyLink={handleCopyLink}
-          onShowDetail={() => setShowDetail(true)}
-          isLiked={file.metadata?.liked || false}
+          {/* Actions */}
+          <FileActions
+            onDownload={handleDownload}
+            onDelete={handleDelete}
+            onView={handleView}
+            onEdit={handleEdit}
+            onToggleLike={handleToggleLike}
+            onCopyLink={handleCopyLink}
+            onShowDetail={() => setShowDetail(true)}
+            isLiked={file.metadata?.liked || false}
+          />
+        </div>
+        <FileDetailDialog
+          file={file}
+          open={showDetail}
+          onOpenChange={setShowDetail}
         />
-      </div>
+      </>
     );
   }
 
