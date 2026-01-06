@@ -71,7 +71,7 @@ function FileActions({
       <Button
         variant="ghost"
         size="icon"
-        className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+        className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         onClick={(e) => {
           e.stopPropagation();
           onToggleLike();
@@ -92,7 +92,7 @@ function FileActions({
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreVertical className="h-4 w-4" />
@@ -367,7 +367,6 @@ export function FileCard({ file, listView = false }: FileCardProps) {
             ? "bg-emerald-500/20 border-emerald-400/50 ring-2 ring-emerald-400/50"
             : "bg-white/10 border-white/10 hover:border-emerald-400/50"
         )}
-        // onClick={handleSelect}
       >
         {/* Checkbox */}
         <div className="absolute top-3 left-3 z-10">
@@ -376,7 +375,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
               isSelected
                 ? "bg-emerald-500 border-emerald-500"
-                : "bg-black/50 border-white/50 opacity-0 group-hover:opacity-100"
+                : "bg-black/50 border-white/50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
             )}
             onClick={handleSelect}
           >
