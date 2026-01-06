@@ -7,11 +7,11 @@ import {
   MoreVertical,
   Download,
   Trash2,
-  ImageIcon,
+  Check,
   Music,
   Video,
   FileText,
-  Check,
+  Copy,
   File,
   Heart,
   Eye,
@@ -36,6 +36,7 @@ import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl, editFileName, toggleLike, deleteFile } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
+import { useToast } from "@/hooks/use-toast";
 
 interface FileCardProps {
   file: FileItem;
@@ -50,6 +51,7 @@ function FileActions({
   onView,
   onEdit,
   onToggleLike,
+  onCopyLink,
   isLiked,
 }: {
   onDownload: () => void;
@@ -57,6 +59,7 @@ function FileActions({
   onView: () => void;
   onEdit: () => void;
   onToggleLike: () => void;
+  onCopyLink: () => void;
   isLiked: boolean;
 }) {
   return (
@@ -112,6 +115,15 @@ function FileActions({
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
+          </DropdownMenuItem>
+
+          {/* 复制链接 */}
+          <DropdownMenuItem
+            onClick={onCopyLink}
+            className="text-white hover:bg-white/10"
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Link
           </DropdownMenuItem>
 
           {/* 下载 */}
@@ -178,6 +190,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   // 只计算一次文件类型，提高性能
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
 
+  const { toast } = useToast();
+
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleSelection(file.name);
@@ -190,6 +204,13 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     });
   };
 
+  const handleCopyLink = () => {
+    const url = getFileUrl(file.name);
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "文件链接复制成功~",
+    });
+  };
   const handleDownload = () => {
     const url = getFileUrl(file.name);
     downloadFile(url, file.metadata.fileName);
@@ -293,6 +314,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           onView={handleView}
           onEdit={handleEdit}
           onToggleLike={handleToggleLike}
+          onCopyLink={handleCopyLink}
           isLiked={file.metadata?.liked || false}
         />
       </div>
@@ -360,6 +382,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
             onView={handleView}
             onEdit={handleEdit}
             onToggleLike={handleToggleLike}
+            onCopyLink={handleCopyLink}
             isLiked={file.metadata?.liked || false}
           />
         </div>
