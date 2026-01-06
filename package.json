@@ -8,7 +8,6 @@
     "build:frontend": "cd frontend && npm install && npm run build"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260103.0",
     "concurrently": "^8.2.2",
     "mocha": "^10.6.0",
     "wait-on": "^7.2.0",
