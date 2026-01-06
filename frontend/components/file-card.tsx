@@ -16,6 +16,11 @@ import {
   Heart,
   Eye,
   Edit,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize,
+  Minimize,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,6 +151,31 @@ function FileActions({
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+  );
+}
+
+// 通用工具栏按钮组件
+function ToolbarButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      className="
+        text-white/80
+        hover:text-white
+        hover:bg-white/10
+        backdrop-blur-sm
+      "
+    >
+      {children}
+    </Button>
   );
 }
 
@@ -319,28 +349,16 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     <PhotoProvider
       maskOpacity={0.85}
       toolbarRender={({ rotate, onRotate, scale, onScale }) => (
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => onScale(scale + 0.2)}
-          >
-            +
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => onScale(scale - 0.2)}
-          >
-            -
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => onRotate(rotate + 90)}
-          >
-            ↻
-          </Button>
+        <div className="flex items-center gap-1">
+          <ToolbarButton onClick={() => onScale(scale + 0.2)}>
+            <ZoomIn className="h-5 w-5" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => onScale(scale - 0.2)}>
+            <ZoomOut className="h-5 w-5" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => onRotate(rotate + 90)}>
+            <RotateCw className="h-5 w-5" />
+          </ToolbarButton>
         </div>
       )}
     >
