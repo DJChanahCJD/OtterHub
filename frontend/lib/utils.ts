@@ -35,7 +35,7 @@ export const getFileType = (mimeType: string): FileType => {
 };
 
 export const getFileTypeFromKey = (key: string): FileType => {
-  const fileType = key.split("_")[0];
+  const fileType = key.split(":")[0];
   return fileType as FileType;
 };
 
