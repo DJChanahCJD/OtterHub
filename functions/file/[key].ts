@@ -27,7 +27,6 @@ export async function onRequestGet({ env, params, request }: any) {
     // 先克隆原始响应，确保 body 流可以被多次读取
     const clonedResponse = response.clone();
     const cachedResp = new Response(clonedResponse.body, clonedResponse);
-    cachedResp.headers.set('Cache-Control', 'public, max-age=3600');
     await cache.put(cacheKey, cachedResp.clone());
     console.log('Cache stored:', params.key);
     return cachedResp;

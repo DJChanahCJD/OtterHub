@@ -208,13 +208,13 @@ export class TGAdapter implements DBAdapter {
 
       const file = await this.getTgFile(fileId);
 
-      const headers = new Headers(file.headers);
-
+      const headers = new Headers();
+      headers.set('Content-Type', contentType);
       headers.set(
         'Content-Disposition',
         `inline; filename="${fileId}.${ext}"` //  实现访问url在新标签页打开的效果
       );
-      headers.set('Content-Type', contentType);
+      headers.set('Cache-Control', 'public, max-age=3600');
 
       return new Response(file.body, {
         status: file.status,
