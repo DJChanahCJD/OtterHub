@@ -21,7 +21,9 @@ export function buildKeyId(fileType: FileType, fullFileId: string): string {
 // 从存储键提取文件ID
 const FILE_PREFIX_REG = new RegExp(`^(${Object.values(FileType).join("|")})_`);
 export function getFileIdFromKey(key: string): string {
-  return key.replace(FILE_PREFIX_REG, "");
+  const fileId = key.replace(FILE_PREFIX_REG, "");
+  console.log("fileId:", fileId);
+  return fileId;
 }
 
 // 生成唯一文件ID

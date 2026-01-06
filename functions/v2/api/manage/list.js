@@ -9,7 +9,7 @@ export async function onRequest(context) {
     data, // arbitrary space for passing data between middlewares
   } = context;
   console.log(env)
-  const value = await env.img_url.list();
+  const value = await env.oh_file_url.list();
 
   console.log(value)
   //let res=[]

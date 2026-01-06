@@ -10,7 +10,7 @@ export async function onRequest(context) {
     } = context;
     console.log(env)
     console.log(params.id)
-    await env.img_url.delete(params.id);
+    await env.oh_file_url.delete(params.id);
     const info = JSON.stringify(params.id);
     return new Response(info);
 

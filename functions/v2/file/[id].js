@@ -43,12 +43,12 @@ export async function onRequest(context) {
     }
 
     // check if kv storage is available
-    if (!env.img_url) {
+    if (!env.oh_file_url) {
         console.error("KV storage not available");
-        return new Response("img_url KV storage not configured", { status: 500 });
+        return new Response("oh_file_url KV storage not configured", { status: 500 });
     }
 
-    let record = await env.img_url.getWithMetadata(params.id);
+    let record = await env.oh_file_url.getWithMetadata(params.id);
     if (!record || !record.metadata) {
         // Initialize metadata if it doesn't exist
         console.log("metadata not found, initializing...");
@@ -62,7 +62,7 @@ export async function onRequest(context) {
                 fileSize: 0,
             }
         };
-        await env.img_url.put(params.id, "", { metadata: record.metadata });
+        await env.oh_file_url.put(params.id, "", { metadata: record.metadata });
     }
 
     const metadata = {
@@ -96,13 +96,13 @@ export async function onRequest(context) {
         metadata.Label = moderateData.rating_label;
 
         if (moderateData.rating_label === "adult") {
-            await env.img_url.put(params.id, "", { metadata });
+            await env.oh_file_url.put(params.id, "", { metadata });
             return Response.redirect(`${url.origin}/block-img.html`, 302);
         }
     }
 
     // save metadata directly, no additional conditions are needed
-    await env.img_url.put(params.id, "", { metadata });
+    await env.oh_file_url.put(params.id, "", { metadata });
     return response;
 }
 
