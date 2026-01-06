@@ -218,14 +218,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   // 查看文件
   const handleView = () => {
-    if (fileType === FileType.Image) {
-      document
-        .querySelector<HTMLImageElement>(`img[data-key="${file.name}"]`)
-        ?.click();
-    } else {
+    // if (fileType === FileType.Image) {
+    //   document
+    //     .querySelector<HTMLImageElement>(`img[data-key="${file.name}"]`)
+    //     ?.click();
+    // } else {
       const url = getFileUrl(file.name);
       window.open(url, "_blank", "noopener,noreferrer");
-    }
+    // }
   };
 
   // 编辑文件名
