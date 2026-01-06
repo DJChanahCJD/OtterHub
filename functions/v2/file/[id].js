@@ -1,3 +1,4 @@
+// functions/v2/file/[id].js
 export async function onRequest(context) {
     const {
         request,
@@ -19,7 +20,16 @@ export async function onRequest(context) {
         // /file/AgACAgEAAxkDAAMDZt1Gzs4W8dQPWiQJxO5YSH5X-gsAAt-sMRuWNelGOSaEM_9lHHgBAAMCAANtAAM2BA.png
         //get the AgACAgEAAxkDAAMDZt1Gzs4W8dQPWiQJxO5YSH5X-gsAAt-sMRuWNelGOSaEM_9lHHgBAAMCAANtAAM2BA
         console.log(url.pathname.split(".")[0].split("/")[2])
-        const filePath = await getFilePath(env, url.pathname.split(".")[0].split("/")[2]);
+
+        // /v2/file/<fileId>.png
+        const pathname = url.pathname; 
+
+        // AgACAgUAA...DeQADOAQ.png
+        const fileIdWithExt = pathname.split("/").pop(); 
+
+        // AgACAgUAA...DeQADOAQ
+        const fileId = fileIdWithExt.split(".")[0];
+        const filePath = await getFilePath(env, fileId);
         console.log(filePath)
         fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
     }
