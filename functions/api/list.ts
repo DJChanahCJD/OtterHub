@@ -16,7 +16,7 @@ export async function onRequestGet(context: any) {
     //  TODO: 限制最大1000, 无法应付较大数据量时的搜索
     // TODO: 考虑用D1数据库？
     const options = {
-      prefix: fileType === "all" ? "" : `${fileType}_`,
+      prefix: fileType === "all" ? "" : `${fileType}:`,
       limit: limit === null ? "1000" : Math.min(Math.max(1, parseInt(limit)), 1000),
       cursor,
     };
