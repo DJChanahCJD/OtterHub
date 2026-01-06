@@ -37,6 +37,12 @@ export type FileMetadata = {
   duration?: number;    // 音视频时长（秒）
 };
 
+// TODO
+export enum FileTag {
+  Liked = 'liked',  // 收藏
+  NSFW = 'nsfw',  // 非安全内容
+
+}
 // Cloudflare KV list参数
 // https://developers.cloudflare.com/kv/api/list-keys/#list-method
 export type ListOptions = {

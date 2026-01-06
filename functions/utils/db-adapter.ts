@@ -1,4 +1,4 @@
-import { isDev, buildKeyId, getFileExt, ok, getFileIdFromKey, fail } from "./common";
+import { isDev, buildKeyId, getFileExt, ok, getFileIdFromKey, fail, getContentTypeByExt } from "./common";
 import { FileMetadata, FileType, CF, ApiResponse } from "./types";
 
 // 存储适配器接口定义
@@ -203,10 +203,18 @@ export class TGAdapter implements DBAdapter {
   async get(key: string): Promise<Response> {
     try {
       const fileId = getFileIdFromKey(key);
+      const ext = key.substring(key.lastIndexOf('.') + 1);
+      const contentType = getContentTypeByExt(ext);
+
       const file = await this.getTgFile(fileId);
-      
+
       const headers = new Headers(file.headers);
-      headers.set('Content-Disposition', 'inline');
+
+      headers.set(
+        'Content-Disposition',
+        `inline; filename="${fileId}.${ext}"` //  实现访问url在新标签页打开的效果
+      );
+      headers.set('Content-Type', contentType);
 
       return new Response(file.body, {
         status: file.status,
@@ -217,6 +225,7 @@ export class TGAdapter implements DBAdapter {
       return fail(`File not found for key: ${key}`, 404);
     }
   }
+
 
   async delete(key: string): Promise<boolean> {
     try {

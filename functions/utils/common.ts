@@ -42,6 +42,45 @@ function json(body: any, status: number, headers?: HeadersInit): Response {
 }
 
 /**
+ * 根据文件扩展名推断 Content-Type
+ * 覆盖主流浏览器可 inline 预览的文件类型
+ */
+export function getContentTypeByExt(ext: string): string {
+  const e = ext.toLowerCase();
+
+  // ---------- 图片 ----------
+  if (['png'].includes(e)) return 'image/png';
+  if (['jpg', 'jpeg'].includes(e)) return 'image/jpeg';
+  if (['webp'].includes(e)) return 'image/webp';
+  if (['gif'].includes(e)) return 'image/gif';
+  if (['bmp'].includes(e)) return 'image/bmp';
+  if (['svg'].includes(e)) return 'image/svg+xml';
+
+  // ---------- 视频 ----------
+  if (['mp4'].includes(e)) return 'video/mp4';
+  if (['webm'].includes(e)) return 'video/webm';
+  if (['ogg', 'ogv'].includes(e)) return 'video/ogg';
+
+  // ---------- 音频 ----------
+  if (['mp3'].includes(e)) return 'audio/mpeg';
+  if (['wav'].includes(e)) return 'audio/wav';
+  if (['ogg'].includes(e)) return 'audio/ogg';
+  if (['m4a'].includes(e)) return 'audio/mp4';
+  if (['aac'].includes(e)) return 'audio/aac';
+  if (['flac'].includes(e)) return 'audio/flac';
+
+  // ---------- 文档 ----------
+  if (['pdf'].includes(e)) return 'application/pdf';
+  if (['txt'].includes(e)) return 'text/plain; charset=utf-8';
+  if (['md'].includes(e)) return 'text/markdown; charset=utf-8';
+  if (['html', 'htm'].includes(e)) return 'text/html; charset=utf-8';
+
+  // ---------- 兜底 ----------
+  return 'application/octet-stream';
+}
+
+
+/**
  * 生成成功响应
  * @param data 响应数据
  * @param message 提示消息
