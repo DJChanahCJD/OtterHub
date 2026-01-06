@@ -108,15 +108,6 @@ function FileActions({
             View
           </DropdownMenuItem>
 
-          {/* 编辑 */}
-          <DropdownMenuItem
-            onClick={onEdit}
-            className="text-white hover:bg-white/10"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-
           {/* 复制链接 */}
           <DropdownMenuItem
             onClick={onCopyLink}
@@ -124,6 +115,15 @@ function FileActions({
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy Link
+          </DropdownMenuItem>
+          
+          {/* 编辑 */}
+          <DropdownMenuItem
+            onClick={onEdit}
+            className="text-white hover:bg-white/10"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
           </DropdownMenuItem>
 
           {/* 下载 */}
@@ -218,14 +218,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   // 查看文件
   const handleView = () => {
-    // if (fileType === FileType.Image) {
-    //   document
-    //     .querySelector<HTMLImageElement>(`img[data-key="${file.name}"]`)
-    //     ?.click();
-    // } else {
-      const url = getFileUrl(file.name);
-      window.open(url, "_blank", "noopener,noreferrer");
-    // }
+    const url = getFileUrl(file.name);
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   // 编辑文件名
