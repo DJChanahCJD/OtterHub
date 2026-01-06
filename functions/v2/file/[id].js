@@ -31,7 +31,7 @@ export async function onRequest(context) {
         const fileId = fileIdWithExt.split(".")[0];
         const filePath = await getFilePath(env, fileId);
         console.log(filePath)
-        fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
+        fileUrl = `https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${filePath}`;
     }
 
     const response = await fetch(fileUrl, {
@@ -51,7 +51,7 @@ export async function onRequest(context) {
 
 async function getFilePath(env, file_id) {
     try {
-        const url = `https://api.telegram.org/bot${env.TG_Bot_Token}/getFile?file_id=${file_id}`;
+        const url = `https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${file_id}`;
         const res = await fetch(url, {
             method: 'GET',
         });

@@ -3,7 +3,7 @@ import { FileType, ApiResponse } from "./types";
 
 // 判断是否为开发环境
 export function isDev(env: any): boolean {
-  const isDev = !env?.TG_Bot_Token;
+  const isDev = !env?.TG_BOT_TOKEN;
   console.log("isDev:", isDev);
   return isDev;
 }

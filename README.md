@@ -21,8 +21,8 @@ OtterHub 是一个基于 Cloudflare KV + Telegram Bot API 的文件存储服务�
 2. 设置环境变量
 BASIC_USER:`your_username`
 BASIC_PASS:`your_password`
-TG_Chat_ID:`your_tg_chat_id`
-TG_Bot_Token:`your_tg_bot_token`
+TG_CHAT_ID:`your_tg_chat_id`
+TG_BOT_TOKEN:`your_tg_bot_token`
 
 2. 创建KV NAMESPACE `oh_file_url` 并绑定到项目
 

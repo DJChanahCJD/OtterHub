@@ -149,8 +149,8 @@ export class TGAdapter implements DBAdapter {
     const fileExtension = getFileExt(fileName);
 
     const tgFormData = new FormData();
-    tgFormData.append("chat_id", this.env.TG_Chat_ID);
-    console.log("chat_id: ", this.env.TG_Chat_ID)
+    tgFormData.append("chat_id", this.env.TG_CHAT_ID);
+    console.log("chat_id: ", this.env.TG_CHAT_ID)
 
     // 根据文件类型选择合适的上传方式
     let apiEndpoint: string;
@@ -229,7 +229,7 @@ export class TGAdapter implements DBAdapter {
   }
 
   private async sendToTelegram(formData: FormData, apiEndpoint: string, retryCount = 0): Promise<ApiResponse<any>> {
-    const apiUrl = `https://api.telegram.org/bot${this.env.TG_Bot_Token}/${apiEndpoint}`;
+    const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/${apiEndpoint}`;
     const attempt = retryCount + 1;
 
     console.log(`Sending to Telegram (Attempt ${attempt}):`, apiUrl);
@@ -301,13 +301,13 @@ export class TGAdapter implements DBAdapter {
       return fail(`File not found: ${key}`, 404);
     }
 
-    const url = `https://api.telegram.org/file/bot${this.env.TG_Bot_Token}/${filePath}`;
+    const url = `https://api.telegram.org/file/bot${this.env.TG_BOT_TOKEN}/${filePath}`;
     return fetch(url);
   }
 
   private async getTgFilePath(fileId: string): Promise<string | null> {
     // TODO: 考虑缓存url
-    const url = `https://api.telegram.org/bot${this.env.TG_Bot_Token}/getFile?file_id=${fileId}`;
+    const url = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`;
     const res = await fetch(url);
 
     if (!res.ok) return null;
