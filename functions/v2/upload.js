@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
         const fileExtension = fileName.split('.').pop().toLowerCase();
 
         const telegramFormData = new FormData();
-        telegramFormData.append("chat_id", -1002300721909);
+        telegramFormData.append("chat_id", env.TG_CHAT_ID);
 
         // 根据文件类型选择合适的上传方式
         let apiEndpoint;
@@ -96,7 +96,7 @@ function getFileId(response) {
 
 async function sendToTelegram(formData, apiEndpoint, env, retryCount = 0) {
     const MAX_RETRIES = 2;
-    const apiUrl = `https://api.telegram.org/bot7448549862:AAEbksADSAu2RhGacqjs3DH3Gaq6idSieyU/${apiEndpoint}`;
+    const apiUrl = `https://api.telegram.org/bot${env.TG_BOT_TOKEN}/${apiEndpoint}`;
 
     try {
         console.log(apiUrl)
