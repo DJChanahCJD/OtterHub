@@ -37,7 +37,7 @@ export default function OtterHubPage() {
       </div>
 
       <div className="relative z-10 flex flex-col h-screen">
-        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header/>
 
         <div className="flex flex-1 overflow-hidden">
           {/* <Sidebar isOpen={sidebarOpen} /> */}

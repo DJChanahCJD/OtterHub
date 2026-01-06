@@ -3,7 +3,6 @@
 import { useFileStore, useFilteredFiles } from "@/lib/file-store"
 import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
-import { AudioPlayerView } from "@/components/audio-player-view"
 import { FileType, ViewMode } from "@/lib/types"
 import { useEffect } from "react"
 import { getFromStorage } from "@/lib/local-storage"
@@ -19,9 +18,6 @@ export function FileGrid() {
     setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
   }, [setViewMode]);
 
-  // if (activeType === FileType.Audio) {
-  //   return <AudioPlayerView />
-  // }
 
   return (
     <div>
