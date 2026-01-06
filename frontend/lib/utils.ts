@@ -92,7 +92,7 @@ export const formatMediaTime = (time: number) => {
 
 export function buildTmpFileKey(file: File): string {
   const fileType = getFileType(file.type);
-  return `${fileType}_${getUniqueFileId()}`;
+  return `${fileType}:${getUniqueFileId()}`;
 }
 
 function getUniqueFileId(): string {

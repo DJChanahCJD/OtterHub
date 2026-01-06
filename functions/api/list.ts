@@ -8,15 +8,16 @@ export async function onRequestGet(context: any) {
     const { request, env } = context;
     // 从URL查询参数中获取分页相关参数
     const url = new URL(request.url);
-    const fileType = url.searchParams.get("fileType") || "all";
+    const fileType = url.searchParams.get("fileType");
     const limit = url.searchParams.get("limit");
     const cursor = url.searchParams.get("cursor");
     
+    const prefix = fileType ? `${fileType}:` : "";
     // 构建KV list参数
     //  TODO: 限制最大1000, 无法应付较大数据量时的搜索
     // TODO: 考虑用D1数据库？
     const options = {
-      prefix: fileType === "all" ? "" : `${fileType}:`,
+      prefix,
       limit: limit === null ? "1000" : Math.min(Math.max(1, parseInt(limit)), 1000),
       cursor,
     };
