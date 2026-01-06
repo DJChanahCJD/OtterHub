@@ -15,18 +15,17 @@ export function getFileExt(fileName: string): string {
 
 // 构建存储键
 export function buildKeyId(fileType: FileType, fullFileId: string): string {
-  return `${fileType}_${fullFileId}`;
+  return `${fileType}:${fullFileId}`;
 }
 
 // 从存储键提取文件ID
 export function getFileIdFromKey(key: string): string {
-  // img_AgACAgUAAyEGAASJIjr1AAIC5WlbsF4QGE2g_21Ln6AFzqUDj27uAAIZC2sbI3PhVp15EFHwmGQcAQADAgADbQADOAQ.png
-
-  // AgACAgUAA...DeQADOAQ.png
-  const fileIdWithExt = key.split("_").pop(); 
+  // img:AgACAgUAAyEGAASJIjr1AAIC5WlbsF4QGE2g_21Ln6AFzqUDj27uAAIZC2sbI3PhVp15EFHwmGQcAQADAgADbQADOAQ.png
+  const [prefix, rest] = key.split(":");
+  const fileId = rest.split(".")[0];
 
   // AgACAgUAA...DeQADOAQ
-  return fileIdWithExt.split(".")[0];
+  return fileId;
 }
 
 // 生成唯一文件ID

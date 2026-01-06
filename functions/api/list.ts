@@ -28,8 +28,8 @@ export async function onRequestGet(context: any) {
     /*
     {
       keys: [
-        { name: 'audio_1767359508183-etm647xv8.mp3', metadata: [Object] },
-        { name: 'img_1767360224212-jdtcgze38.jpg', metadata: [Object] }
+        { name: 'audio:1767359508183-etm647xv8.mp3', metadata: [Object] },
+        { name: 'img:1767360224212-jdtcgze38.jpg', metadata: [Object] }
       ],
       list_complete: true,
       cursor: "next-cursor-value", // 分页游标
