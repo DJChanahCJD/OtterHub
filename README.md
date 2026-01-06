@@ -1,13 +1,13 @@
 # OtterHub
 OtterHub 是一个基于 Cloudflare KV + Telegram Bot API 的文件存储服务，支持文件上传、下载、删除、收藏等操作。
 
-## 快速开始
+## 本地开发
 1. 安装依赖
    ```bash
    npm install
    cd frontend && npm install
    ```
-2. 根目录下构建项目
+2. 根目录下启动
    ```bash
    npm run start
    ```
@@ -15,7 +15,7 @@ OtterHub 是一个基于 Cloudflare KV + Telegram Bot API 的文件存储服务�
 ## Cloudfare部署
 
 1. Fork该项目，创建一个 Cloudfare Pages
-构建命令: `cd frontend && npm install && npm run build`
+构建命令: `build:frontend`
 构建输出目录：`frontend/out`
 
 2. 设置环境变量

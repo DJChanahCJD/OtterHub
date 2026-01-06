@@ -205,9 +205,12 @@ export class TGAdapter implements DBAdapter {
       const fileId = getFileIdFromKey(key);
       const file = await this.getTgFile(fileId);
       
+      const headers = new Headers(file.headers);
+      headers.set('Content-Disposition', 'inline');
+      
       return new Response(file.body, {
         status: file.status,
-        headers: file.headers,
+        headers,
       });
     } catch (error) {
       console.error('Failed to fetch Telegram file:', error);

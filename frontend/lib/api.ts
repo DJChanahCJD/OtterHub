@@ -12,7 +12,7 @@ export function uploadFile(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
 
-  return request<string>(`${API_URL}/api/upload1`, {
+  return request<string>(`${API_URL}/api/upload`, {
     method: 'POST',
     body: formData,
   })
