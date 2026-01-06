@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveItems, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function BatchOperationsBar() {
   const fileStore = useFileStore()
