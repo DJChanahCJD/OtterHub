@@ -59,7 +59,7 @@ export async function onRequestPost(context) {
         }
 
         return new Response(
-            JSON.stringify([{ 'src': `/file/${fileId}.${fileExtension}` }]),
+            JSON.stringify([{ 'src': `/file/${fileId}.${fileExtension}` , 'tg_result': result}]),
             {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
