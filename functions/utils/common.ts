@@ -19,11 +19,14 @@ export function buildKeyId(fileType: FileType, fullFileId: string): string {
 }
 
 // 从存储键提取文件ID
-const FILE_PREFIX_REG = new RegExp(`^(${Object.values(FileType).join("|")})_`);
 export function getFileIdFromKey(key: string): string {
-  const fileId = key.replace(FILE_PREFIX_REG, "");
-  console.log("fileId:", fileId);
-  return fileId;
+  // img_AgACAgUAAyEGAASJIjr1AAIC5WlbsF4QGE2g_21Ln6AFzqUDj27uAAIZC2sbI3PhVp15EFHwmGQcAQADAgADbQADOAQ.png
+
+  // AgACAgUAA...DeQADOAQ.png
+  const fileIdWithExt = key.split("_").pop(); 
+
+  // AgACAgUAA...DeQADOAQ
+  return fileIdWithExt.split(".")[0];
 }
 
 // 生成唯一文件ID

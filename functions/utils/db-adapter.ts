@@ -293,12 +293,11 @@ export class TGAdapter implements DBAdapter {
 
   // Telegram Bot API 文件处理逻辑
   // 原Telegraph API: 'https://telegra.ph/' + url.pathname + url.search;
-  private async getTgFile(key: string) {
-    const fileId = getFileIdFromKey(key);
+  private async getTgFile(fileId: string) {
     const filePath = await this.getTgFilePath(fileId);
 
     if (!filePath) {
-      return fail(`File not found: ${key}`, 404);
+      return fail(`File not found: ${fileId}`, 404);
     }
 
     const url = `https://api.telegram.org/file/bot${this.env.TG_BOT_TOKEN}/${filePath}`;
