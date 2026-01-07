@@ -15,13 +15,15 @@ export function FileGrid() {
   const setViewMode = useFileStore((state) => state.setViewMode)
   const setSortType = useFileStore((state) => state.setSortType)
   const setSortOrder = useFileStore((state) => state.setSortOrder)
+  const setSafeMode = useFileStore((state) => state.setSafeMode)
   const filteredFiles = useFilteredFiles()
 
   useEffect(() => {
     setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
     setSortType(getFromStorage(STORAGE_KEYS.SORT_TYPE, SortType.UploadedAt));
     setSortOrder(getFromStorage(STORAGE_KEYS.SORT_ORDER, SortOrder.Desc));
-  }, [setViewMode, setSortType, setSortOrder]);
+    setSafeMode(getFromStorage(STORAGE_KEYS.SAFE_MODE, true));
+  }, [setViewMode, setSortType, setSortOrder, setSafeMode]);
 
 
   return (

@@ -92,9 +92,5 @@ export const formatMediaTime = (time: number) => {
 
 export function buildTmpFileKey(file: File): string {
   const fileType = getFileType(file.type);
-  return `${fileType}:${getUniqueFileId()}`;
-}
-
-function getUniqueFileId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  return `${fileType}:${crypto.randomUUID()}`;
 }

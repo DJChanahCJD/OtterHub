@@ -25,6 +25,7 @@ interface FileStore {
   searchQuery: string;
   sortType: SortType;
   sortOrder: SortOrder;
+  safeMode: boolean; // 安全浏览模式
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
@@ -39,6 +40,7 @@ interface FileStore {
   setSearchQuery: (query: string) => void;
   setSortType: (type: SortType) => void;
   setSortOrder: (order: SortOrder) => void;
+  setSafeMode: (enabled: boolean) => void;
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -61,6 +63,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   searchQuery: "",
   sortType: SortType.UploadedAt,
   sortOrder: SortOrder.Desc,
+  safeMode: true, // 默认开启安全浏览模式
 
   buckets: {
     [FileType.Image]: emptyBucket(),
@@ -143,6 +146,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setSortOrder: (order) => {
     set({ sortOrder: order });
     setToStorage(STORAGE_KEYS.SORT_ORDER, order);
+  },
+
+  setSafeMode: (enabled) => {
+    set({ safeMode: enabled });
+    setToStorage(STORAGE_KEYS.SAFE_MODE, enabled);
   },
 
   addFileLocal: (file, fileType) =>

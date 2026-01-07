@@ -6,10 +6,10 @@ import { useCallback, useRef, useState } from "react"
 import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { uploadFile } from "@/lib/api"
+import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
-import { FileItem, MAX_FILE_SIZE } from "@/lib/types"
+import { FileItem, MAX_CONCURRENT_UPLOADS, MAX_FILE_SIZE, FileTag } from "@/lib/types"
 import { nsfwDetector } from "@/lib/nsfw-detector"
 
 export function FileUploadZone() {
@@ -19,44 +19,12 @@ export function FileUploadZone() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
-  // 文件上传配置
-  const uploadConfig = {
-    // TODO: TG Bot API 中的50MB是怎么回事？
-    maxSize: MAX_FILE_SIZE, // 20MB - Telegram可分发的最大文件大小 
-    maxConcurrent: 3, // 最大并发上传数
-  }
-
   const processFiles = useCallback(
     async (files: FileList) => {
       const fileArray = Array.from(files)
       if (!fileArray.length) return
 
-      // 文件验证
-      const valid: File[] = []
-      const invalid: File[] = []
-
-      fileArray.forEach(file => {
-        (file.size <= uploadConfig.maxSize ? valid : invalid).push(file)
-      })
-
-      // 显示错误信息
-      if (invalid.length) {
-        toast({
-          title: "文件大小超过限制",
-          description: `文件超过${formatFileSize(uploadConfig.maxSize)}: ${invalid.map(f => f.name).join(', ')}`,
-          variant: "destructive",
-          duration: 5000,
-        })
-      }
-      if (!valid.length) {
-        toast({
-          title: "没有符合条件的文件",
-          variant: "destructive",
-          duration: 5000,
-        })
-        return
-      }
-
+      // 支持任意大小文件，小文件走普通上传，大文件走分片上传
 
       // 上传状态
       let successCount = 0
@@ -64,41 +32,24 @@ export function FileUploadZone() {
       const uploadProgressMap: Record<string, number> = {}
       setUploadProgress({})
 
-      // 单个文件上传函数
-      const uploadSingleFile = async (file: File) => {
+      // 普通上传 (≤ MAX_FILE_SIZE)
+      const uploadNormalFile = async (file: File) => {
         const tmpKey = buildTmpFileKey(file)
         uploadProgressMap[tmpKey] = 0
         setUploadProgress({ ...uploadProgressMap })
 
         try {
           // 对图片文件进行 NSFW 检测, 非图片文件直接返回 false
-          const isUnsafe = await nsfwDetector.isUnsafeImg(file);
-
+          const isUnsafe = await nsfwDetector.isUnsafeImg(file)
           const key = await uploadFile(file, isUnsafe)
+
           uploadProgressMap[tmpKey] = 100
           setUploadProgress({ ...uploadProgressMap })
 
-          // 获取文件类型
-          const fileType = getFileType(file.type)
-
-          // 添加到文件存储
-          const fileItem : FileItem = {
-            name: key,
-            metadata: {
-              fileName: file.name,
-              fileSize: file.size,
-              uploadedAt: Date.now(),
-              liked: false,
-            },
-          }
-
-          addFileLocal(fileItem, fileType)
-          successCount++
+          return { key, fileType: getFileType(file.type), isUnsafe }
         } catch (error) {
-          console.error(`Error uploading file ${file.name}:`, error)
-          failed.push(`${file.name} (${(error as Error).message})`)
+          throw new Error(`${file.name}: ${(error as Error).message}`)
         } finally {
-          // 移除进度显示
           setTimeout(() => {
             delete uploadProgressMap[tmpKey]
             setUploadProgress({ ...uploadProgressMap })
@@ -106,9 +57,73 @@ export function FileUploadZone() {
         }
       }
 
+      // 分片上传 (> MAX_FILE_SIZE)
+      const uploadChunkedFile = async (file: File) => {
+        const tmpKey = buildTmpFileKey(file)
+        uploadProgressMap[tmpKey] = 0
+        setUploadProgress({ ...uploadProgressMap })
+
+        try {
+          const fileType = getFileType(file.type)
+          const totalChunks = Math.ceil(file.size / MAX_FILE_SIZE)  // 总分片数
+
+          // 1. 初始化分片上传
+          const key = await uploadChunkInit(fileType, file.name, file.size, totalChunks)
+
+          // 2. 按 MAX_FILE_SIZE 分片上传
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * MAX_FILE_SIZE
+            const end = Math.min(start + MAX_FILE_SIZE, file.size)
+            const chunkFile = file.slice(start, end)
+
+            await uploadChunk(key, i, chunkFile)
+
+            // 更新进度
+            uploadProgressMap[tmpKey] = Math.round(((i + 1) / totalChunks) * 100)
+            setUploadProgress({ ...uploadProgressMap })
+          }
+
+          return { key, fileType, isUnsafe: false } //  大文件不做nsfw检测
+        } catch (error) {
+          throw new Error(`${file.name}: ${(error as Error).message}`)
+        } finally {
+          setTimeout(() => {
+            delete uploadProgressMap[tmpKey]
+            setUploadProgress({ ...uploadProgressMap })
+          }, 500)
+        }
+      }
+
+      // 单个文件上传入口
+      const uploadSingleFile = async (file: File) => {
+        try {
+          const { key, fileType, isUnsafe } = file.size > MAX_FILE_SIZE
+            ? await uploadChunkedFile(file)
+            : await uploadNormalFile(file)
+
+          // 添加到文件存储
+          const fileItem: FileItem = {
+            name: key,
+            metadata: {
+              fileName: file.name,
+              fileSize: file.size,
+              uploadedAt: Date.now(),
+              liked: false,
+              tags: isUnsafe ? [FileTag.NSFW] : [],
+            },
+          }
+
+          addFileLocal(fileItem, fileType)
+          successCount++
+        } catch (error) {
+          console.error(`Error uploading file ${file.name}:`, error)
+          failed.push((error as Error).message)
+        }
+      }
+
       // 分批上传
-      for (let i = 0; i < valid.length; i += uploadConfig.maxConcurrent) {
-        const batch = valid.slice(i, i + uploadConfig.maxConcurrent)
+      for (let i = 0; i < fileArray.length; i += MAX_CONCURRENT_UPLOADS) {
+        const batch = fileArray.slice(i, i + MAX_CONCURRENT_UPLOADS)
         await Promise.all(batch.map(uploadSingleFile))
       }
 

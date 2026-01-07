@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileTypeTabs } from "@/components/file-type-tabs";
 import { FileTypeDropdown } from "@/components/file-type-dropdown";
+import { SafeModeToggle } from "@/components/safe-mode-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -117,6 +118,8 @@ export function Header() {
                 </Button>
               )}
             </div>
+            {/* 安全模式切换按钮 */}
+            <SafeModeToggle />
           </div>
         </div>
       </div>

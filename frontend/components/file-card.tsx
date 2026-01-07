@@ -20,6 +20,7 @@ import {
   ZoomOut,
   RotateCw,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +37,7 @@ import {
   downloadFile,
   formatTime,
 } from "@/lib/utils";
-import { FileItem, FileType } from "@/lib/types";
+import { FileItem, FileType, FileTag } from "@/lib/types";
 import { getFileUrl, editFileName, toggleLike, deleteFile } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
@@ -193,17 +194,27 @@ function ToolbarButton({
 export function FileContent({
   fileType,
   fileKey,
+  safeMode,
+  tags,
 }: {
   fileType: FileType;
   fileKey: string;
+  safeMode: boolean;
+  tags?: FileTag[] | string[];
 }) {
+  const isNSFW = tags?.includes(FileTag.NSFW) || false;
+  const shouldBlur = safeMode && isNSFW;
+
   if (fileType === FileType.Image) {
     return (
       <PhotoView src={getFileUrl(fileKey)}>
         <img
           data-key={fileKey}
           src={getFileUrl(fileKey)}
-          className="w-full h-full object-cover cursor-zoom-in"
+          className={cn(
+            "w-full h-full object-cover cursor-zoom-in transition-all duration-300",
+            shouldBlur && "blur-2xl scale-110"
+          )}
         />
       </PhotoView>
     );
@@ -225,9 +236,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const toggleSelection = useFileStore((state) => state.toggleSelection);
   const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
+  const safeMode = useFileStore((state) => state.safeMode);
   const [showDetail, setShowDetail] = useState(false);
 
   const isSelected = selectedKeys.includes(file.name);
+
+  // 检查是否为 NSFW 内容
+  const isNSFW = file.metadata?.tags?.includes(FileTag.NSFW) || false;
+  const shouldBlur = safeMode && isNSFW;
 
   // 只计算一次文件类型，提高性能
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
@@ -313,13 +329,23 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           </div>
 
           {/* File Icon/Preview */}
-          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0 relative">
             {fileType === FileType.Image ? (
-              <img
-                src={getFileUrl(file.name)}
-                alt={file.name}
-                className="w-full h-full object-cover rounded"
-              />
+              <>
+                <img
+                  src={getFileUrl(file.name)}
+                  alt={file.name}
+                  className={cn(
+                    "w-full h-full object-cover rounded transition-all duration-300",
+                    shouldBlur && "blur-xl"
+                  )}
+                />
+                {shouldBlur && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                    <AlertTriangle className="h-5 w-5 text-amber-400" />
+                  </div>
+                )}
+              </>
             ) : fileType === FileType.Video ? (
               <Video className="h-6 w-6 text-purple-400" />
             ) : fileType === FileType.Audio ? (
@@ -423,15 +449,36 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           {/* File Content */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative w-full h-full bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-              <FileContent fileType={fileType} fileKey={file.name} />
+              <FileContent
+                fileType={fileType}
+                fileKey={file.name}
+                safeMode={safeMode}
+                tags={file.metadata?.tags}
+              />
+              {shouldBlur && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="flex flex-col items-center gap-2 bg-black/60 backdrop-blur-sm px-4 py-3 rounded-xl">
+                    <AlertTriangle className="h-8 w-8 text-amber-400" />
+                    <span className="text-sm font-medium text-amber-300">NSFW Content</span>
+                    <span className="text-xs text-white/60">Safe mode is on</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* File Info Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
-            <p className="text-sm font-medium text-white truncate">
-              {file.metadata.fileName || file.name}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-white truncate">
+                {file.metadata.fileName || file.name}
+              </p>
+              {isNSFW && (
+                <span className="px-1.5 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">
+                  NSFW
+                </span>
+              )}
+            </div>
             <p className="text-xs text-white/60">
               {formatFileSize(file.metadata.fileSize || 0)}
             </p>
