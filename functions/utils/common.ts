@@ -1,5 +1,5 @@
 // utils/common.ts
-import { FileType, ApiResponse } from "./types";
+import { FileType, ApiResponse, chunkPrefix } from "./types";
 
 // 判断是否为开发环境
 export function isDev(env: any): boolean {
@@ -19,19 +19,24 @@ export function buildKeyId(fileType: FileType, fullFileId: string): string {
 }
 
 // 从存储键提取文件ID
-export function getFileIdFromKey(key: string): string {
+export function getFileIdFromKey(key: string): { fileId: string, isChunk: boolean } {
   // img:AgACAgUAAyEGAASJIjr1AAIC5WlbsF4QGE2g_21Ln6AFzqUDj27uAAIZC2sbI3PhVp15EFHwmGQcAQADAgADbQADOAQ.png
   const [prefix, rest] = key.split(":");
   const fileId = rest.split(".")[0];
 
   // AgACAgUAA...DeQADOAQ
-  return fileId;
+
+  // 处理分片文件ID
+  if (fileId.startsWith(chunkPrefix)) {
+    return { fileId: fileId.slice(chunkPrefix.length), isChunk: true };
+  }
+  return { fileId, isChunk: false };
 }
 
 // 生成唯一文件ID
-// 当前只给R2用，TG的文件ID由TG API返回
+// 当前用于R2和TG分片上传的fileId，TG的文件ID由TG API返回
 export function getUniqueFileId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  return crypto.randomUUID();
 }
 
 function json(body: any, status: number, headers?: HeadersInit): Response {
