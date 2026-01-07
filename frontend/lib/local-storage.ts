@@ -5,6 +5,8 @@
 export const STORAGE_KEYS = {
   ACTIVE_TYPE: 'otterhub_active_type',
   VIEW_MODE: 'otterhub_view_mode',
+  SORT_TYPE: 'otterhub_sort_type',
+  SORT_ORDER: 'otterhub_sort_order',
 } as const;
 
 /**

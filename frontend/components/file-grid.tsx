@@ -3,7 +3,8 @@
 import { useFileStore, useFilteredFiles } from "@/lib/file-store"
 import { FileCard } from "@/components/file-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
-import { FileType, ViewMode } from "@/lib/types"
+import { SortTypeDropdown } from "@/components/sort-type-dropdown"
+import { FileType, ViewMode, SortType, SortOrder } from "@/lib/types"
 import { useEffect } from "react"
 import { getFromStorage } from "@/lib/local-storage"
 import { STORAGE_KEYS } from "@/lib/local-storage"
@@ -12,11 +13,15 @@ export function FileGrid() {
   const activeType = useFileStore((state) => state.activeType)
   const viewMode = useFileStore((state) => state.viewMode)
   const setViewMode = useFileStore((state) => state.setViewMode)
+  const setSortType = useFileStore((state) => state.setSortType)
+  const setSortOrder = useFileStore((state) => state.setSortOrder)
   const filteredFiles = useFilteredFiles()
 
   useEffect(() => {
     setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
-  }, [setViewMode]);
+    setSortType(getFromStorage(STORAGE_KEYS.SORT_TYPE, SortType.UploadedAt));
+    setSortOrder(getFromStorage(STORAGE_KEYS.SORT_ORDER, SortOrder.Desc));
+  }, [setViewMode, setSortType, setSortOrder]);
 
 
   return (
@@ -25,7 +30,10 @@ export function FileGrid() {
         <div className="text-sm text-white/60">
           {filteredFiles.length} {filteredFiles.length === 1 ? "file" : "files"}
         </div>
-        <ViewModeToggle />
+        <div className="flex items-center gap-2">
+          <SortTypeDropdown />
+          <ViewModeToggle />
+        </div>
       </div>
 
       {viewMode === ViewMode.Grid ? (

@@ -6,6 +6,8 @@ import {
   FileType,
   ListFilesRequest,
   ViewMode,
+  SortType,
+  SortOrder,
 } from "./types";
 import { deleteFile, getFileList } from "./api";
 import { STORAGE_KEYS, getFromStorage, setToStorage } from "./local-storage";
@@ -18,10 +20,11 @@ type FileBucket = {
 };
 
 interface FileStore {
-  // 当前视图状态
   activeType: FileType;
   viewMode: ViewMode;
   searchQuery: string;
+  sortType: SortType;
+  sortOrder: SortOrder;
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
@@ -34,6 +37,8 @@ interface FileStore {
   fetchNextPage: () => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
   setSearchQuery: (query: string) => void;
+  setSortType: (type: SortType) => void;
+  setSortOrder: (order: SortOrder) => void;
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -54,6 +59,8 @@ export const useFileStore = create<FileStore>((set, get) => ({
   activeType: FileType.Image,
   viewMode: ViewMode.Grid,
   searchQuery: "",
+  sortType: SortType.UploadedAt,
+  sortOrder: SortOrder.Desc,
 
   buckets: {
     [FileType.Image]: emptyBucket(),
@@ -126,6 +133,16 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   setSearchQuery: (query) => {
     set({ searchQuery: query });
+  },
+
+  setSortType: (type) => {
+    set({ sortType: type });
+    setToStorage(STORAGE_KEYS.SORT_TYPE, type);
+  },
+
+  setSortOrder: (order) => {
+    set({ sortOrder: order });
+    setToStorage(STORAGE_KEYS.SORT_ORDER, order);
   },
 
   addFileLocal: (file, fileType) =>
@@ -212,13 +229,37 @@ export const useBucketItems = (type: FileType) =>
 
 export const useFilteredFiles = () => {
   const searchQuery = useFileStore((s) => s.searchQuery);
+  const sortType = useFileStore((s) => s.sortType);
+  const sortOrder = useFileStore((s) => s.sortOrder);
   const items = useActiveItems()
 
-  return items.filter((item) => {
+  let filteredItems = items.filter((item) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
 
     const fileName = item.metadata?.fileName?.toLowerCase() || item.name.toLowerCase();
     return fileName.includes(query);
   });
+
+  filteredItems = [...filteredItems].sort((a, b) => {
+    let comparison = 0;
+
+    if (sortType === SortType.Name) {
+      const nameA = a.metadata?.fileName?.toLowerCase() || a.name.toLowerCase();
+      const nameB = b.metadata?.fileName?.toLowerCase() || b.name.toLowerCase();
+      comparison = nameA.localeCompare(nameB);
+    } else if (sortType === SortType.UploadedAt) {
+      const timeA = a.metadata?.uploadedAt || 0;
+      const timeB = b.metadata?.uploadedAt || 0;
+      comparison = timeA - timeB;
+    } else if (sortType === SortType.FileSize) {
+      const sizeA = a.metadata?.fileSize || 0;
+      const sizeB = b.metadata?.fileSize || 0;
+      comparison = sizeA - sizeB;
+    }
+
+    return sortOrder === SortOrder.Asc ? comparison : -comparison;
+  });
+
+  return filteredItems;
 };

@@ -12,6 +12,17 @@ export enum ViewMode {
   List = "list",
 }
 
+export enum SortType {
+  UploadedAt = "uploadedAt",
+  Name = "name",
+  FileSize = "fileSize",
+}
+
+export enum SortOrder {
+  Asc = "asc",
+  Desc = "desc",
+}
+
 // 文件类型
 export enum FileType {
   Image = "img",
