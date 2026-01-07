@@ -8,9 +8,12 @@ import { ListFilesRequest, ListFilesResponse } from "./types";
 export const API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '')
 
-export function uploadFile(file: File): Promise<string> {
+export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
+  if (nsfw) {
+    formData.append('nsfw', 'true')
+  }
 
   return request<string>(`${API_URL}/api/upload`, {
     method: 'POST',

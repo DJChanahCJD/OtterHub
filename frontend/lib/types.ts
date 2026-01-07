@@ -40,10 +40,28 @@ export type FileItem = {
 export type FileMetadata = {
   fileName: string;
   fileSize: number;
-  uploadedAt: number; // 时间戳
-  liked: boolean; // 是否被收藏
-  duration?: number; // 音视频时长（秒）
+  uploadedAt: number;   // 时间戳
+  liked: boolean;      // 是否被收藏
+  tags?: FileTag[] | string[];
+  chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
 };
+
+export enum FileTag {
+  NSFW = 'nsfw',  // 非安全内容
+  Private = 'private',  // 私有文件, 不允许其他人通过url直接访问到
+}
+export const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+
+// 分片信息（用于大文件分片上传）
+export type ChunkInfo = {
+  total: number;          // 总分片数
+  chunks: Chunk[];        // 已上传的分片
+}
+export type Chunk = {
+  idx: number;
+  file_id: string;
+  size: number; // 分片大小
+}
 
 export type ListFilesRequest = {
   fileType?: FileType;

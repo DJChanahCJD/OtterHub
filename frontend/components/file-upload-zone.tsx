@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
-import { FileItem } from "@/lib/types"
+import { FileItem, MAX_FILE_SIZE } from "@/lib/types"
 import { nsfwDetector } from "@/lib/nsfw-detector"
 
 export function FileUploadZone() {
@@ -21,7 +21,8 @@ export function FileUploadZone() {
 
   // 文件上传配置
   const uploadConfig = {
-    maxSize: 50 * 1024 * 1024, // 50MB - Telegram可分发的最大文件大小 
+    // TODO: TG Bot API 中的50MB是怎么回事？
+    maxSize: MAX_FILE_SIZE, // 20MB - Telegram可分发的最大文件大小 
     maxConcurrent: 3, // 最大并发上传数
   }
 
@@ -70,25 +71,10 @@ export function FileUploadZone() {
         setUploadProgress({ ...uploadProgressMap })
 
         try {
-          // 对图片文件进行 NSFW 检测
-          if (file.type.startsWith('image/')) {
-            const isUnsafe = await nsfwDetector.detectImgFile(file);
-            console.log("nsfwDetector detectFile result:", isUnsafe)
-            
-            if (isUnsafe) {
-              // 检测到不适宜内容，阻止上传
-              toast({
-                title: "文件包含不适宜内容",
-                description: "检测到NSFW",
-                variant: "destructive",
-                duration: 5000,
-              });
-              
-              // return;
-            }
-          }
+          // 对图片文件进行 NSFW 检测, 非图片文件直接返回 false
+          const isUnsafe = await nsfwDetector.isUnsafeImg(file);
 
-          const key = await uploadFile(file)
+          const key = await uploadFile(file, isUnsafe)
           uploadProgressMap[tmpKey] = 100
           setUploadProgress({ ...uploadProgressMap })
 

@@ -1,6 +1,6 @@
 import * as nsfwjs from "nsfwjs";
 import * as tf from "@tensorflow/tfjs";
-
+import { MAX_FILE_SIZE } from "./types";
 
 tf.enableProdMode();
 
@@ -60,8 +60,18 @@ class NSFWDetector {
       const hardUnsafeScore = porn + hentai;
       const softUnsafeScore = sexy * (1 - neutral);
 
-      const isUnsafe =
-        hardUnsafeScore >= 0.2 || softUnsafeScore >= 0.6;
+      const isUnsafe = hardUnsafeScore >= 0.4 || hardUnsafeScore + softUnsafeScore >= 1;
+
+      // console.table({
+      //   porn,
+      //   hentai,
+      //   sexy,
+      //   neutral,
+      //   drawing,
+      //   hardUnsafeScore,
+      //   softUnsafeScore,
+      //   isUnsafe,
+      // });
 
       return isUnsafe;
     } catch {
@@ -69,8 +79,10 @@ class NSFWDetector {
     }
   }
 
-
-  async detectImgFile(file: File): Promise<boolean> {
+  async isUnsafeImg(file: File): Promise<boolean> {
+    if (file.type.indexOf("image") === -1 || file.size > MAX_FILE_SIZE) { // 只检测＜20MB的图片文件
+      return false;
+    }
     const img = new Image();
     const url = URL.createObjectURL(file);
 
