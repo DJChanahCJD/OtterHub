@@ -75,18 +75,22 @@ export function deleteFile(key: string): Promise<boolean> {
   });
 }
 
-export function editFileName(key: string, fileName: string): Promise<boolean> {
-  return request<boolean>(
-    `${API_URL}/api/editName/${key}?fileName=${fileName}`,
-    {
-      method: "PATCH",
-    }
-  );
-}
-
 export function toggleLike(key: string): Promise<boolean> {
   return request<boolean>(`${API_URL}/api/toggleLike/${key}`, {
     method: "POST",
+  });
+}
+
+export function editMetadata(
+  key: string,
+  updates: { fileName?: string; tags?: string[] }
+): Promise<{ metadata: any }> {
+  return request<{ metadata: any }>(`${API_URL}/api/editFileMeta/${key}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updates),
   });
 }
 

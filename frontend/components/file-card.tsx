@@ -38,11 +38,12 @@ import {
   formatTime,
 } from "@/lib/utils";
 import { FileItem, FileType, FileTag } from "@/lib/types";
-import { getFileUrl, editFileName, toggleLike, deleteFile } from "@/lib/api";
+import { getFileUrl, toggleLike, deleteFile } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
+import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
 
 interface FileCardProps {
   file: FileItem;
@@ -238,6 +239,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
   const safeMode = useFileStore((state) => state.safeMode);
   const [showDetail, setShowDetail] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const isSelected = selectedKeys.includes(file.name);
 
@@ -280,17 +282,18 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  // 编辑文件名
+  // 编辑元数据
   const handleEdit = () => {
-    const newName = prompt("请输入新的文件名：", file.metadata.fileName);
-    if (newName && newName.trim() && newName !== file.metadata.fileName) {
-      editFileName(file.name, newName.trim()).then(() => {
-        updateFileMetadata(file.name, {
-          ...file.metadata,
-          fileName: newName.trim(),
-        });
-      });
-    }
+    setShowEdit(true);
+  };
+
+  // 编辑成功回调
+  const handleEditSuccess = (updatedMetadata: any) => {
+    // 更新本地状态
+    updateFileMetadata(file.name, {
+      ...file.metadata,
+      ...updatedMetadata,
+    });
   };
 
   // 切换收藏状态
@@ -386,6 +389,12 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           file={file}
           open={showDetail}
           onOpenChange={setShowDetail}
+        />
+        <EditMetadataDialog
+          file={file}
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          onSuccess={handleEditSuccess}
         />
       </>
     );
@@ -489,6 +498,12 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         file={file}
         open={showDetail}
         onOpenChange={setShowDetail}
+      />
+      <EditMetadataDialog
+        file={file}
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        onSuccess={handleEditSuccess}
       />
     </>
   );
