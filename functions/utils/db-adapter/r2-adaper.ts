@@ -113,6 +113,11 @@ export class R2Adapter implements DBAdapter {
     headers.set("etag", object.httpEtag);
     headers.set("Accept-Ranges", "bytes");
 
+    // 覆盖 Content-Type 为标准的（带 charset）
+    // 避免 R2 存储的 httpMetadata 缺少 charset 导致中文乱码
+    const ext = key.substring(key.lastIndexOf(".") + 1);
+    headers.set("Content-Type", getContentTypeByExt(ext));
+
     const size = object.size;
     const range = req?.headers.get("Range");
 
