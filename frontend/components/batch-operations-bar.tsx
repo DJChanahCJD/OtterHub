@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveItems, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
@@ -20,11 +20,16 @@ export function BatchOperationsBar() {
   const fileStore = useFileStore()
   const selectedKeys = fileStore.selectedKeys
   const clearSelection = fileStore.clearSelection
+  const selectAll = fileStore.selectAll
   const updateFileMetadata = fileStore.updateFileMetadata
   const { toast } = useToast()
   const [showBatchTags, setShowBatchTags] = useState(false)
 
   const items = useActiveItems()
+
+  // 检查是否已全选当前页
+  const isAllSelected = items.length > 0 && selectedKeys.length === items.length &&
+    items.every(item => selectedKeys.includes(item.name))
 
   // 批量操作成功回调
   const handleBatchSuccess = (updatedFiles: Array<{ name: string; tags: string[] }>) => {
@@ -112,6 +117,13 @@ export function BatchOperationsBar() {
                 side="top"
                 className="bg-[#0d2137] border-white/10 min-w-[180px]"
               >
+                <DropdownMenuItem
+                  onClick={isAllSelected ? clearSelection : selectAll}
+                  className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer"
+                >
+                  <Check className={`h-4 w-4 mr-2 ${isAllSelected ? "text-emerald-300" : "text-blue-400"}`} />
+                  {isAllSelected ? "取消全选" : "全选当前页"}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setShowBatchTags(true)}
                   className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer"

@@ -205,19 +205,25 @@ export function FileContent({
 }) {
   const isNSFW = tags?.includes(FileTag.NSFW) || false;
   const shouldBlur = safeMode && isNSFW;
+  const canPreview = !shouldBlur; // 只有在非安全模式或非NSFW时才能预览
 
   if (fileType === FileType.Image) {
-    return (
-      <PhotoView src={getFileUrl(fileKey)}>
-        <img
-          data-key={fileKey}
-          src={getFileUrl(fileKey)}
-          className={cn(
-            "w-full h-full object-cover cursor-zoom-in transition-all duration-300",
-            shouldBlur && "blur-2xl scale-110"
-          )}
-        />
-      </PhotoView>
+    const imgElement = (
+      <img
+        data-key={fileKey}
+        src={getFileUrl(fileKey)}
+        className={cn(
+          "w-full h-full object-cover transition-all duration-300",
+          shouldBlur ? "blur-2xl scale-110" : "cursor-zoom-in"
+        )}
+      />
+    );
+
+    // 只有非 NSFW 或安全模式关闭时才能预览
+    return canPreview ? (
+      <PhotoView src={getFileUrl(fileKey)}>{imgElement}</PhotoView>
+    ) : (
+      imgElement
     );
   }
 
