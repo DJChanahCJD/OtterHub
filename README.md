@@ -30,12 +30,11 @@ TG_BOT_TOKEN:`your_tg_bot_token`
 ## TODO
 
 - [ ] NSFW相关
-   - [ ] 支持安全浏览模式（过滤/blur遮罩？ NSFW内容）
-   - [ ] 集成NSFWJS库，用于上传图片时检测NSFW内容，打上FileTag
+   - [x] 支持安全浏览模式（过滤/blur遮罩？ NSFW内容）
+   - [x] 集成NSFWJS库，用于上传图片时检测NSFW内容，打上FileTag  -> 不再需要后端调用ModerateContent API
    - NSFW检测免费API： 
-      - Moderate Content API	1 万次 / 月	图像	REST（URL/Base64）	轻量 Web 应用  https://moderateapi.com/docs/
-      - [Sightengine](https://sightengine.com/docs/getstarted)	 每月2000次免费，每日最多500次 https://dashboard.sightengine.com/api-credentials
-      - NsfwSpy API	100 次 / 月	图像	REST（URL/Base64）	NSFW 内容检测
+      - [Moderate Content API](https://account.moderatecontent.com/login)	1 万次 / 月，但似乎无法注册了
+      - [Sightengine](https://sightengine.com/docs/getstarted)	 每月2000次免费，每日最多500次
 - [ ] 考虑是否前端转Vue3 + Vite + TS，或者使用antd
 - [ ] 不同文件类型的定制化
    - [ ] 图片：支持Masonry瀑布流布局
