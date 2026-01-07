@@ -6,6 +6,7 @@ import {
   getFileIdFromKey,
   getContentTypeByExt,
   fail,
+  encodeContentDisposition,
 } from "../common";
 import { FileMetadata, ApiResponse, chunkPrefix, FileType } from "../types";
 import { getTgFileId, resolveFileDescriptor } from "./tg-tools";
@@ -181,17 +182,21 @@ export class TGAdapter implements DBAdapter {
 
     const sortedChunks = [...chunkInfo.chunks].sort((a, b) => a.idx - b.idx);
 
+    // 捕获 this 引用，避免 ReadableStream start 回调中 this 丢失
+    const botToken = this.env.TG_BOT_TOKEN;
+    const getFilePath = this.getTgFilePath.bind(this);
+
     // 使用 stream 合并分片，避免内存占用过大
     const stream = new ReadableStream({
       async start(controller) {
         try {
           for (const chunk of sortedChunks) {
-            const filePath = await this.getTgFilePath(chunk.file_id);
+            const filePath = await getFilePath(chunk.file_id);
             if (!filePath) {
               throw new Error(`Missing chunk ${chunk.idx}`);
             }
 
-            const url = `https://api.telegram.org/file/bot${this.env.TG_BOT_TOKEN}/${filePath}`;
+            const url = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
             const res = await fetch(url);
 
             if (!res.ok || !res.body) {
@@ -218,7 +223,7 @@ export class TGAdapter implements DBAdapter {
       status: 200,
       headers: {
         "Content-Type": contentType,
-        "Content-Disposition": `inline; filename="${metadata.fileName}"`,
+        "Content-Disposition": encodeContentDisposition(metadata.fileName),
         "Cache-Control": "public, max-age=3600",
         "Accept-Ranges": "bytes",
       },
