@@ -1,7 +1,8 @@
-import { DBAdapterFactory } from '../utils/db-adapter';
-import { FileMetadata } from '../utils/types';
-import { ok, fail } from '../utils/common';
+import { fail } from "../../utils/common";
+import { DBAdapterFactory } from "../../utils/db-adapter";
+import { FileMetadata, FileTag } from "../../utils/types";
 
+// 单个文件上传
 export async function onRequestPost(context: any) {
     const { request, env } = context;
 
@@ -20,15 +21,19 @@ export async function onRequestPost(context: any) {
         // 创建存储适配器实例
         const dbAdapter = DBAdapterFactory.getAdapter(env);
 
+        const isNsfw = formData.get('nsfw') === 'true';
+        console.log(formData);
+
         const metadata : FileMetadata = {
             fileName,
             fileSize,
             uploadedAt: Date.now(),
             liked: false,
+            tags: isNsfw ? [FileTag.NSFW] : [],
         }
 
         // console.log('Uploading file:', fileName, fileSize);
-        return await dbAdapter.upload(uploadFile, metadata);
+        return await dbAdapter.uploadFile(uploadFile, metadata);
     } catch (error: any) {
         console.error('Upload error:', error);
         return fail(`Failed to upload file: ${error.message}`, 500);

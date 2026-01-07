@@ -14,8 +14,8 @@ export function getFileExt(fileName: string): string {
 }
 
 // 构建存储键
-export function buildKeyId(fileType: FileType, fullFileId: string): string {
-  return `${fileType}:${fullFileId}`;
+export function buildKeyId(fileType: FileType, fileId: string, fileExt: string): string {
+  return `${fileType}:${fileId}.${fileExt}`;
 }
 
 // 从存储键提取文件ID
@@ -86,7 +86,19 @@ export function getContentTypeByExt(ext: string): string {
 
 
 /**
- * 生成成功响应
+ * 编码 Content-Disposition header 中的文件名（支持中文等非 ASCII 字符）
+ * 使用 RFC 5987 标准：filename*=UTF-8''<percent-encodedfilename>
+ */
+export function encodeContentDisposition(fileName: string, inline = true): string {
+  const disposition = inline ? 'inline' : 'attachment';
+  // 使用 RFC 5987 编码：filename*=UTF-8''<percent-encoded>
+  const encodedFileName = encodeURIComponent(fileName)
+    .replace(/['()]/g, escape) // 额外转义特殊字符
+    .replace(/\*/g, '%2A');
+  return `${disposition}; filename*=UTF-8''${encodedFileName}`;
+}
+
+/**
  * @param data 响应数据
  * @param message 提示消息
  * @param status HTTP状态码，默认为200

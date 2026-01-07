@@ -34,15 +34,27 @@ export type FileMetadata = {
   fileSize: number;
   uploadedAt: number;   // 时间戳
   liked: boolean;      // 是否被收藏
-  duration?: number;    // 音视频时长（秒）
+  tags?: FileTag[] | string[];
+  chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
 };
 
-// TODO
 export enum FileTag {
-  Liked = 'liked',  // 收藏
   NSFW = 'nsfw',  // 非安全内容
-
+  Private = 'private',  // 私有文件, 不允许其他人通过url直接访问到
 }
+
+// 分片信息（用于大文件分片上传）
+export const chunkPrefix = 'chunk_';
+export type ChunkInfo = {
+  total: number;          // 总分片数
+  chunks: Chunk[];        // 已上传的分片
+}
+export type Chunk = {
+  idx: number;
+  file_id: string;  // Telegram: file_id / R2: chunk key
+  size: number;      // 分片大小
+}
+
 // Cloudflare KV list参数
 // https://developers.cloudflare.com/kv/api/list-keys/#list-method
 export type ListOptions = {
