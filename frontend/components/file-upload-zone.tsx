@@ -10,6 +10,7 @@ import { uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
 import { FileItem } from "@/lib/types"
+import { nsfwDetector } from "@/lib/nsfw-detector"
 
 export function FileUploadZone() {
   const addFileLocal = useFileStore((state) => state.addFileLocal)
@@ -19,9 +20,8 @@ export function FileUploadZone() {
   const { toast } = useToast()
 
   // 文件上传配置
-  // TODO: 分片上传
   const uploadConfig = {
-    maxSize: 20 * 1024 * 1024, // 20MB - Telegram可分发的最大文件大小 
+    maxSize: 50 * 1024 * 1024, // 50MB - Telegram可分发的最大文件大小 
     maxConcurrent: 3, // 最大并发上传数
   }
 
@@ -70,6 +70,24 @@ export function FileUploadZone() {
         setUploadProgress({ ...uploadProgressMap })
 
         try {
+          // 对图片文件进行 NSFW 检测
+          if (file.type.startsWith('image/')) {
+            const isUnsafe = await nsfwDetector.detectImgFile(file);
+            console.log("nsfwDetector detectFile result:", isUnsafe)
+            
+            if (isUnsafe) {
+              // 检测到不适宜内容，阻止上传
+              toast({
+                title: "文件包含不适宜内容",
+                description: "检测到NSFW",
+                variant: "destructive",
+                duration: 5000,
+              });
+              
+              // return;
+            }
+          }
+
           const key = await uploadFile(file)
           uploadProgressMap[tmpKey] = 100
           setUploadProgress({ ...uploadProgressMap })
