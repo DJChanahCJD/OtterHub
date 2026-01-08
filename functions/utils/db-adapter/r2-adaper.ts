@@ -103,122 +103,152 @@ export class R2Adapter implements DBAdapter {
   }
 
   private async getSingleFile(key: string, req?: Request): Promise<Response> {
-    const object = await this.env[this.bucketName].get(key);
-    if (!object) {
-      return fail(`File not found for key: ${key}`, 404);
-    }
-
-    const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set("etag", object.httpEtag);
-    headers.set("Accept-Ranges", "bytes");
-
-    // 覆盖 Content-Type 为标准的（带 charset）
-    // 避免 R2 存储的 httpMetadata 缺少 charset 导致中文乱码
-    const ext = key.substring(key.lastIndexOf(".") + 1);
-    headers.set("Content-Type", getContentTypeByExt(ext));
-
-    const size = object.size;
-    const range = req?.headers.get("Range");
-
-    // ===== 处理 Range 请求 =====
-    if (range) {
-      // 只支持单段 Range：bytes=start-end
-      const match = /bytes=(\d+)-(\d+)?/.exec(range);
-      if (!match) {
-        return new Response("Invalid Range", { status: 416 });
+    try {
+      const object = await this.env[this.bucketName].get(key);
+      if (!object) {
+        console.error(`[getSingleFile] File not found: ${key}`);
+        return fail(`File not found for key: ${key}`, 404);
       }
 
-      const start = Number(match[1]);
-      const end = match[2] ? Number(match[2]) : size - 1;
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set("etag", object.httpEtag);
+      headers.set("Accept-Ranges", "bytes");
 
-      if (start >= size || end < start) {
-        return new Response("Range Not Satisfiable", { status: 416 });
+      // 覆盖 Content-Type 为标准的（带 charset）
+      // 避免 R2 存储的 httpMetadata 缺少 charset 导致中文乱码
+      const ext = key.substring(key.lastIndexOf(".") + 1);
+      headers.set("Content-Type", getContentTypeByExt(ext));
+
+      const size = object.size;
+      const range = req?.headers.get("Range");
+
+      // ===== 处理 Range 请求 =====
+      if (range) {
+        console.log(`[getSingleFile] Range request: ${key}, range=${range}, size=${size}`);
+
+        // 只支持单段 Range：bytes=start-end
+        const match = /bytes=(\d+)-(\d+)?/.exec(range);
+        if (!match) {
+          console.error(`[getSingleFile] Invalid Range format: ${range}`);
+          return new Response("Invalid Range", { status: 416 });
+        }
+
+        const start = Number(match[1]);
+        const end = match[2] ? Number(match[2]) : size - 1;
+
+        if (start >= size || end < start) {
+          console.error(`[getSingleFile] Range not satisfiable: start=${start}, end=${end}, size=${size}`);
+          return new Response("Range Not Satisfiable", { status: 416 });
+        }
+
+        const partial = await this.env[this.bucketName].get(key, {
+          range: { start, end },
+        });
+
+        if (!partial) {
+          console.error(`[getSingleFile] Failed to get partial object: ${key}`);
+          return fail("Failed to read file range", 500);
+        }
+
+        headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
+        headers.set("Content-Length", String(end - start + 1));
+
+        console.log(`[getSingleFile] Returning partial content: ${start}-${end}/${size}`);
+
+        return new Response(partial.body, {
+          status: 206,
+          headers,
+        });
       }
 
-      const partial = await this.env[this.bucketName].get(key, {
-        range: { start, end },
-      });
-
-      headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
-      headers.set("Content-Length", String(end - start + 1));
-
-      return new Response(partial.body, {
-        status: 206,
+      // ===== 非 Range：返回完整文件 =====
+      headers.set("Content-Length", String(size));
+      console.log(`[getSingleFile] Returning full file: ${key}, size=${size}`);
+      return new Response(object.body, {
+        status: 200,
         headers,
       });
+    } catch (error) {
+      console.error(`[getSingleFile] Error:`, error);
+      return fail(`Failed to read file: ${error}`, 500);
     }
-
-    // ===== 非 Range：返回完整文件 =====
-    headers.set("Content-Length", String(size));
-    return new Response(object.body, {
-      status: 200,
-      headers,
-    });
   }
 
   private async getMergedFile(key: string, req?: Request): Promise<Response> {
-    // 获取 metadata
-    const item = await this.env[this.kvName].getWithMetadata(key);
-    const metadata: FileMetadata = item.metadata;
+    try {
+      // 获取 metadata
+      const item = await this.env[this.kvName].getWithMetadata(key);
+      const metadata: FileMetadata = item.metadata;
 
-    if (!metadata?.chunkInfo) {
-      return fail("Invalid metadata", 400);
-    }
-
-    const { chunkInfo } = metadata;
-
-    // 检查分片是否完整
-    if (chunkInfo.chunks.length !== chunkInfo.total) {
-      return fail(
-        `Incomplete file: ${chunkInfo.chunks.length}/${chunkInfo.total}`,
-        425
-      );
-    }
-
-    // 按索引排序
-    const sortedChunks = [...chunkInfo.chunks].sort((a, b) => a.idx - b.idx);
-
-    // 计算总大小
-    const totalSize = sortedChunks.reduce((sum, c) => sum + c.size, 0);
-
-    const headers = new Headers();
-    const ext = metadata.fileName.split(".").pop()?.toLowerCase() || "bin";
-    headers.set("Content-Type", getContentTypeByExt(ext));
-    headers.set("Accept-Ranges", "bytes");
-
-    // 处理 Range 请求
-    const range = req?.headers.get("Range");
-    if (range) {
-      const match = /bytes=(\d+)-(\d+)?/.exec(range);
-      if (!match) {
-        return new Response("Invalid Range", { status: 416 });
+      if (!metadata?.chunkInfo) {
+        console.error(`[getMergedFile] Invalid metadata for key: ${key}`);
+        return fail("Invalid metadata", 400);
       }
 
-      const start = Number(match[1]);
-      const end = match[2] ? Number(match[2]) : totalSize - 1;
+      const { chunkInfo } = metadata;
 
-      if (start >= totalSize || end < start) {
-        return new Response("Range Not Satisfiable", { status: 416 });
+      // 检查分片是否完整
+      if (chunkInfo.chunks.length !== chunkInfo.total) {
+        console.error(`[getMergedFile] Incomplete file: ${chunkInfo.chunks.length}/${chunkInfo.total}`);
+        return fail(
+          `Incomplete file: ${chunkInfo.chunks.length}/${chunkInfo.total}`,
+          425
+        );
       }
 
-      headers.set("Content-Range", `bytes ${start}-${end}/${totalSize}`);
-      headers.set("Content-Length", String(end - start + 1));
+      // 按索引排序
+      const sortedChunks = [...chunkInfo.chunks].sort((a, b) => a.idx - b.idx);
 
-      return new Response(
-        this.createRangeStream(sortedChunks, start, end),
-        { status: 206, headers }
-      );
+      // 计算总大小
+      const totalSize = sortedChunks.reduce((sum, c) => sum + c.size, 0);
+
+      const headers = new Headers();
+      const ext = metadata.fileName.split(".").pop()?.toLowerCase() || "bin";
+      headers.set("Content-Type", getContentTypeByExt(ext));
+      headers.set("Accept-Ranges", "bytes");
+
+      // 处理 Range 请求
+      const range = req?.headers.get("Range");
+      if (range) {
+        const match = /bytes=(\d+)-(\d+)?/.exec(range);
+        if (!match) {
+          console.error(`[getMergedFile] Invalid Range format: ${range}`);
+          return new Response("Invalid Range", { status: 416 });
+        }
+
+        const start = Number(match[1]);
+        const end = match[2] ? Number(match[2]) : totalSize - 1;
+
+        if (start >= totalSize || end < start) {
+          console.error(`[getMergedFile] Range not satisfiable: start=${start}, end=${end}, totalSize=${totalSize}`);
+          return new Response("Range Not Satisfiable", { status: 416 });
+        }
+
+        headers.set("Content-Range", `bytes ${start}-${end}/${totalSize}`);
+        headers.set("Content-Length", String(end - start + 1));
+        headers.set("Cache-Control", "no-cache");
+
+        console.log(`[getMergedFile] Range: ${start}-${end}/${totalSize}`);
+
+        return new Response(
+          this.createRangeStream(sortedChunks, start, end),
+          { status: 206, headers }
+        );
+      }
+
+      // 非 Range：返回完整文件
+      headers.set("Content-Length", String(totalSize));
+      headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
+
+      return new Response(this.createMergedStream(sortedChunks), {
+        status: 200,
+        headers,
+      });
+    } catch (error) {
+      console.error(`[getMergedFile] Error:`, error);
+      return fail(`Failed to read merged file: ${error}`, 500);
     }
-
-    // 非 Range：返回完整文件
-    headers.set("Content-Length", String(totalSize));
-    headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
-
-    return new Response(this.createMergedStream(sortedChunks), {
-      status: 200,
-      headers,
-    });
   }
 
   // 创建合并流
@@ -228,23 +258,34 @@ export class R2Adapter implements DBAdapter {
     return new ReadableStream({
       async start(controller) {
         try {
+          console.log(`[createMergedStream] Merging ${chunks.length} chunks`);
           for (const chunk of chunks) {
             const object = await bucket.get(chunk.file_id);
             if (!object) {
               throw new Error(`Missing chunk ${chunk.idx}`);
             }
+
             const reader = object.body.getReader();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                controller.enqueue(value);
+              }
+            } finally {
+              reader.releaseLock();
             }
           }
+          console.log(`[createMergedStream] Completed`);
           controller.close();
         } catch (err) {
+          console.error(`[createMergedStream] Error:`, err);
           controller.error(err);
         }
       },
+      cancel() {
+        console.log(`[createMergedStream] Cancelled`);
+      }
     });
   }
 
@@ -258,6 +299,8 @@ export class R2Adapter implements DBAdapter {
           let byteOffset = 0;
           const targetEnd = end + 1;
 
+          console.log(`[Range] Stream start: ${start}-${end}/${chunks.length} chunks`);
+
           for (const chunk of chunks) {
             const chunkStart = byteOffset;
             const chunkEnd = byteOffset + chunk.size;
@@ -268,33 +311,54 @@ export class R2Adapter implements DBAdapter {
               continue;
             }
 
-            const object = await bucket.get(chunk.file_id);
-            if (!object) {
-              throw new Error(`Missing chunk ${chunk.idx}`);
-            }
-
             // 计算当前分片需要读取的范围
             const readStart = Math.max(0, start - chunkStart);
             const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
 
-            const ranged = await bucket.get(chunk.file_id, {
-              range: { start: readStart, end: readEnd - 1 },
-            });
+            // 检查是否需要读取完整分片
+            const isFullChunk = readStart === 0 && readEnd === chunk.size;
 
-            const reader = ranged.body.getReader();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
+            let object;
+            if (isFullChunk) {
+              // 读取完整分片，不使用 range 参数
+              object = await bucket.get(chunk.file_id);
+            } else {
+              // 读取分片的部分内容
+              object = await bucket.get(chunk.file_id, {
+                range: { start: readStart, end: readEnd - 1 },
+              });
+            }
+
+            if (!object) {
+              throw new Error(`Missing chunk ${chunk.idx}`);
+            }
+
+            // 直接 pipe 到 controller，避免缓冲
+            const reader = object.body.getReader();
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                controller.enqueue(value);
+              }
+            } finally {
+              reader.releaseLock();
             }
 
             byteOffset += chunk.size;
           }
+
+          console.log(`[Range] Stream completed`);
           controller.close();
         } catch (err) {
+          console.error(`[Range] Stream error:`, err);
           controller.error(err);
         }
       },
+      // 添加 cancel 处理，确保资源释放
+      cancel() {
+        console.log(`[Range] Stream cancelled`);
+      }
     });
   }
 

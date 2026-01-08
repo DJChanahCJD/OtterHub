@@ -6,8 +6,9 @@ export async function onRequestGet({ env, params, request }: any) {
   const db = DBAdapterFactory.getAdapter(env);
   const key = params.key;
 
-  // Range 请求不缓存
+  // Range 请求直接返回，不缓存，不修改 Response
   if (request.headers.has('Range')) {
+    console.log('[File] Range request detected, bypassing cache');
     return db.get(key, request);
   }
 
@@ -23,6 +24,7 @@ export async function onRequestGet({ env, params, request }: any) {
 
   const response = await db.get(key, request);
 
+  // 非 Range 请求可以缓存
   if (response.ok) {
     // 先克隆原始响应，确保 body 流可以被多次读取
     const clonedResponse = response.clone();
