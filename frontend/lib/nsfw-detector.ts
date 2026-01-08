@@ -1,6 +1,6 @@
 import * as nsfwjs from "nsfwjs";
 import * as tf from "@tensorflow/tfjs";
-import { MAX_FILE_SIZE } from "./types";
+import { MAX_CHUNK_SIZE } from "./types";
 
 tf.enableProdMode();
 
@@ -80,7 +80,7 @@ class NSFWDetector {
   }
 
   async isUnsafeImg(file: File): Promise<boolean> {
-    if (file.type.indexOf("image") === -1 || file.size > MAX_FILE_SIZE) { // 只检测＜20MB的图片文件
+    if (file.type.indexOf("image") === -1 || file.size > MAX_CHUNK_SIZE) { // 只检测＜20MB的图片文件
       return false;
     }
     const img = new Image();

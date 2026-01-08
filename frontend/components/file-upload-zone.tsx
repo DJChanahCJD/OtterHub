@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
-import { FileItem, MAX_CONCURRENT_UPLOADS, MAX_FILE_SIZE, FileTag } from "@/lib/types"
+import { FileItem, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileTag, MAX_FILE_SIZE, FileType } from "@/lib/types"
 import { nsfwDetector } from "@/lib/nsfw-detector"
 
 export function FileUploadZone() {
@@ -57,30 +57,50 @@ export function FileUploadZone() {
         }
       }
 
-      // 分片上传 (> MAX_FILE_SIZE)
-      const uploadChunkedFile = async (file: File) => {
+      // 分片上传 (> MAX_CHUNK_SIZE)
+      const uploadChunkedFile = async (file: File) : Promise<{key: string, fileType: FileType, isUnsafe: boolean} | null> => {
+        if (file.size >= MAX_FILE_SIZE) {
+          toast({
+            title: `文件大小超过${formatFileSize(MAX_FILE_SIZE)}`,
+            variant: "destructive",
+          })
+          return null
+        }
         const tmpKey = buildTmpFileKey(file)
         uploadProgressMap[tmpKey] = 0
         setUploadProgress({ ...uploadProgressMap })
 
         try {
           const fileType = getFileType(file.type)
-          const totalChunks = Math.ceil(file.size / MAX_FILE_SIZE)  // 总分片数
+          const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE)  // 总分片数
 
           // 1. 初始化分片上传
           const key = await uploadChunkInit(fileType, file.name, file.size, totalChunks)
 
-          // 2. 按 MAX_FILE_SIZE 分片上传
-          for (let i = 0; i < totalChunks; i++) {
-            const start = i * MAX_FILE_SIZE
-            const end = Math.min(start + MAX_FILE_SIZE, file.size)
+          // 2. 并发上传所有分片（最多3个并发）
+          const uploadedChunks: number[] = []
+
+          const uploadSingleChunk = async (i: number) => {
+            const start = i * MAX_CHUNK_SIZE
+            const end = Math.min(start + MAX_CHUNK_SIZE, file.size)
             const chunkFile = file.slice(start, end)
 
             await uploadChunk(key, i, chunkFile)
+            uploadedChunks.push(i)
 
             // 更新进度
-            uploadProgressMap[tmpKey] = Math.round(((i + 1) / totalChunks) * 100)
+            uploadProgressMap[tmpKey] = Math.round((uploadedChunks.length / totalChunks) * 100)
             setUploadProgress({ ...uploadProgressMap })
+          }
+
+          // 分批并发上传
+          for (let i = 0; i < totalChunks; i += MAX_CONCURRENTS) {
+            const batch = []
+            const end = Math.min(i + MAX_CONCURRENTS, totalChunks)
+            for (let j = i; j < end; j++) {
+              batch.push(uploadSingleChunk(j))
+            }
+            await Promise.all(batch)
           }
 
           return { key, fileType, isUnsafe: false } //  大文件不做nsfw检测
@@ -97,23 +117,25 @@ export function FileUploadZone() {
       // 单个文件上传入口
       const uploadSingleFile = async (file: File) => {
         try {
-          const { key, fileType, isUnsafe } = file.size > MAX_FILE_SIZE
+          const uploadResult = file.size > MAX_CHUNK_SIZE
             ? await uploadChunkedFile(file)
             : await uploadNormalFile(file)
 
+          if (!uploadResult) return
+
           // 添加到文件存储
           const fileItem: FileItem = {
-            name: key,
+            name: uploadResult.key,
             metadata: {
               fileName: file.name,
               fileSize: file.size,
               uploadedAt: Date.now(),
               liked: false,
-              tags: isUnsafe ? [FileTag.NSFW] : [],
+              tags: uploadResult.isUnsafe ? [FileTag.NSFW] : [],
             },
           }
 
-          addFileLocal(fileItem, fileType)
+          addFileLocal(fileItem, uploadResult.fileType)
           successCount++
         } catch (error) {
           console.error(`Error uploading file ${file.name}:`, error)
@@ -122,8 +144,8 @@ export function FileUploadZone() {
       }
 
       // 分批上传
-      for (let i = 0; i < fileArray.length; i += MAX_CONCURRENT_UPLOADS) {
-        const batch = fileArray.slice(i, i + MAX_CONCURRENT_UPLOADS)
+      for (let i = 0; i < fileArray.length; i += MAX_CONCURRENTS) {
+        const batch = fileArray.slice(i, i + MAX_CONCURRENTS)
         await Promise.all(batch.map(uploadSingleFile))
       }
 
