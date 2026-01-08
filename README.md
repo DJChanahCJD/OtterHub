@@ -1,4 +1,9 @@
-# OtterHub
+<p align="center" style="margin-bottom: 0;">
+  <img width="100" alt="OtterHub icon" src="public/otterhub-icon.svg">
+</p>
+<p align="center" style="font-size: 24px; font-weight: bold;">OtterHub</p>
+<p align="center">All your resources, in one place</p>
+
 OtterHub 是一个基于 Cloudflare KV + Telegram Bot API 的文件存储服务，支持文件上传、下载、删除、收藏等操作。
 
 ## 本地开发
