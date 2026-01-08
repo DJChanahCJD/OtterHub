@@ -69,55 +69,82 @@ export class TGAdapter implements DBAdapter {
    */
   async uploadChunk(
     key: string,
-    chunkIndex: number, 
+    chunkIndex: number,
     chunkFile: File | Blob
   ): Promise<Response> {
-    // 获取当前 KV
-    const item = await this.env[this.kvName].getWithMetadata(key);
+    try {
+      console.log(`[TGAdapter] Uploading chunk ${chunkIndex} for ${key}, size=${chunkFile.size}`);
 
-    const metadata: FileMetadata = item.metadata;
+      // 获取当前 KV
+      const item = await this.env[this.kvName].getWithMetadata(key);
 
-    if (!metadata.chunkInfo) {
-      throw new Error(`Not a chunked file: ${key}`);
-    }
+      const metadata: FileMetadata = item.metadata;
 
-    // 检查分片是否已上传
-    const existingChunk = metadata.chunkInfo.chunks.find(
-      (c) => c.idx === chunkIndex
-    );
-    if (existingChunk) {
-      return ok(existingChunk.file_id); // 已上传，直接返回
-    }
+      if (!metadata.chunkInfo) {
+        throw new Error(`Not a chunked file: ${key}`);
+      }
 
-    // 上传到 Telegram
-    const formData = new FormData();
-    formData.append("chat_id", this.env.TG_CHAT_ID);
-    formData.append("document", chunkFile, `${chunkPrefix}${chunkIndex}`);
-
-    const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/sendDocument`;
-    const response = await fetch(apiUrl, { method: "POST", body: formData });
-    const result = await response.json();
-
-    if (!result.ok) {
-      throw new Error(
-        `Chunk ${chunkIndex} upload failed: ${
-          result.description || "Unknown error"
-        }`
+      // 检查分片是否已上传
+      const existingChunk = metadata.chunkInfo.chunks.find(
+        (c) => c.idx === chunkIndex
       );
+      if (existingChunk) {
+        console.log(`[TGAdapter] Chunk ${chunkIndex} already uploaded`);
+        return ok(existingChunk.file_id); // 已上传，直接返回
+      }
+
+      // 上传到 Telegram
+      const formData = new FormData();
+      formData.append("chat_id", this.env.TG_CHAT_ID);
+      formData.append("document", chunkFile, `${chunkPrefix}${chunkIndex}`);
+
+      const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/sendDocument`;
+
+      // 添加超时控制
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const result = await response.json();
+
+        if (!result.ok) {
+          throw new Error(
+            `Chunk ${chunkIndex} upload failed: ${
+              result.description || "Unknown error"
+            }`
+          );
+        }
+
+        const tgFileId = result.result.document.file_id;
+        console.log(`[TGAdapter] Chunk ${chunkIndex} uploaded successfully, tg_file_id=${tgFileId}`);
+
+        // 更新 KV：追加分片
+        metadata.chunkInfo.chunks.push({
+          idx: chunkIndex,
+          file_id: tgFileId,
+          size: chunkFile.size, // TODO: TG是否会压缩？能否从result中获取
+        });
+
+        await this.env[this.kvName].put(key, "", { metadata });
+
+        return ok(tgFileId);
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error(`Chunk ${chunkIndex} upload timeout after 60s`);
+        }
+        throw error;
+      }
+    } catch (error) {
+      throw error;
     }
-
-    const tgFileId = result.result.document.file_id;
-
-    // 更新 KV：追加分片
-    metadata.chunkInfo.chunks.push({
-      idx: chunkIndex,
-      file_id: tgFileId,
-      size: chunkFile.size,
-    });
-
-    await this.env[this.kvName].put(key, "", { metadata });
-
-    return tgFileId;
   }
 
   async get(key: string, req?: Request): Promise<Response> {
@@ -152,7 +179,6 @@ export class TGAdapter implements DBAdapter {
         headers,
       });
     } catch (error) {
-      console.error("Failed to fetch Telegram file:", error);
       return fail(`File not found for key: ${key}`, 404);
     }
   }
@@ -264,7 +290,6 @@ export class TGAdapter implements DBAdapter {
 
       return true;
     } catch (error) {
-      console.error("Telegram delete error:", error);
       return false;
     }
   }
@@ -318,9 +343,7 @@ export class TGAdapter implements DBAdapter {
         }`,
       };
     } catch (error: any) {
-      console.error("Network error:", error);
       if (retryCount > 0) {
-        console.log(`Retry ${retryCount} times left. Retrying upload...`);
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (3 - retryCount))
         );
