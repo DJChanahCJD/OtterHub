@@ -4,6 +4,7 @@ import {
   FileType,
   ListFilesRequest,
   ListFilesResponse,
+  FileItem,
 } from "./types";
 
 // 开发环境：.env.local
@@ -98,4 +99,26 @@ export function logout(): Promise<boolean> {
   return request<boolean>(`${API_URL}/api/logout`, {
     method: "POST",
   });
+}
+
+/**
+ * 检查是否有未完成的上传（用于断点续传）
+ * 通过 filename + fileSize 匹配文件，检查 chunkInfo 是否完整
+ */
+export async function checkIncompleteUpload(
+  file: File
+): Promise<FileItem | null> {
+  try {
+    const fileList = await getFileList();
+    const incompleteFile = fileList.keys.find(
+      (item) =>
+        item.metadata.fileName === file.name &&
+        item.metadata.fileSize === file.size &&
+        item.metadata.chunkInfo?.chunks.length !== item.metadata.chunkInfo?.total
+    );
+    return incompleteFile || null;
+  } catch (error) {
+    console.error("检查未完成上传失败:", error);
+    return null;
+  }
 }

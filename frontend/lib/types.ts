@@ -83,5 +83,5 @@ export type ListFilesResponse = {
 // === 常量 ===
 export const MAX_CONCURRENTS = 3  // 最大并发上传数
 export const MAX_CHUNK_SIZE = 20 * 1024 * 1024 // 20MB
-export const MAX_CHUNK_NUM = 10 // 最多10个分片
+export const MAX_CHUNK_NUM = 10 // 由于Cloudfare KV的metadata最大只能存储1024个字符，理论最多10个分片
 export const MAX_FILE_SIZE = MAX_CHUNK_SIZE * MAX_CHUNK_NUM

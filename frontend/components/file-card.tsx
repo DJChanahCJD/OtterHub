@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MoreVertical,
   Download,
@@ -21,6 +21,7 @@ import {
   RotateCw,
   Info,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,8 +38,8 @@ import {
   downloadFile,
   formatTime,
 } from "@/lib/utils";
-import { FileItem, FileType, FileTag } from "@/lib/types";
-import { getFileUrl, toggleLike, deleteFile } from "@/lib/api";
+import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS } from "@/lib/types";
+import { getFileUrl, toggleLike, deleteFile, uploadChunk } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useToast } from "@/hooks/use-toast";
@@ -246,12 +247,20 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const safeMode = useFileStore((state) => state.safeMode);
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
+  const resumeInputRef = useState<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelected = selectedKeys.includes(file.name);
 
   // 检查是否为 NSFW 内容
   const isNSFW = file.metadata?.tags?.includes(FileTag.NSFW) || false;
   const shouldBlur = safeMode && isNSFW;
+
+  // 检查是否有未完成的上传
+  const isIncompleteUpload =
+    file.metadata?.chunkInfo &&
+    file.metadata.chunkInfo.chunks.length !== file.metadata.chunkInfo.total;
 
   // 只计算一次文件类型，提高性能
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
@@ -310,6 +319,77 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         liked: !file.metadata.liked,
       });
     });
+  };
+
+  // 处理继续上传
+  const handleResumeUpload = () => {
+    inputRef.current?.click();
+  };
+
+  const handleResumeFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile || !isIncompleteUpload) return;
+
+    // 检查文件是否匹配
+    if (
+      selectedFile.name !== file.metadata.fileName ||
+      selectedFile.size !== file.metadata.fileSize
+    ) {
+      toast({
+        title: "文件不匹配",
+        description: "请选择相同的文件以继续上传",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsResuming(true);
+    const chunkInfo = file.metadata.chunkInfo!;
+    const totalChunks = chunkInfo.total;
+    const uploadedIndices = new Set(chunkInfo.chunks.map((c) => c.idx));
+
+    try {
+      // 计算需要上传的分片索引
+      const chunkIndicesToUpload: number[] = [];
+      for (let i = 0; i < totalChunks; i++) {
+        if (!uploadedIndices.has(i)) {
+          chunkIndicesToUpload.push(i);
+        }
+      }
+
+      // 分批并发上传缺失分片
+      for (let i = 0; i < chunkIndicesToUpload.length; i += MAX_CONCURRENTS) {
+        const batch: Promise<void>[] = [];
+        const end = Math.min(i + MAX_CONCURRENTS, chunkIndicesToUpload.length);
+        for (let j = i; j < end; j++) {
+          const chunkIndex = chunkIndicesToUpload[j];
+          const start = chunkIndex * MAX_CHUNK_SIZE;
+          const endPos = Math.min(start + MAX_CHUNK_SIZE, selectedFile.size);
+          const chunkFile = selectedFile.slice(start, endPos);
+
+          batch.push(uploadChunk(file.name, chunkIndex, chunkFile).then(() => {}));
+        }
+        await Promise.all(batch);
+      }
+
+      // 更新 metadata
+      await new Promise((resolve) => setTimeout(resolve, 500)); // 等待后端更新
+      window.location.reload(); // 刷新页面获取最新状态
+
+      toast({
+        title: "继续上传成功",
+        description: `已成功上传 ${chunkIndicesToUpload.length} 个缺失分片`,
+      });
+    } catch (error) {
+      console.error("继续上传失败:", error);
+      toast({
+        title: "继续上传失败",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsResuming(false);
+    }
   };
 
   if (listView) {
@@ -378,6 +458,27 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           <div className="hidden md:block text-xs text-white/40" title="上传时间">
             {formatTime(file.metadata.uploadedAt || 0)}
           </div>
+
+          {/* 继续上传按钮 */}
+          {isIncompleteUpload && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResumeUpload();
+              }}
+              disabled={isResuming}
+              className="text-amber-300 border-amber-500/30 hover:bg-amber-500/10 shrink-0"
+            >
+              {isResuming ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <RotateCw className="h-4 w-4 mr-1" />
+              )}
+              继续上传 ({file.metadata.chunkInfo!.chunks.length}/{file.metadata.chunkInfo!.total})
+            </Button>
+          )}
 
           {/* Actions */}
           <FileActions
@@ -484,7 +585,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
           {/* File Info Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
               <p className="text-sm font-medium text-white truncate">
                 {file.metadata.fileName || file.name}
               </p>
@@ -494,9 +595,32 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs text-white/60">
-              {formatFileSize(file.metadata.fileSize || 0)}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-white/60">
+                {formatFileSize(file.metadata.fileSize || 0)}
+              </p>
+              {isIncompleteUpload && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleResumeUpload();
+                  }}
+                  disabled={isResuming}
+                  className="text-amber-300 hover:bg-amber-500/10 h-6 px-2 text-xs"
+                >
+                  {isResuming ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCw className="h-3 w-3 mr-1" />
+                      {file.metadata.chunkInfo!.chunks.length}/{file.metadata.chunkInfo!.total}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </PhotoProvider>
@@ -511,6 +635,15 @@ export function FileCard({ file, listView = false }: FileCardProps) {
         onOpenChange={setShowEdit}
         onSuccess={handleEditSuccess}
       />
+      {/* 隐藏的文件输入框，用于继续上传 */}
+      {isIncompleteUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          onChange={handleResumeFileSelect}
+        />
+      )}
     </>
   );
 }

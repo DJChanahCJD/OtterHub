@@ -31,6 +31,8 @@ export function FileDetailDialog({
 
   const jsonString = JSON.stringify(file, null, 2);
 
+  const metadataCharCount = JSON.stringify(file.metadata).length;
+
   const handleCopyJson = () => {
     navigator.clipboard.writeText(jsonString);
     setCopied(true);
@@ -101,7 +103,7 @@ export function FileDetailDialog({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Code className="h-5 w-5 text-teal-400" />
-              <p className="text-sm font-medium text-white">JSON 数据</p>
+              <p className="text-sm font-medium text-white">JSON 数据（metadata字符数：{metadataCharCount}）</p>
             </div>
             <Button
               variant="ghost"

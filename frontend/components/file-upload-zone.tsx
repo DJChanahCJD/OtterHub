@@ -3,28 +3,44 @@
 import type React from "react"
 
 import { useCallback, useRef, useState } from "react"
-import { Upload } from "lucide-react"
+import { Upload, AlertCircle } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
+import { uploadChunk, uploadChunkInit, uploadFile, checkIncompleteUpload } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
 import { FileItem, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileTag, MAX_FILE_SIZE, FileType } from "@/lib/types"
 import { nsfwDetector } from "@/lib/nsfw-detector"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function FileUploadZone() {
   const addFileLocal = useFileStore((state) => state.addFileLocal)
+  const updateFileMetadata = useFileStore((state) => state.updateFileMetadata)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
+  const [resumePrompt, setResumePrompt] = useState<{ file: File; existingFile: FileItem } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   const processFiles = useCallback(
-    async (files: FileList) => {
+    async (files: FileList, skipResumeCheck = false, resumeFile?: FileItem) => {
       const fileArray = Array.from(files)
       if (!fileArray.length) return
 
       // 支持任意大小文件，小文件走普通上传，大文件走分片上传
+
+      // 检查是否有未完成的上传（仅对大文件）
+      if (!skipResumeCheck) {
+        for (const file of fileArray) {
+          if (file.size > MAX_CHUNK_SIZE) {
+            const incompleteFile = await checkIncompleteUpload(file)
+            if (incompleteFile) {
+              setResumePrompt({ file, existingFile: incompleteFile })
+              return // 显示确认对话框
+            }
+          }
+        }
+      }
 
       // 上传状态
       let successCount = 0
@@ -58,7 +74,10 @@ export function FileUploadZone() {
       }
 
       // 分片上传 (> MAX_CHUNK_SIZE)
-      const uploadChunkedFile = async (file: File) : Promise<{key: string, fileType: FileType, isUnsafe: boolean} | null> => {
+      const uploadChunkedFile = async (
+        file: File,
+        resumeFile?: FileItem
+      ): Promise<{ key: string; fileType: FileType; isUnsafe: boolean } | null> => {
         if (file.size >= MAX_FILE_SIZE) {
           toast({
             title: `文件大小超过${formatFileSize(MAX_FILE_SIZE)}`,
@@ -72,14 +91,26 @@ export function FileUploadZone() {
 
         try {
           const fileType = getFileType(file.type)
-          const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE)  // 总分片数
+          const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE)
+          let key: string
+          let uploadedChunks: number[] = []
 
-          // 1. 初始化分片上传
-          const key = await uploadChunkInit(fileType, file.name, file.size, totalChunks)
+          // 断点续传：使用已存在的 key
+          if (resumeFile) {
+            key = resumeFile.name
+            // 已上传的分片索引
+            const uploadedIndices = new Set(resumeFile.metadata.chunkInfo!.chunks.map((c) => c.idx))
+            uploadedChunks = Array.from(uploadedIndices)
 
-          // 2. 并发上传所有分片（最多3个并发）
-          const uploadedChunks: number[] = []
+            // 初始进度
+            uploadProgressMap[tmpKey] = Math.round((uploadedChunks.length / totalChunks) * 100)
+            setUploadProgress({ ...uploadProgressMap })
+          } else {
+            // 新上传：初始化分片上传
+            key = await uploadChunkInit(fileType, file.name, file.size, totalChunks)
+          }
 
+          // 上传缺失的分片
           const uploadSingleChunk = async (i: number) => {
             const start = i * MAX_CHUNK_SIZE
             const end = Math.min(start + MAX_CHUNK_SIZE, file.size)
@@ -93,17 +124,32 @@ export function FileUploadZone() {
             setUploadProgress({ ...uploadProgressMap })
           }
 
-          // 分批并发上传
-          for (let i = 0; i < totalChunks; i += MAX_CONCURRENTS) {
+          // 计算需要上传的分片索引
+          const chunkIndicesToUpload = []
+          if (resumeFile) {
+            const uploadedIndices = new Set(resumeFile.metadata.chunkInfo!.chunks.map((c) => c.idx))
+            for (let i = 0; i < totalChunks; i++) {
+              if (!uploadedIndices.has(i)) {
+                chunkIndicesToUpload.push(i)
+              }
+            }
+          } else {
+            for (let i = 0; i < totalChunks; i++) {
+              chunkIndicesToUpload.push(i)
+            }
+          }
+
+          // 分批并发上传缺失分片
+          for (let i = 0; i < chunkIndicesToUpload.length; i += MAX_CONCURRENTS) {
             const batch = []
-            const end = Math.min(i + MAX_CONCURRENTS, totalChunks)
+            const end = Math.min(i + MAX_CONCURRENTS, chunkIndicesToUpload.length)
             for (let j = i; j < end; j++) {
-              batch.push(uploadSingleChunk(j))
+              batch.push(uploadSingleChunk(chunkIndicesToUpload[j]))
             }
             await Promise.all(batch)
           }
 
-          return { key, fileType, isUnsafe: false } //  大文件不做nsfw检测
+          return { key, fileType, isUnsafe: false }
         } catch (error) {
           throw new Error(`${file.name}: ${(error as Error).message}`)
         } finally {
@@ -118,24 +164,31 @@ export function FileUploadZone() {
       const uploadSingleFile = async (file: File) => {
         try {
           const uploadResult = file.size > MAX_CHUNK_SIZE
-            ? await uploadChunkedFile(file)
+            ? await uploadChunkedFile(file, resumeFile)
             : await uploadNormalFile(file)
 
           if (!uploadResult) return
 
-          // 添加到文件存储
-          const fileItem: FileItem = {
-            name: uploadResult.key,
-            metadata: {
-              fileName: file.name,
-              fileSize: file.size,
+          // 断点续传：更新已存在的文件 metadata
+          if (resumeFile) {
+            updateFileMetadata(resumeFile.name, {
+              ...resumeFile.metadata,
               uploadedAt: Date.now(),
-              liked: false,
-              tags: uploadResult.isUnsafe ? [FileTag.NSFW] : [],
-            },
+            })
+          } else {
+            // 新上传：添加到文件存储
+            const fileItem: FileItem = {
+              name: uploadResult.key,
+              metadata: {
+                fileName: file.name,
+                fileSize: file.size,
+                uploadedAt: Date.now(),
+                liked: false,
+                tags: uploadResult.isUnsafe ? [FileTag.NSFW] : [],
+              },
+            }
+            addFileLocal(fileItem, uploadResult.fileType)
           }
-
-          addFileLocal(fileItem, uploadResult.fileType)
           successCount++
         } catch (error) {
           console.error(`Error uploading file ${file.name}:`, error)
@@ -241,6 +294,46 @@ export function FileUploadZone() {
           className="hidden"
         />
       </div>
+
+      {/* 断点续传确认对话框 */}
+      {resumePrompt && (
+        <Alert className="mt-4 bg-amber-500/10 border-amber-500/30 backdrop-blur-sm">
+          <AlertCircle className="h-4 w-4 text-amber-400" />
+          <div className="flex-1 space-y-2">
+            <div className="font-medium text-amber-300">
+              检测到未完成的上传
+            </div>
+            <AlertDescription className="text-white/70">
+              文件 "{resumePrompt.file.name}" 已上传{" "}
+              {resumePrompt.existingFile.metadata.chunkInfo!.chunks.length} /{" "}
+              {resumePrompt.existingFile.metadata.chunkInfo!.total} 个分片
+            </AlertDescription>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => {
+                  const fileList = Object.assign([resumePrompt.file], {
+                    item: (index: number) => [resumePrompt.file][index],
+                    length: 1,
+                  }) as FileList
+                  processFiles(fileList, true, resumePrompt.existingFile)
+                  setResumePrompt(null)
+                }}
+                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
+              >
+                继续上传
+              </button>
+              <button
+                onClick={() => {
+                  setResumePrompt(null)
+                }}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       {uploadingFiles.length > 0 && (
         <div className="mt-4 space-y-2">
