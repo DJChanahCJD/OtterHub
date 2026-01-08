@@ -37,4 +37,13 @@ export async function onRequestGet({ env, params, request }: any) {
   return response;
 }
 
+// 处理 HEAD 请求
+export async function onRequestHead({ env, params, request }: any) {
+  const db = DBAdapterFactory.getAdapter(env);
+  const key = params.key;
+
+  console.log('[File] HEAD request:', params.key);
+  return db.get(key, request);
+}
+
 

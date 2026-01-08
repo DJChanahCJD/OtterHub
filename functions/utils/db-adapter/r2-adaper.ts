@@ -71,8 +71,14 @@ export class R2Adapter implements DBAdapter {
       return ok(existingChunk.file_id);
     }
 
-    // 构建分片在 R2 中的 key: {原始key}_{index}
-    const chunkId = `${key}_${chunkIndex}`;
+    // {原始key}
+    // key = video:chunk_RR1ySaZme2zoASCt.mp4
+    // chunkId = RR1ySaZme2zoASCt_0
+
+
+    // 将ID简化为原始16位ID + 分片索引
+    const shortFileId = key.split("_")[1].slice(0, 16);
+    const chunkId = `${shortFileId}_${chunkIndex}`;
 
     // 上传分片到 R2
     await this.env[this.bucketName].put(chunkId, chunkFile, {

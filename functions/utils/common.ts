@@ -36,8 +36,20 @@ export function getFileIdFromKey(key: string): { fileId: string, isChunk: boolea
 // 生成唯一文件ID
 // 当前用于R2和TG分片上传的fileId，TG的文件ID由TG API返回
 export function getUniqueFileId(): string {
-  return crypto.randomUUID();
+  // return crypto.randomUUID();
+  return generateShortId(); //  改为短ID以支持更多chunk
 }
+
+/**
+ * 生成短 ID（0-9a-zA-Z）
+ */
+export function generateShortId(length = 16): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/[+/=]/g, "")
+    .slice(0, length);
+}
+
 
 function json(body: any, status: number, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(body), {

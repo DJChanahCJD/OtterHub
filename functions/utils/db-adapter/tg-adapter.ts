@@ -151,14 +151,14 @@ export class TGAdapter implements DBAdapter {
     const { fileId, isChunk } = getFileIdFromKey(key);
     // 检查是否为分片文件
     if (isChunk) {
-      return await this.getMergedFile(key);
+      return await this.getMergedFile(key, req);
     }
-    return await this.getSingleFile(key);
+    return await this.getSingleFile(key, req);
   }
   /**
    * 获取单个文件
    */
-  private async getSingleFile(key: string): Promise<Response> {
+  private async getSingleFile(key: string, req?: Request): Promise<Response> {
     try {
       const { fileId, isChunk } = getFileIdFromKey(key);
       const ext = key.substring(key.lastIndexOf(".") + 1);
@@ -173,6 +173,46 @@ export class TGAdapter implements DBAdapter {
         `inline; filename="${fileId}.${ext}"` //  实现访问url在新标签页打开的效果
       );
       headers.set("Cache-Control", "public, max-age=3600");
+      headers.set("Accept-Ranges", "bytes");
+
+      // 获取文件大小
+      const contentLength = file.headers.get("Content-Length");
+      const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+
+      // 处理 Range 请求
+      const range = req?.headers.get("Range");
+      if (range && fileSize > 0) {
+        const match = /bytes=(\d+)-(\d+)?/.exec(range);
+        if (match) {
+          const start = Number(match[1]);
+          const end = match[2] ? Number(match[2]) : fileSize - 1;
+
+          if (start >= fileSize || end < start) {
+            return new Response("Range Not Satisfiable", {
+              status: 416,
+              headers: {
+                "Content-Range": `bytes */${fileSize}`,
+              },
+            });
+          }
+
+          // Telegram 不支持 Range，需要下载整个文件然后截取
+          const arrayBuffer = await file.arrayBuffer();
+          const slice = arrayBuffer.slice(start, end + 1);
+
+          headers.set("Content-Range", `bytes ${start}-${end}/${fileSize}`);
+          headers.set("Content-Length", String(end - start + 1));
+
+          return new Response(slice, {
+            status: 206,
+            headers,
+          });
+        }
+      }
+
+      if (fileSize > 0) {
+        headers.set("Content-Length", String(fileSize));
+      }
 
       return new Response(file.body, {
         status: file.status,
@@ -186,7 +226,7 @@ export class TGAdapter implements DBAdapter {
   /**
    * 合并分片文件
    */
-  private async getMergedFile(key: string): Promise<Response> {
+  private async getMergedFile(key: string, req?: Request): Promise<Response> {
     const ext = key.substring(key.lastIndexOf(".") + 1);
     const contentType = getContentTypeByExt(ext);
 
@@ -207,10 +247,90 @@ export class TGAdapter implements DBAdapter {
     }
 
     const sortedChunks = [...chunkInfo.chunks].sort((a, b) => a.idx - b.idx);
+    const totalSize = sortedChunks.reduce((sum, c) => sum + c.size, 0);
 
     // 捕获 this 引用，避免 ReadableStream start 回调中 this 丢失
     const botToken = this.env.TG_BOT_TOKEN;
     const getFilePath = this.getTgFilePath.bind(this);
+
+    // 处理 Range 请求
+    const range = req?.headers.get("Range");
+    if (range) {
+      const match = /bytes=(\d+)-(\d+)?/.exec(range);
+      if (match) {
+        const start = Number(match[1]);
+        const end = match[2] ? Number(match[2]) : totalSize - 1;
+
+        if (start >= totalSize || end < start) {
+          return new Response("Range Not Satisfiable", {
+            status: 416,
+            headers: {
+              "Content-Range": `bytes */${totalSize}`,
+            },
+          });
+        }
+
+        // 创建 Range 流
+        const rangeStream = new ReadableStream({
+          async start(controller) {
+            try {
+              let byteOffset = 0;
+              const targetEnd = end + 1;
+
+              for (const chunk of sortedChunks) {
+                const chunkStart = byteOffset;
+                const chunkEnd = byteOffset + chunk.size;
+
+                // 跳过不在范围内的分片
+                if (chunkEnd <= start || chunkStart >= targetEnd) {
+                  byteOffset += chunk.size;
+                  continue;
+                }
+
+                // 计算当前分片需要读取的范围
+                const readStart = Math.max(0, start - chunkStart);
+                const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
+
+                const filePath = await getFilePath(chunk.file_id);
+                if (!filePath) {
+                  throw new Error(`Missing chunk ${chunk.idx}`);
+                }
+
+                const url = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+                const res = await fetch(url);
+
+                if (!res.ok || !res.body) {
+                  throw new Error(`Failed to fetch chunk ${chunk.idx}`);
+                }
+
+                // 读取整个分片，然后截取需要的部分
+                const arrayBuffer = await res.arrayBuffer();
+                const slice = arrayBuffer.slice(readStart, readEnd);
+                controller.enqueue(new Uint8Array(slice));
+
+                byteOffset += chunk.size;
+              }
+
+              controller.close();
+            } catch (err) {
+              controller.error(err);
+            }
+          },
+        });
+
+        return new Response(rangeStream, {
+          status: 206,
+          headers: {
+            "Content-Type": contentType,
+            "Content-Range": `bytes ${start}-${end}/${totalSize}`,
+            "Content-Length": String(end - start + 1),
+            "Content-Disposition": encodeContentDisposition(metadata.fileName),
+            "Cache-Control": "public, max-age=3600",
+            "Accept-Ranges": "bytes",
+          },
+        });
+      }
+    }
 
     // 使用 stream 合并分片，避免内存占用过大
     const stream = new ReadableStream({
@@ -252,6 +372,7 @@ export class TGAdapter implements DBAdapter {
         "Content-Disposition": encodeContentDisposition(metadata.fileName),
         "Cache-Control": "public, max-age=3600",
         "Accept-Ranges": "bytes",
+        "Content-Length": String(totalSize),
       },
     });
   }
