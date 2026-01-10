@@ -77,38 +77,19 @@ export const downloadFile = async (url: string, metadata: FileMetadata) => {
 
   const { fileSize, fileName } = metadata;
 
-  // 大文件让用户自己直接通过浏览器控件下载（浏览器原生下载，支持断点续传）
+  // 大文件让用户自己直接通过浏览器控件下载
   if (fileSize > DIRECT_DOWNLOAD_LIMIT) {
-    downloadViaIframe(url);
+    window.open(url, "_blank", "noopener,noreferrer");
     return;
   }
-
-  // 小文件直接通过 url 下载
+  
+  // 小文件直接通过url下载
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
-};
-
-/**
- * 使用隐藏 iframe 触发浏览器原生下载
- * 优点：不占内存、支持大文件、支持 206 续传、批量调用稳定性高
- */
-export const downloadViaIframe = (url: string) => {
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none"; // 隐藏
-  iframe.src = url;
-  
-  // 必须添加到文档树中才会触发加载
-  document.body.appendChild(iframe);
-
-  // 触发下载后一段时间移除，防止 DOM 堆积
-  // 30秒足够浏览器发起请求并识别出这是一个下载任务
-  setTimeout(() => {
-    document.body.removeChild(iframe);
-  }, 30000);
 };
 
 // 格式化音视频时间为分秒格式
