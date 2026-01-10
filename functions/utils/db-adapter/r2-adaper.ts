@@ -1,5 +1,6 @@
 import { DBAdapter } from ".";
-import { buildKeyId, ok, fail, getUniqueFileId, getFileIdFromKey, getContentTypeByExt, encodeContentDisposition } from "../common";
+import { ok, fail, encodeContentDisposition } from "../common";
+import { getUniqueFileId, buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file-tools";
 import { Chunk, FileMetadata, FileType } from "../types";
 
 // R2存储适配器实现
