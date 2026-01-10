@@ -148,8 +148,10 @@ export class R2Adapter implements DBAdapter {
           return new Response("Range Not Satisfiable", { status: 416 });
         }
 
+        // https://developers.cloudflare.com/r2/api/workers/workers-api-reference
+        // R2 API 使用 offset 和 length 字段，而非 start 和 end
         const partial = await this.env[this.bucketName].get(key, {
-          range: { start, end },
+          range: { offset: start, length: end - start + 1 },
         });
 
         if (!partial) {
@@ -329,9 +331,9 @@ export class R2Adapter implements DBAdapter {
               // 读取完整分片，不使用 range 参数
               object = await bucket.get(chunk.file_id);
             } else {
-              // 读取分片的部分内容
+              // R2 API 使用 offset 和 length 字段，而非 start 和 end
               object = await bucket.get(chunk.file_id, {
-                range: { start: readStart, end: readEnd - 1 },
+                range: { offset: readStart, length: readEnd - readStart },
               });
             }
 
