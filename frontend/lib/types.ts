@@ -23,6 +23,13 @@ export enum SortOrder {
   Desc = "desc",
 }
 
+// 浏览模式
+export enum BrowseMode {
+  Default = "default",      // 默认模式：正常显示所有内容
+  SmartNoImage = "smart",   // 智能无图：不加载 >5MB 的图片
+  DataSaver = "dataSaver", // 省流模式：不加载任何图片
+}
+
 // 文件类型
 export enum FileType {
   Image = "img",

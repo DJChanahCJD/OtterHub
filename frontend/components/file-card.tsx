@@ -22,6 +22,7 @@ import {
   Info,
   AlertTriangle,
   Loader2,
+  Image,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,7 @@ import {
   downloadFile,
   formatTime,
 } from "@/lib/utils";
-import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS } from "@/lib/types";
+import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS, BrowseMode } from "@/lib/types";
 import { getFileUrl, toggleLike, deleteFile, uploadChunk } from "@/lib/api";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
@@ -198,26 +199,44 @@ export function FileContent({
   fileKey,
   safeMode,
   tags,
+  fileSize,
+  browseMode,
 }: {
   fileType: FileType;
   fileKey: string;
   safeMode: boolean;
   tags?: FileTag[] | string[];
+  fileSize?: number;
+  browseMode: BrowseMode;
 }) {
   const isNSFW = tags?.includes(FileTag.NSFW) || false;
   const shouldBlur = safeMode && isNSFW;
   const canPreview = !shouldBlur; // 只有在非安全模式或非NSFW时才能预览
 
+  // 5MB 阈值
+  const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
+
+  // 判断是否应该加载图片
+  const shouldLoadImage = () => {
+    if (fileType !== FileType.Image) return false;
+    if (browseMode === BrowseMode.DataSaver) return false; // 省流模式不加载任何图片
+    if (browseMode === BrowseMode.SmartNoImage && fileSize && fileSize > SMART_NO_IMAGE_THRESHOLD) {
+      return false; // 智能无图模式，大于5MB不加载
+    }
+    return true;
+  };
+
   if (fileType === FileType.Image) {
     const imgElement = (
-      <img
-        data-key={fileKey}
+      shouldLoadImage() ? (<img
         src={getFileUrl(fileKey)}
         className={cn(
           "w-full h-full object-cover transition-all duration-300",
           shouldBlur ? "blur-2xl scale-110" : "cursor-zoom-in"
         )}
-      />
+      />) : (
+          <Image className="h-12 w-12 text-slate-400"/>
+      )
     );
 
     // 只有非 NSFW 或安全模式关闭时才能预览
@@ -245,6 +264,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
   const safeMode = useFileStore((state) => state.safeMode);
+  const browseMode = useFileStore((state) => state.browseMode);
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
@@ -570,6 +590,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 fileKey={file.name}
                 safeMode={safeMode}
                 tags={file.metadata?.tags}
+                fileSize={file.metadata.fileSize}
+                browseMode={browseMode}
               />
               {shouldBlur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
