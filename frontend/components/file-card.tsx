@@ -313,7 +313,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   
   const handleDownload = () => {
     const url = getFileUrl(file.name);
-    downloadFileV2(url, file.metadata);
+    downloadFile(url, file.metadata);
   };
 
   // 查看文件

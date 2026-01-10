@@ -87,12 +87,16 @@ export const downloadFile = async (url: string, metadata: FileMetadata) => {
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
+  a.rel = "noopener,noreferrer";
+  
   document.body.appendChild(a);
   a.click();
-  a.remove();
+
+  setTimeout(() => a.remove(), 100);
 };
 
 /**
+ * （已证实无效）
  * 基于 StreamSaver 的流式下载 (V2)
  * 优势：支持跨域重命名、无内存溢出、大文件进度条
  */
