@@ -1,7 +1,7 @@
-import { ok } from "../../utils/common";
+import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { getUniqueFileId, buildKeyId, getFileExt } from "../../utils/file";
-import { CF, FileMetadata, FileType, TEMP_CHUNK_TTL, chunkPrefix } from "../../utils/types";
+import { CF, FileMetadata, FileType, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL, chunkPrefix } from "../../utils/types";
 
 // 分片上传流程：
 // 1. 前端发起分片上传初始化请求，获取chunks对应的唯一key，然后前端自行分片上传
@@ -16,6 +16,10 @@ export async function onRequestGet(context: any): Promise<Response> {
   const fileName = params.get("fileName");
   const fileSize = parseInt(params.get("fileSize"), 10);
   const totalChunks = parseInt(params.get("totalChunks"), 10);
+
+  if (fileSize > MAX_FILE_SIZE || totalChunks > MAX_CHUNK_NUM) {
+    return fail("File size exceeds the limit", 400);
+  }
 
   const fileId = getUniqueFileId();
   const key = buildKeyId(fileType, `${chunkPrefix}${fileId}`, getFileExt(fileName));
