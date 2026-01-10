@@ -31,8 +31,6 @@ export function FileDetailDialog({
 
   const jsonString = JSON.stringify(file, null, 2);
 
-  const metadataCharCount = JSON.stringify(file.metadata).length;
-
   const handleCopyJson = () => {
     navigator.clipboard.writeText(jsonString);
     setCopied(true);
@@ -79,31 +77,13 @@ export function FileDetailDialog({
               </p>
             </div>
           </div>
-
-          <div className="flex items-start gap-3">
-            {file.metadata.liked ? (
-              <Heart className="h-5 w-5 text-pink-400 mt-0.5 shrink-0 fill-pink-400" />
-            ) : (
-              <HeartOff className="h-5 w-5 text-white/40 mt-0.5 shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/60 mb-1">收藏状态</p>
-              <p
-                className={`text-sm font-medium ${
-                  file.metadata.liked ? "text-pink-400" : "text-white/60"
-                }`}
-              >
-                {file.metadata.liked ? "已收藏" : "未收藏"}
-              </p>
-            </div>
-          </div>
         </div>
 
         <div className="border-t border-white/10 pt-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Code className="h-5 w-5 text-teal-400" />
-              <p className="text-sm font-medium text-white">JSON 数据（metadata字符数：{metadataCharCount}）</p>
+              <p className="text-sm font-medium text-white">JSON 数据</p>
             </div>
             <Button
               variant="ghost"
@@ -119,7 +99,7 @@ export function FileDetailDialog({
               {copied ? "已复制" : "复制"}
             </Button>
           </div>
-          <div className="bg-black/30 rounded-lg p-4 overflow-x-auto">
+          <div className="bg-black/30 rounded-lg p-4 overflow-x-auto overflow-y-auto max-h-80">
             <pre className="text-xs text-white/80 font-mono whitespace-pre-wrap break-all">
               {jsonString}
             </pre>
