@@ -92,6 +92,62 @@ export const downloadFile = async (url: string, metadata: FileMetadata) => {
   a.remove();
 };
 
+/**
+ * 基于 StreamSaver 的流式下载 (V2)
+ * 优势：支持跨域重命名、无内存溢出、大文件进度条
+ */
+export const downloadFileV2 = async (url: string, { fileSize, fileName }: FileMetadata) => {
+  if (!url) return;
+
+  // 1. 极超大文件策略：直接浏览器接管
+  if (fileSize && fileSize > DIRECT_DOWNLOAD_LIMIT) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok || !response.body) throw new Error(`Download failed: ${response.status}`);
+
+    // 2. 动态加载 StreamSaver (减少首屏体积)
+    const streamSaver = (await import('streamsaver')).default;
+    const fileStream = streamSaver.createWriteStream(fileName, { size: fileSize });
+    const readable = response.body;
+
+    // 3. 写入流：优先使用原生 pipeTo，不支持则降级为手动泵送
+    if (readable.pipeTo) {
+      await readable.pipeTo(fileStream);
+    } else {
+      const writer = fileStream.getWriter();
+      const reader = readable.getReader();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          await writer.close();
+          break;
+        }
+        await writer.write(value);
+      }
+    }
+  } catch (err) {
+    console.warn('StreamSaver failed, falling back to legacy download:', err);
+    fallbackDownload(url, fileName);
+  }
+};
+
+/**
+ * 降级方案：传统的 A 标签下载
+ * 注意：跨域文件可能无法重命名
+ */
+const fallbackDownload = (url: string, fileName: string) => {
+  const a = document.createElement('a');
+  Object.assign(a, { href: url, download: fileName, style: 'display: none' });
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+};
+
 // 格式化音视频时间为分秒格式
 export const formatMediaTime = (time: number) => {
   if (isNaN(time)) return "0:00";

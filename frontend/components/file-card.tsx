@@ -38,6 +38,7 @@ import {
   formatFileSize,
   downloadFile,
   formatTime,
+  downloadFileV2,
 } from "@/lib/utils";
 import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS, BrowseMode } from "@/lib/types";
 import { getFileUrl, toggleLike, deleteFile, uploadChunk } from "@/lib/api";
@@ -312,7 +313,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   
   const handleDownload = () => {
     const url = getFileUrl(file.name);
-    downloadFile(url, file.metadata);
+    downloadFileV2(url, file.metadata);
   };
 
   // 查看文件
