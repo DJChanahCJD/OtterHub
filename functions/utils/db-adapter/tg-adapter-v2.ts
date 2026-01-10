@@ -5,16 +5,13 @@ import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 import {
   FileMetadata,
   ApiResponse,
-  chunkPrefix,
-  FileType,
   MAX_CHUNK_SIZE,
-  TEMP_CHUNK_TTL,
   Chunk,
 } from "../types";
 import {
   parseRangeHeader,
   sortChunksAndCalculateSize,
-  validateChunks,
+  validateChunksForMerge,
 } from "./shared-utils";
 import {
   getTgFileId,
@@ -211,7 +208,7 @@ export class TGAdapterV2 extends BaseAdapter {
     }
 
     // 使用通用工具函数验证分片完整性
-    const validation = validateChunks(metadata);
+    const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
     if (!validation.valid) {
       console.error(`[getMergedFile] ${validation.reason}`);
       return fail(validation.reason || "Invalid metadata", 425);

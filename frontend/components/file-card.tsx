@@ -312,10 +312,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   
   const handleDownload = () => {
     const url = getFileUrl(file.name);
-    // 延迟到下一个事件循环，避免下载中断
-    setTimeout(() => {
-      downloadFile(url, file.metadata);
-    }, 0);
+    downloadFile(url, file.metadata);
   };
 
   // 查看文件

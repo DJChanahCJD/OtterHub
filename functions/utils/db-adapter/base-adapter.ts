@@ -1,7 +1,7 @@
 import { DBAdapter } from ".";
 import { Chunk, chunkPrefix, FileMetadata, TEMP_CHUNK_TTL } from "../types";
 import { fail, ok } from "../common";
-import { isUploadedChunk, validateChunks, streamToBlob } from "./shared-utils";
+import { isUploadedChunk, streamToBlob } from "./shared-utils";
 import { getUniqueFileId } from "../file";
 
 /**

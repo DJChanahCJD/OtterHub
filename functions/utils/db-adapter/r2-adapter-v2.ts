@@ -10,13 +10,11 @@ import {
   Chunk,
   FileMetadata,
   FileType,
-  TEMP_CHUNK_TTL,
-  chunkPrefix,
 } from "../types";
 import {
   parseRangeHeader,
-  validateChunks,
   sortChunksAndCalculateSize,
+  validateChunksForMerge,
 } from "./shared-utils";
 
 // R2存储适配器实现（新版本：优化分片上传）
@@ -164,7 +162,7 @@ export class R2AdapterV2 extends BaseAdapter {
       }
 
       // 使用通用工具函数验证分片完整性
-      const validation = validateChunks(metadata);
+      const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
       if (!validation.valid) {
         console.error(`[getMergedFile] ${validation.reason}`);
         return fail(validation.reason || "Invalid metadata", 425);

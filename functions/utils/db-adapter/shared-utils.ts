@@ -94,16 +94,6 @@ export function validateChunksForMerge(
 }
 
 /**
- * @deprecated 使用 validateUploadCompletion 代替
- * 保留此函数以向后兼容
- */
-export function validateChunks(
-  metadata: FileMetadata,
-): { valid: boolean; uploaded: number; total: number; reason?: string } {
-  return validateUploadCompletion(metadata);
-}
-
-/**
  * 排序分片并计算总大小
  * @param chunks 分片数组
  * @returns 排序后的分片数组和总大小
