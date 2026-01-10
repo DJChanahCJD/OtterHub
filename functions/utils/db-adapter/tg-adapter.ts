@@ -1,7 +1,7 @@
 // functions/utils/db-adapter/tg-adapter.ts
 import { DBAdapter } from ".";
 import { ok, fail, encodeContentDisposition } from "../common";
-import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file-tools";
+import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 
 import { FileMetadata, ApiResponse, chunkPrefix, FileType } from "../types";
 import { getTgFileId, resolveFileDescriptor } from "./tg-tools";

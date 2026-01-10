@@ -1,5 +1,5 @@
 // functions/utils/db-adapter/tg-tools.ts
-import { getFileExt } from "../file-tools";
+import { getFileExt } from "../file";
 import { FileType } from "../types";
 
 export function resolveFileDescriptor(

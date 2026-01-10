@@ -1,6 +1,6 @@
 import { ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
-import { getUniqueFileId, buildKeyId, getFileExt } from "../../utils/file-tools";
+import { getUniqueFileId, buildKeyId, getFileExt } from "../../utils/file";
 import { CF, FileMetadata, FileType, chunkPrefix } from "../../utils/types";
 
 // 分片上传流程：
