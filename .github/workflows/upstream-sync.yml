@@ -1,0 +1,39 @@
+name: Upstream Sync
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 每天自动同步
+  workflow_dispatch:     # 支持手动触发
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync upstream changes
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          upstream_sync_repo: DJChanahCJD/OtterHub
+          upstream_sync_branch: main
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          test_mode: false
+
+      - name: Sync result
+        run: |
+          if [ "${{ steps.sync.outcome }}" != "success" ]; then
+            echo "[Error] Upstream sync failed. Manual intervention required."
+            exit 1
+          else
+            echo "✅ Upstream repository synced successfully"
+          fi
