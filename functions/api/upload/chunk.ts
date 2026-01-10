@@ -5,7 +5,7 @@ import { CF, FileMetadata, FileType, TEMP_CHUNK_TTL, chunkPrefix } from "../../u
 
 // 分片上传流程：
 // 1. 前端发起分片上传初始化请求，获取chunks对应的唯一key，然后前端自行分片上传
-// 2. 后端接收分片后，逐个上传，并维护chunkInfo.chunks数组，当数组长度等于chunkInfo.total时即上传完成
+// 2. 后端接收分片后，逐个上传，并维护chunkInfo.uploadedIndices数组，当数组长度等于chunkInfo.total时即上传完成
 
 // 初始化分片上传, 返回唯一文件key
 export async function onRequestGet(context: any): Promise<Response> {
@@ -27,7 +27,7 @@ export async function onRequestGet(context: any): Promise<Response> {
     liked: false,
     chunkInfo: {
       total: totalChunks,
-      chunks: [], // 初始空数组
+      uploadedIndices: [],
     },
   };
 
