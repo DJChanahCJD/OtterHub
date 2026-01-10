@@ -82,9 +82,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
     // 保存到localStorage
     setToStorage(STORAGE_KEYS.ACTIVE_TYPE, type);
 
-    // 检查该类型的bucketItems是否为空，为空时才fetch数据
+    // 检查该类型是否从未加载过数据（cursor为undefined）
     const bucket = get().buckets[type];
-    if (bucket.items.length === 0) {
+    if (bucket.cursor === undefined) {
       await get().fetchNextPage();
     }
   },
@@ -153,7 +153,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
     setToStorage(STORAGE_KEYS.SAFE_MODE, enabled);
   },
 
-  addFileLocal: (file, fileType) =>
+  addFileLocal: (file, fileType) => {
     set((state) => {
       const newBuckets = {
         ...state.buckets,
@@ -165,7 +165,8 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return {
         buckets: newBuckets,
       };
-    }),
+    });
+  },
 
   deleteFilesLocal: (names: string[]) =>
     set((state) => {
