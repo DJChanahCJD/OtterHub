@@ -47,7 +47,9 @@ export enum FileTag {
 export const chunkPrefix = 'chunk_';
 export type ChunkInfo = {
   total: number;          // 总分片数
-  chunks: Chunk[];        // 已上传的分片
+  chunks: Chunk[];        // TODO: （待废弃）已上传的分片
+
+  uploadedIndices?: number[]; // 已上传的分片索引
 }
 export type Chunk = {
   idx: number;
@@ -73,3 +75,8 @@ export type ListFilesResponse = {
   cursor?: string;
   cacheStatus: null;
 }
+
+// == 常量
+// 临时分片超时时间（秒）
+export const TEMP_CHUNK_TTL = 3600; // 1小时
+export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB

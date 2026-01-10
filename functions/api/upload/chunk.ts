@@ -1,7 +1,7 @@
 import { ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { getUniqueFileId, buildKeyId, getFileExt } from "../../utils/file";
-import { CF, FileMetadata, FileType, chunkPrefix } from "../../utils/types";
+import { CF, FileMetadata, FileType, TEMP_CHUNK_TTL, chunkPrefix } from "../../utils/types";
 
 // 分片上传流程：
 // 1. 前端发起分片上传初始化请求，获取chunks对应的唯一key，然后前端自行分片上传
@@ -31,14 +31,14 @@ export async function onRequestGet(context: any): Promise<Response> {
     },
   };
 
-  await env[CF.KV_NAME].put(key, "", { metadata });
+  await env[CF.KV_NAME].put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
 
   return ok(key);
 }
 
 // 上传分片
 export async function onRequestPost(context: any): Promise<Response> {
-  const { request, env } = context;
+  const { request, env, waitUntil } = context;
 
   const clonedRequest = request.clone();
   const formData = await clonedRequest.formData();
@@ -50,5 +50,5 @@ export async function onRequestPost(context: any): Promise<Response> {
   console.log(`Upload chunk ${chunkIndex} for key ${key}`);
 
   const db = DBAdapterFactory.getAdapter(env);
-  return await db.uploadChunk(key, chunkIndex, chunk);
+  return await db.uploadChunk(key, chunkIndex, chunk, waitUntil);
 }

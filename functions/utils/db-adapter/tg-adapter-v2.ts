@@ -2,12 +2,32 @@ import { BaseAdapter } from "./base-adapter";
 import { ok, fail, encodeContentDisposition } from "../common";
 import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 
-import { FileMetadata, ApiResponse, chunkPrefix, FileType, MAX_CHUNK_SIZE } from "../types";
-import { parseRangeHeader, sortChunksAndCalculateSize, findUploadedChunk } from "./shared-utils";
-import { getTgFileId, resolveFileDescriptor, buildTgApiUrl, buildTgFileUrl, getTgFilePath, getTgFile } from "./tg-tools";
+import {
+  FileMetadata,
+  ApiResponse,
+  chunkPrefix,
+  FileType,
+  MAX_CHUNK_SIZE,
+  TEMP_CHUNK_TTL,
+  Chunk,
+} from "../types";
+import {
+  parseRangeHeader,
+  sortChunksAndCalculateSize,
+  findUploadedChunk,
+  validateChunks,
+} from "./shared-utils";
+import {
+  getTgFileId,
+  resolveFileDescriptor,
+  buildTgApiUrl,
+  buildTgFileUrl,
+  getTgFilePath,
+  getTgFile,
+} from "./tg-tools";
 
-// Telegram存储适配器实现
-export class TGAdapter extends BaseAdapter {
+// Telegram存储适配器实现（新版本：优化分片上传）
+export class TGAdapterV2 extends BaseAdapter {
   constructor(env: any, kvName: string) {
     super(env, kvName);
   }
@@ -53,36 +73,87 @@ export class TGAdapter extends BaseAdapter {
   }
 
   /**
-   * 上传单个分片
-   * @returns 该分片的 tg_file_id
+   * 上传单个分片（新方案：使用 waitUntil 异步处理）
    */
   async uploadChunk(
     key: string,
     chunkIndex: number,
-    chunkFile: File | Blob
+    chunkFile: File | Blob,
+    waitUntil?: (promise: Promise<any>) => void
   ): Promise<Response> {
+    const kv = this.env[this.kvName];
+
+    // 1. 获取当前 metadata
+    const item = await this.getMetadata(key);
+    const { metadata, value } = item;
+    if (!metadata?.chunkInfo) {
+      return fail("Not a chunked file", 400);
+    }
+
+    const chunks: Chunk[] = item.value
+      ? JSON.parse(item.value)
+      : [];
+
+    // 2. 检查分片是否已上传（使用通用工具函数）
+    const uploadedChunk = findUploadedChunk(metadata, chunkIndex, chunks);
+    if (uploadedChunk) {
+      return ok(uploadedChunk.file_id);
+    }
+
+    // 3. 将分片内容暂存到临时 KV（带过期时间）
+    const tempChunkKey = `${chunkPrefix}${key}-${chunkIndex}`;
+    await kv.put(tempChunkKey, chunkFile.stream(), {
+      expirationTtl: TEMP_CHUNK_TTL,
+    });
+
+    // 4. 异步处理：上传到 Telegram 并更新 metadata
+    const uploadPromise = this.consumeChunk(
+      key,
+      tempChunkKey,
+      chunkIndex,
+    );
+
+    if (waitUntil) {
+      // 使用 waitUntil 异步处理，不阻塞响应
+      waitUntil(uploadPromise);
+    } else {
+      // 如果没有 waitUntil，直接等待（兼容性）
+      await uploadPromise;
+    }
+
+    return ok({ chunkIndex });
+  }
+
+  /**
+   * 消费分片：从临时 KV 读取，上传到 Telegram，更新 KV metadata
+   */
+  private async consumeChunk(
+    parentKey: string,
+    tempChunkKey: string,
+    chunkIndex: number,
+  ): Promise<void> {
+    const kv = this.env[this.kvName];
+
     try {
-      console.log(`[TGAdapter] Uploading chunk ${chunkIndex} for ${key}, size=${chunkFile.size}`);
+      console.log(
+        `[TGAdapterV2] Processing chunk ${chunkIndex} for ${parentKey}`
+      );
 
-      // 获取当前 KV
-      const metaResult = await this.getMetadata(key);
-      if (!metaResult?.metadata?.chunkInfo) {
-        throw new Error(`Not a chunked file: ${key}`);
+      // 1. 从临时 KV 读取分片内容
+      const chunkStream = await kv.get(tempChunkKey, "stream");
+      if (!chunkStream) {
+        console.error(`[TGAdapterV2] Temp chunk not found: ${tempChunkKey}`);
+        return;
       }
 
-      const metadata = metaResult.metadata;
+      // 2. 将 stream 转换为 File
+      const chunkBlob = await this.streamToBlob(chunkStream);
+      const chunkFile = new File([chunkBlob], `${chunkPrefix}${chunkIndex}`);
 
-      // 使用通用工具函数检查分片是否已上传
-      const existingChunk = findUploadedChunk(metadata, chunkIndex);
-      if (existingChunk) {
-        console.log(`[TGAdapter] Chunk ${chunkIndex} already uploaded`);
-        return ok(existingChunk.file_id);
-      }
-
-      // 上传到 Telegram
+      // 3. 上传到 Telegram
       const formData = new FormData();
       formData.append("chat_id", this.env.TG_CHAT_ID);
-      formData.append("document", chunkFile, `${chunkPrefix}${chunkIndex}`);
+      formData.append("document", chunkFile);
 
       const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
 
@@ -90,6 +161,7 @@ export class TGAdapter extends BaseAdapter {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
 
+      let tgFileId: string;
       try {
         const response = await fetch(apiUrl, {
           method: "POST",
@@ -108,28 +180,107 @@ export class TGAdapter extends BaseAdapter {
           );
         }
 
-        const tgFileId = result.result.document.file_id;
-        console.log(`[TGAdapter] Chunk ${chunkIndex} uploaded successfully, tg_file_id=${tgFileId}`);
-
-        // 更新 KV：追加分片
-        metadata.chunkInfo.chunks.push({
-          idx: chunkIndex,
-          file_id: tgFileId,
-          size: chunkFile.size,
-        });
-
-        await this.env[this.kvName].put(key, "", { metadata });
-
-        return ok(tgFileId);
+        tgFileId = result.result.document.file_id;
+        console.log(
+          `[TGAdapterV2] Uploaded chunk ${chunkIndex} to Telegram: ${tgFileId}`
+        );
       } catch (error: any) {
         clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           throw new Error(`Chunk ${chunkIndex} upload timeout after 60s`);
         }
         throw error;
       }
+
+      // 4. 更新 KV（使用重试机制避免并发冲突）
+      await this.updateChunkInfo(
+        parentKey,
+        chunkIndex,
+        tgFileId,
+        chunkFile.size,
+      );
+
+      // 5. 删除临时 KV
+      await kv.delete(tempChunkKey);
+
+      console.log(`[TGAdapterV2] Completed chunk ${chunkIndex}`);
     } catch (error) {
-      throw error;
+      console.error(
+        `[TGAdapterV2] Error processing chunk ${chunkIndex}:`,
+        error
+      );
+      // 即使出错也要删除临时 KV，避免堆积
+      try {
+        await kv.delete(tempChunkKey);
+      } catch (e) {
+        // 忽略删除错误
+      }
+    }
+  }
+
+  /**
+   * 更新分片信息（使用重试机制避免并发冲突）
+   */
+  private async updateChunkInfo(
+    key: string,
+    chunkIndex: number,
+    chunkId: string,
+    chunkSize: number,
+  ): Promise<void> {
+    const kv = this.env[this.kvName];
+    const maxRetries = 3;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        // 1. 获取最新状态
+        const metaResult = await this.getMetadata(key);
+        if (!metaResult) {
+          throw new Error(`Metadata not found for key: ${key}`);
+        }
+
+        const metadata = metaResult.metadata;
+        const chunks: Chunk[] = metaResult.value
+          ? JSON.parse(metaResult.value)
+          : [];
+
+        // 2. 检查是否已上传
+        if (metadata.chunkInfo.uploadedIndices?.includes(chunkIndex)) {
+          console.log(
+            `[TGAdapterV2] Chunk ${chunkIndex} already uploaded, skipping`
+          );
+          return;
+        }
+
+        // 3. 更新 uploadedIndices
+        if (!metadata.chunkInfo.uploadedIndices) {
+          metadata.chunkInfo.uploadedIndices = [];
+        }
+        metadata.chunkInfo.uploadedIndices.push(chunkIndex);
+
+        // 4. 更新 chunks 数组（存储在 value 中）
+        chunks.push({
+          idx: chunkIndex,
+          file_id: chunkId,
+          size: chunkSize,
+        });
+
+        // 5. 写回 KV
+        await kv.put(key, JSON.stringify(chunks), { metadata });
+
+        console.log(
+          `[TGAdapterV2] Updated chunk ${chunkIndex} (attempt ${i + 1})`
+        );
+        return;
+      } catch (error) {
+        console.error(`[TGAdapterV2] Attempt ${i + 1} failed:`, error);
+        if (i === maxRetries - 1) {
+          throw error;
+        }
+        // 指数退避
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, i) * 100)
+        );
+      }
     }
   }
 
@@ -167,7 +318,10 @@ export class TGAdapter extends BaseAdapter {
       const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
 
       // 使用通用工具函数处理 Range 请求
-      const rangeResult = parseRangeHeader(req?.headers.get("Range") || null, fileSize);
+      const rangeResult = parseRangeHeader(
+        req?.headers.get("Range") || null,
+        fileSize
+      );
       if (rangeResult && fileSize > 0) {
         const { start, end } = rangeResult;
 
@@ -204,22 +358,42 @@ export class TGAdapter extends BaseAdapter {
     const ext = key.substring(key.lastIndexOf(".") + 1);
     const contentType = getContentTypeByExt(ext);
 
-    const metaResult = await this.getMetadata(key);
-    if (!metaResult?.metadata?.chunkInfo) {
+    const item = await this.getMetadata(key);
+    if (!item?.metadata?.chunkInfo) {
       return fail("Invalid metadata", 400);
     }
 
-    const { metadata } = metaResult;
-    const { chunkInfo } = metadata;
+    const { metadata, value } = item;
+
+    // 解析 chunks（从 value 中获取，而非 metadata.chunkInfo.chunks）
+    let chunks: Chunk[] = [];
+    try {
+      if (value) {
+        chunks = JSON.parse(value);
+      }
+    } catch (e) {
+      console.error(`[TGAdapterV2] Failed to parse chunks for ${key}:`, e);
+      return fail("Failed to parse chunks metadata", 500);
+    }
+    
+    // 使用通用工具函数验证分片完整性
+    const validation = validateChunks(metadata, chunks);
+    if (!validation.valid) {
+      console.error(`[getMergedFile] ${validation.reason}`);
+      return fail(validation.reason || "Invalid metadata", 425);
+    }
 
     // 使用通用工具函数排序并计算总大小
-    const { sortedChunks, totalSize } = sortChunksAndCalculateSize(chunkInfo.chunks);
+    const { sortedChunks, totalSize } = sortChunksAndCalculateSize(chunks);
 
     // 捕获变量，避免 ReadableStream start 回调中引用丢失
     const botToken = this.env.TG_BOT_TOKEN;
 
     // 使用通用工具函数处理 Range 请求
-    const rangeResult = parseRangeHeader(req?.headers.get("Range") || null, totalSize);
+    const rangeResult = parseRangeHeader(
+      req?.headers.get("Range") || null,
+      totalSize
+    );
     if (rangeResult) {
       const { start, end } = rangeResult;
 
@@ -405,3 +579,5 @@ export class TGAdapter extends BaseAdapter {
     }
   }
 }
+
+

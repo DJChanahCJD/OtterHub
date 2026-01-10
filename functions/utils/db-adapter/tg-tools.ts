@@ -1,29 +1,5 @@
-// functions/utils/db-adapter/tg-tools.ts
 import { getFileExt } from "../file";
 import { FileType } from "../types";
-
-/**
- * 解析 Range 请求头
- * @returns { start, end } 或 null（如果无效）
- */
-export function parseRangeHeader(
-  range: string | null,
-  fileSize: number
-): { start: number; end: number } | null {
-  if (!range) return null;
-
-  const match = /bytes=(\d+)-(\d+)?/.exec(range);
-  if (!match) return null;
-
-  const start = Number(match[1]);
-  const end = match[2] ? Number(match[2]) : fileSize - 1;
-
-  if (start >= fileSize || end < start) {
-    return null;
-  }
-
-  return { start, end };
-}
 
 /**
  * 构建 Telegram API URL

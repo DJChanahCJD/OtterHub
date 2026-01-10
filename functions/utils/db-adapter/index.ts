@@ -1,7 +1,9 @@
 import { isDev } from "../common";
 import { FileMetadata, CF } from "../types";
 import { R2Adapter } from "./r2-adaper";
+import { R2AdapterV2 } from "./r2-adapter-v2";
 import { TGAdapter } from "./tg-adapter";
+import { TGAdapterV2 } from "./tg-adapter-v2";
 
 // 存储适配器接口定义
 export interface DBAdapter {
@@ -12,7 +14,8 @@ export interface DBAdapter {
   uploadChunk(
     key: string,
     chunkIndex: number,
-    chunkFile: File | Blob
+    chunkFile: File | Blob,
+    waitUntil?: (promise: Promise<any>) => void,
   ): Promise<Response>;
 
   // 获取文件，永远返回Response
@@ -46,10 +49,10 @@ export class DBAdapterFactory {
     let adapter: DBAdapter;
     switch (type.toLowerCase()) {
       case DBAdapterType.R2:
-        adapter = new R2Adapter(env, CF.R2_BUCKET, CF.KV_NAME);
+        adapter = new R2AdapterV2(env, CF.R2_BUCKET, CF.KV_NAME);
         break;
       case DBAdapterType.TG:
-        adapter = new TGAdapter(env, CF.KV_NAME);
+        adapter = new TGAdapterV2(env, CF.KV_NAME);
         break;
       default:
         throw new Error(`Unsupported storage adapter type: ${type}`);
@@ -57,24 +60,5 @@ export class DBAdapterFactory {
     this.adapterInstances.set(type, adapter);
 
     return adapter;
-  }
-  // 根据环境选择合适的存储适配器
-  static createAdapter(env: any, adapterType?: string): DBAdapter {
-    // 优先使用传入的adapterType，否则根据环境变量判断
-    // 开发环境默认使用R2，生产环境默认使用Telegram
-    const type =
-      adapterType ||
-      (isDev(env)
-        ? DBAdapterType.R2
-        : env.STORAGE_ADAPTER_TYPE || DBAdapterType.TG);
-
-    switch (type.toLowerCase()) {
-      case DBAdapterType.R2:
-        return new R2Adapter(env, CF.R2_BUCKET, CF.KV_NAME);
-      case DBAdapterType.TG:
-        return new TGAdapter(env, CF.KV_NAME);
-      default:
-        throw new Error(`Unsupported storage adapter type: ${type}`);
-    }
   }
 }
