@@ -4,7 +4,7 @@ import { ok, fail, encodeContentDisposition } from "../common";
 import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 
 import { FileMetadata, ApiResponse, chunkPrefix, FileType } from "../types";
-import { getTgFileId, resolveFileDescriptor } from "./tg-tools";
+import { getTgFileId, resolveFileDescriptor, parseRangeHeader, buildTgApiUrl, buildTgFileUrl, getTgFilePath, getTgFile } from "./tg-tools";
 
 // Telegram存储适配器实现
 export class TGAdapter implements DBAdapter {
@@ -93,7 +93,7 @@ export class TGAdapter implements DBAdapter {
       formData.append("chat_id", this.env.TG_CHAT_ID);
       formData.append("document", chunkFile, `${chunkPrefix}${chunkIndex}`);
 
-      const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/sendDocument`;
+      const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
 
       // 添加超时控制
       const controller = new AbortController();
@@ -159,7 +159,7 @@ export class TGAdapter implements DBAdapter {
       const ext = key.substring(key.lastIndexOf(".") + 1);
       const contentType = getContentTypeByExt(ext);
 
-      const file = await this.getTgFile(fileId);
+      const file = await getTgFile(fileId, this.env.TG_BOT_TOKEN);
 
       const headers = new Headers();
       headers.set("Content-Type", contentType);
@@ -176,33 +176,21 @@ export class TGAdapter implements DBAdapter {
 
       // 处理 Range 请求
       const range = req?.headers.get("Range");
-      if (range && fileSize > 0) {
-        const match = /bytes=(\d+)-(\d+)?/.exec(range);
-        if (match) {
-          const start = Number(match[1]);
-          const end = match[2] ? Number(match[2]) : fileSize - 1;
+      const rangeResult = parseRangeHeader(range, fileSize);
+      if (rangeResult && fileSize > 0) {
+        const { start, end } = rangeResult;
 
-          if (start >= fileSize || end < start) {
-            return new Response("Range Not Satisfiable", {
-              status: 416,
-              headers: {
-                "Content-Range": `bytes */${fileSize}`,
-              },
-            });
-          }
+        // Telegram 不支持 Range，需要下载整个文件然后截取
+        const arrayBuffer = await file.arrayBuffer();
+        const slice = arrayBuffer.slice(start, end + 1);
 
-          // Telegram 不支持 Range，需要下载整个文件然后截取
-          const arrayBuffer = await file.arrayBuffer();
-          const slice = arrayBuffer.slice(start, end + 1);
+        headers.set("Content-Range", `bytes ${start}-${end}/${fileSize}`);
+        headers.set("Content-Length", String(end - start + 1));
 
-          headers.set("Content-Range", `bytes ${start}-${end}/${fileSize}`);
-          headers.set("Content-Length", String(end - start + 1));
-
-          return new Response(slice, {
-            status: 206,
-            headers,
-          });
-        }
+        return new Response(slice, {
+          status: 206,
+          headers,
+        });
       }
 
       if (fileSize > 0) {
@@ -244,87 +232,74 @@ export class TGAdapter implements DBAdapter {
     const sortedChunks = [...chunkInfo.chunks].sort((a, b) => a.idx - b.idx);
     const totalSize = sortedChunks.reduce((sum, c) => sum + c.size, 0);
 
-    // 捕获 this 引用，避免 ReadableStream start 回调中 this 丢失
+    // 捕获变量，避免 ReadableStream start 回调中引用丢失
     const botToken = this.env.TG_BOT_TOKEN;
-    const getFilePath = this.getTgFilePath.bind(this);
 
     // 处理 Range 请求
     const range = req?.headers.get("Range");
-    if (range) {
-      const match = /bytes=(\d+)-(\d+)?/.exec(range);
-      if (match) {
-        const start = Number(match[1]);
-        const end = match[2] ? Number(match[2]) : totalSize - 1;
+    const rangeResult = parseRangeHeader(range, totalSize);
+    if (rangeResult) {
+      const { start, end } = rangeResult;
 
-        if (start >= totalSize || end < start) {
-          return new Response("Range Not Satisfiable", {
-            status: 416,
-            headers: {
-              "Content-Range": `bytes */${totalSize}`,
-            },
-          });
-        }
+      // 创建 Range 流
+      const rangeStream = new ReadableStream({
+        async start(controller) {
+          try {
+            let byteOffset = 0;
+            const targetEnd = end + 1;
 
-        // 创建 Range 流
-        const rangeStream = new ReadableStream({
-          async start(controller) {
-            try {
-              let byteOffset = 0;
-              const targetEnd = end + 1;
+            for (const chunk of sortedChunks) {
+              const chunkStart = byteOffset;
+              const chunkEnd = byteOffset + chunk.size;
 
-              for (const chunk of sortedChunks) {
-                const chunkStart = byteOffset;
-                const chunkEnd = byteOffset + chunk.size;
-
-                // 跳过不在范围内的分片
-                if (chunkEnd <= start || chunkStart >= targetEnd) {
-                  byteOffset += chunk.size;
-                  continue;
-                }
-
-                // 计算当前分片需要读取的范围
-                const readStart = Math.max(0, start - chunkStart);
-                const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
-
-                const filePath = await getFilePath(chunk.file_id);
-                if (!filePath) {
-                  throw new Error(`Missing chunk ${chunk.idx}`);
-                }
-
-                const url = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-                const res = await fetch(url);
-
-                if (!res.ok || !res.body) {
-                  throw new Error(`Failed to fetch chunk ${chunk.idx}`);
-                }
-
-                // 读取整个分片，然后截取需要的部分
-                const arrayBuffer = await res.arrayBuffer();
-                const slice = arrayBuffer.slice(readStart, readEnd);
-                controller.enqueue(new Uint8Array(slice));
-
+              // 跳过不在范围内的分片
+              if (chunkEnd <= start || chunkStart >= targetEnd) {
                 byteOffset += chunk.size;
+                continue;
               }
 
-              controller.close();
-            } catch (err) {
-              controller.error(err);
-            }
-          },
-        });
+              // 计算当前分片需要读取的范围
+              const readStart = Math.max(0, start - chunkStart);
+              const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
 
-        return new Response(rangeStream, {
-          status: 206,
-          headers: {
-            "Content-Type": contentType,
-            "Content-Range": `bytes ${start}-${end}/${totalSize}`,
-            "Content-Length": String(end - start + 1),
-            "Content-Disposition": encodeContentDisposition(metadata.fileName),
-            "Cache-Control": "public, max-age=3600",
-            "Accept-Ranges": "bytes",
-          },
-        });
-      }
+              const filePath = await getTgFilePath(chunk.file_id, botToken);
+              if (!filePath) {
+                throw new Error(`Missing chunk ${chunk.idx}`);
+              }
+
+              const url = buildTgFileUrl(botToken, filePath);
+              const res = await fetch(url);
+
+              if (!res.ok || !res.body) {
+                throw new Error(`Failed to fetch chunk ${chunk.idx}`);
+              }
+
+              // 读取整个分片，然后截取需要的部分
+              const arrayBuffer = await res.arrayBuffer();
+              const slice = arrayBuffer.slice(readStart, readEnd);
+              controller.enqueue(new Uint8Array(slice));
+
+              byteOffset += chunk.size;
+            }
+
+            controller.close();
+          } catch (err) {
+            controller.error(err);
+          }
+        },
+      });
+
+      return new Response(rangeStream, {
+        status: 206,
+        headers: {
+          "Content-Type": contentType,
+          "Content-Range": `bytes ${start}-${end}/${totalSize}`,
+          "Content-Length": String(end - start + 1),
+          "Content-Disposition": encodeContentDisposition(metadata.fileName),
+          "Cache-Control": "public, max-age=3600",
+          "Accept-Ranges": "bytes",
+        },
+      });
     }
 
     // 使用 stream 合并分片，避免内存占用过大
@@ -332,12 +307,12 @@ export class TGAdapter implements DBAdapter {
       async start(controller) {
         try {
           for (const chunk of sortedChunks) {
-            const filePath = await getFilePath(chunk.file_id);
+            const filePath = await getTgFilePath(chunk.file_id, botToken);
             if (!filePath) {
               throw new Error(`Missing chunk ${chunk.idx}`);
             }
 
-            const url = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+            const url = buildTgFileUrl(botToken, filePath);
             const res = await fetch(url);
 
             if (!res.ok || !res.body) {
@@ -416,7 +391,7 @@ export class TGAdapter implements DBAdapter {
     apiEndpoint: string,
     retryCount = 3
   ): Promise<ApiResponse<any>> {
-    const apiUrl = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/${apiEndpoint}`;
+    const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, apiEndpoint);
 
     try {
       const response = await fetch(apiUrl, { method: "POST", body: formData });
@@ -472,29 +447,5 @@ export class TGAdapter implements DBAdapter {
         }`,
       };
     }
-  }
-
-  // Telegram Bot API 文件处理逻辑
-  // 原Telegraph API: 'https://telegra.ph/' + url.pathname + url.search;
-  private async getTgFile(fileId: string) {
-    const filePath = await this.getTgFilePath(fileId);
-
-    if (!filePath) {
-      return fail(`File not found: ${fileId}`, 404);
-    }
-
-    const url = `https://api.telegram.org/file/bot${this.env.TG_BOT_TOKEN}/${filePath}`;
-    return fetch(url);
-  }
-
-  private async getTgFilePath(fileId: string): Promise<string | null> {
-    // TODO: 考虑缓存url
-    const url = `https://api.telegram.org/bot${this.env.TG_BOT_TOKEN}/getFile?file_id=${fileId}`;
-    const res = await fetch(url);
-
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    return data?.ok ? data.result.file_path : null;
   }
 }
