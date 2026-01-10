@@ -35,7 +35,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
   async uploadFile(
     file: File | Blob,
-    metadata: FileMetadata
+    metadata: FileMetadata,
   ): Promise<Response> {
     if (metadata.fileSize > MAX_CHUNK_SIZE) {
       throw new Error(`File size exceeds ${MAX_CHUNK_SIZE}MB`);
@@ -47,7 +47,10 @@ export class TGAdapterV2 extends BaseAdapter {
       throw new Error("Invalid file");
     }
 
-    const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(file, fileName);
+    const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(
+      file,
+      fileName,
+    );
 
     const formData = new FormData();
     formData.append("chat_id", this.env.TG_CHAT_ID);
@@ -74,61 +77,9 @@ export class TGAdapterV2 extends BaseAdapter {
   }
 
   /**
-   * 上传单个分片（新方案：使用 waitUntil 异步处理）
-   */
-  async uploadChunk(
-    key: string,
-    chunkIndex: number,
-    chunkFile: File | Blob,
-    waitUntil?: (promise: Promise<any>) => void
-  ): Promise<Response> {
-    const kv = this.env[this.kvName];
-
-    // 1. 获取当前 metadata
-    const item = await this.getMetadata(key);
-    const { metadata, value } = item;
-    if (!metadata?.chunkInfo) {
-      return fail("Not a chunked file", 400);
-    }
-
-    const chunks: Chunk[] = item.value
-      ? JSON.parse(item.value)
-      : [];
-
-    // 2. 检查分片是否已上传（使用通用工具函数）
-    const uploadedChunk = findUploadedChunk(metadata, chunkIndex, chunks);
-    if (uploadedChunk) {
-      return ok(uploadedChunk.file_id);
-    }
-
-    // 3. 将分片内容暂存到临时 KV（带过期时间）
-    const tempChunkKey = `${chunkPrefix}${key}-${chunkIndex}`;
-    await kv.put(tempChunkKey, chunkFile.stream(), {
-      expirationTtl: TEMP_CHUNK_TTL,
-    });
-
-    // 4. 异步处理：上传到 Telegram 并更新 metadata
-    const uploadPromise = this.consumeChunk(
-      key,
-      tempChunkKey,
-      chunkIndex,
-    );
-
-    if (waitUntil) {
-      // 使用 waitUntil 异步处理，不阻塞响应
-      waitUntil(uploadPromise);
-    } else {
-      // 如果没有 waitUntil，直接等待（兼容性）
-      await uploadPromise;
-    }
-
-    return ok({ chunkIndex });
-  }
-
-  /**
    * 消费分片：从临时 KV 读取，上传到 Telegram，更新 KV metadata
    */
-  private async consumeChunk(
+  protected async consumeChunk(
     parentKey: string,
     tempChunkKey: string,
     chunkIndex: number,
@@ -137,7 +88,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
     try {
       console.log(
-        `[TGAdapterV2] Processing chunk ${chunkIndex} for ${parentKey}`
+        `[TGAdapterV2] Processing chunk ${chunkIndex} for ${parentKey}`,
       );
 
       // 1. 从临时 KV 读取分片内容
@@ -177,13 +128,13 @@ export class TGAdapterV2 extends BaseAdapter {
           throw new Error(
             `Chunk ${chunkIndex} upload failed: ${
               result.description || "Unknown error"
-            }`
+            }`,
           );
         }
 
         tgFileId = result.result.document.file_id;
         console.log(
-          `[TGAdapterV2] Uploaded chunk ${chunkIndex} to Telegram: ${tgFileId}`
+          `[TGAdapterV2] Uploaded chunk ${chunkIndex} to Telegram: ${tgFileId}`,
         );
       } catch (error: any) {
         clearTimeout(timeoutId);
@@ -208,7 +159,7 @@ export class TGAdapterV2 extends BaseAdapter {
     } catch (error) {
       console.error(
         `[TGAdapterV2] Error processing chunk ${chunkIndex}:`,
-        error
+        error,
       );
       // 即使出错也要删除临时 KV，避免堆积
       try {
@@ -241,10 +192,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
       const headers = new Headers();
       headers.set("Content-Type", contentType);
-      headers.set(
-        "Content-Disposition",
-        `inline; filename="${fileId}.${ext}"`
-      );
+      headers.set("Content-Disposition", `inline; filename="${fileId}.${ext}"`);
       headers.set("Cache-Control", "public, max-age=3600");
       headers.set("Accept-Ranges", "bytes");
 
@@ -255,7 +203,7 @@ export class TGAdapterV2 extends BaseAdapter {
       // 使用通用工具函数处理 Range 请求
       const rangeResult = parseRangeHeader(
         req?.headers.get("Range") || null,
-        fileSize
+        fileSize,
       );
       if (rangeResult && fileSize > 0) {
         const { start, end } = rangeResult;
@@ -310,7 +258,7 @@ export class TGAdapterV2 extends BaseAdapter {
       console.error(`[TGAdapterV2] Failed to parse chunks for ${key}:`, e);
       return fail("Failed to parse chunks metadata", 500);
     }
-    
+
     // 使用通用工具函数验证分片完整性
     const validation = validateChunks(metadata, chunks);
     if (!validation.valid) {
@@ -327,7 +275,7 @@ export class TGAdapterV2 extends BaseAdapter {
     // 使用通用工具函数处理 Range 请求
     const rangeResult = parseRangeHeader(
       req?.headers.get("Range") || null,
-      totalSize
+      totalSize,
     );
     if (rangeResult) {
       const { start, end } = rangeResult;
@@ -454,7 +402,7 @@ export class TGAdapterV2 extends BaseAdapter {
   private async sendToTelegram(
     formData: FormData,
     apiEndpoint: string,
-    retryCount = 3
+    retryCount = 3,
   ): Promise<ApiResponse<any>> {
     const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, apiEndpoint);
 
@@ -477,17 +425,17 @@ export class TGAdapterV2 extends BaseAdapter {
           newFormData.append("chat_id", formData.get("chat_id") as string);
           newFormData.append("document", formData.get("photo") as File);
           await new Promise((resolve) =>
-            setTimeout(resolve, 1000 * (3 - retryCount))
+            setTimeout(resolve, 1000 * (3 - retryCount)),
           );
           return await this.sendToTelegram(
             newFormData,
             "sendDocument",
-            retryCount - 1
+            retryCount - 1,
           );
         }
         // 其他类型直接重试
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (3 - retryCount))
+          setTimeout(resolve, 1000 * (3 - retryCount)),
         );
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
@@ -501,7 +449,7 @@ export class TGAdapterV2 extends BaseAdapter {
     } catch (error: any) {
       if (retryCount > 0) {
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (3 - retryCount))
+          setTimeout(resolve, 1000 * (3 - retryCount)),
         );
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
@@ -514,5 +462,3 @@ export class TGAdapterV2 extends BaseAdapter {
     }
   }
 }
-
-

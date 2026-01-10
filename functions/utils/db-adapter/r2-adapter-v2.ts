@@ -6,7 +6,13 @@ import {
   getFileIdFromKey,
   getContentTypeByExt,
 } from "../file";
-import { Chunk, FileMetadata, FileType, TEMP_CHUNK_TTL, chunkPrefix } from "../types";
+import {
+  Chunk,
+  FileMetadata,
+  FileType,
+  TEMP_CHUNK_TTL,
+  chunkPrefix,
+} from "../types";
 import {
   parseRangeHeader,
   validateChunks,
@@ -63,74 +69,16 @@ export class R2AdapterV2 extends BaseAdapter {
   }
 
   /**
-   * 上传单个分片（新方案：使用临时 KV + 异步处理）
-   */
-  async uploadChunk(
-    key: string,
-    chunkIndex: number,
-    chunkFile: File | Blob,
-    waitUntil?: (promise: Promise<any>) => void,
-  ): Promise<Response> {
-    const kv = this.env[this.kvName];
-
-    // 1. 获取当前 metadata
-    const metaResult = await this.getMetadata(key);
-    if (!metaResult?.metadata?.chunkInfo) {
-      return fail("Not a chunked file", 400);
-    }
-
-    const metadata = metaResult.metadata;
-    const chunks: Chunk[] = metaResult.value
-      ? JSON.parse(metaResult.value)
-      : [];
-
-    // 2. 检查分片是否已上传（使用通用工具函数）
-    const uploadedChunk = findUploadedChunk(metadata, chunkIndex, chunks);
-    if (uploadedChunk) {
-      return ok(uploadedChunk.file_id);
-    }
-
-    // 3. 生成分片 ID
-    const shortFileId =
-      key.split("_")[1]?.slice(0, 16) || getUniqueFileId().slice(0, 16);
-    const chunkId = `${shortFileId}_${chunkIndex}`;
-
-    // 4. 将分片内容暂存到临时 KV（带过期时间）
-    const tempChunkKey = `${chunkPrefix}${key}-${chunkIndex}`;
-    await kv.put(tempChunkKey, chunkFile.stream(), {
-      expirationTtl: TEMP_CHUNK_TTL,
-    });
-
-    // 5. 异步处理：上传到 R2 并更新 metadata
-    const uploadPromise = this.consumeChunk(
-      key,
-      tempChunkKey,
-      chunkIndex,
-      chunkId,
-    );
-
-    if (waitUntil) {
-      // 使用 waitUntil 异步处理，不阻塞响应
-      waitUntil(uploadPromise);
-    } else {
-      // 如果没有 waitUntil，直接等待（兼容性）
-      await uploadPromise;
-    }
-
-    return ok({ chunkIndex, chunkId });
-  }
-
-  /**
    * 消费分片：从临时 KV 读取，上传到 R2，更新 KV metadata
    */
-  private async consumeChunk(
+  protected async consumeChunk(
     parentKey: string,
     tempChunkKey: string,
     chunkIndex: number,
-    chunkId: string,
   ): Promise<void> {
     const kv = this.env[this.kvName];
     const bucket = this.env[this.bucketName];
+    const chunkId = this.generateChunkId(parentKey, chunkIndex);
 
     try {
       console.log(

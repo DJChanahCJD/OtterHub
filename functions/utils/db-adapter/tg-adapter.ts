@@ -12,6 +12,10 @@ export class TGAdapter extends BaseAdapter {
     super(env, kvName);
   }
 
+  protected consumeChunk(parentKey: string, tempChunkKey: string, chunkIndex: number): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  
   async uploadFile(
     file: File | Blob,
     metadata: FileMetadata
