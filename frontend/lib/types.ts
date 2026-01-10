@@ -9,6 +9,7 @@ export interface ApiResponse<T = any> {
 // 视图模式
 export enum ViewMode {
   Grid = "grid",
+  Masonry = "masonry",
   List = "list",
 }
 
@@ -62,6 +63,8 @@ export enum FileTag {
 export type ChunkInfo = {
   total: number;          // 总分片数
   chunks: Chunk[];        // 已上传的分片
+  
+  uploadedIndices: number[]; // 已上传的分片索引
 }
 export type Chunk = {
   idx: number;

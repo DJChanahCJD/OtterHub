@@ -13,6 +13,55 @@ import { FileItem, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileTag, MAX_FILE_SIZE, File
 import { nsfwDetector } from "@/lib/nsfw-detector"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+// ============================================================================
+// 纯函数：分片上传核心逻辑
+// ============================================================================
+
+/**
+ * 计算需要上传的分片索引
+ */
+function getMissingChunkIndices(
+  totalChunks: number,
+  uploadedIndices: number[] = [],
+): number[] {
+  const uploadedSet = new Set(uploadedIndices)
+  const result: number[] = []
+
+  for (let i = 0; i < totalChunks; i++) {
+    if (!uploadedSet.has(i)) result.push(i)
+  }
+
+  return result
+}
+
+/**
+ * 更新上传进度
+ */
+function updateProgress(
+  map: Record<string, number>,
+  key: string,
+  uploaded: number,
+  total: number,
+  setProgress: (v: Record<string, number>) => void,
+) {
+  map[key] = Math.round((uploaded / total) * 100)
+  setProgress({ ...map })
+}
+
+/**
+ * 并发分批执行任务
+ */
+async function runBatches(
+  indices: number[],
+  batchSize: number,
+  task: (idx: number) => Promise<void>,
+) {
+  for (let i = 0; i < indices.length; i += batchSize) {
+    const batch = indices.slice(i, i + batchSize)
+    await Promise.all(batch.map(task))
+  }
+}
+
 export function FileUploadZone() {
   const addFileLocal = useFileStore((state) => state.addFileLocal)
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata)
@@ -80,11 +129,12 @@ export function FileUploadZone() {
       ): Promise<{ key: string; fileType: FileType; isUnsafe: boolean } | null> => {
         if (file.size >= MAX_FILE_SIZE) {
           toast({
-            title: `文件大小超过${formatFileSize(MAX_FILE_SIZE)}`,
+            title: `文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`,
             variant: "destructive",
           })
           return null
         }
+
         const tmpKey = buildTmpFileKey(file)
         uploadProgressMap[tmpKey] = 0
         setUploadProgress({ ...uploadProgressMap })
@@ -92,62 +142,52 @@ export function FileUploadZone() {
         try {
           const fileType = getFileType(file.type)
           const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE)
-          let key: string
-          let uploadedChunks: number[] = []
 
-          // 断点续传：使用已存在的 key
-          if (resumeFile) {
-            key = resumeFile.name
-            // 已上传的分片索引
-            const uploadedIndices = new Set(resumeFile.metadata.chunkInfo!.chunks.map((c) => c.idx))
-            uploadedChunks = Array.from(uploadedIndices)
+          const key = resumeFile
+            ? resumeFile.name
+            : await uploadChunkInit(fileType, file.name, file.size, totalChunks)
 
-            // 初始进度
-            uploadProgressMap[tmpKey] = Math.round((uploadedChunks.length / totalChunks) * 100)
-            setUploadProgress({ ...uploadProgressMap })
-          } else {
-            // 新上传：初始化分片上传
-            key = await uploadChunkInit(fileType, file.name, file.size, totalChunks)
-          }
+          // ✅ 唯一可信来源：统一从 uploadedIndices 获取
+          const uploadedIndices =
+            resumeFile?.metadata.chunkInfo?.uploadedIndices ?? []
 
-          // 上传缺失的分片
-          const uploadSingleChunk = async (i: number) => {
-            const start = i * MAX_CHUNK_SIZE
+          // 初始进度
+          updateProgress(
+            uploadProgressMap,
+            tmpKey,
+            uploadedIndices.length,
+            totalChunks,
+            setUploadProgress,
+          )
+
+          const missingIndices = getMissingChunkIndices(
+            totalChunks,
+            uploadedIndices,
+          )
+
+          // 上传单个分片并更新进度
+          const uploadSingleChunk = async (idx: number) => {
+            const start = idx * MAX_CHUNK_SIZE
             const end = Math.min(start + MAX_CHUNK_SIZE, file.size)
-            const chunkFile = file.slice(start, end)
 
-            await uploadChunk(key, i, chunkFile)
-            uploadedChunks.push(i)
+            await uploadChunk(key, idx, file.slice(start, end))
 
-            // 更新进度
-            uploadProgressMap[tmpKey] = Math.round((uploadedChunks.length / totalChunks) * 100)
-            setUploadProgress({ ...uploadProgressMap })
+            uploadedIndices.push(idx)
+            updateProgress(
+              uploadProgressMap,
+              tmpKey,
+              uploadedIndices.length,
+              totalChunks,
+              setUploadProgress,
+            )
           }
 
-          // 计算需要上传的分片索引
-          const chunkIndicesToUpload = []
-          if (resumeFile) {
-            const uploadedIndices = new Set(resumeFile.metadata.chunkInfo!.chunks.map((c) => c.idx))
-            for (let i = 0; i < totalChunks; i++) {
-              if (!uploadedIndices.has(i)) {
-                chunkIndicesToUpload.push(i)
-              }
-            }
-          } else {
-            for (let i = 0; i < totalChunks; i++) {
-              chunkIndicesToUpload.push(i)
-            }
-          }
-
-          // 分批并发上传缺失分片
-          for (let i = 0; i < chunkIndicesToUpload.length; i += MAX_CONCURRENTS) {
-            const batch = []
-            const end = Math.min(i + MAX_CONCURRENTS, chunkIndicesToUpload.length)
-            for (let j = i; j < end; j++) {
-              batch.push(uploadSingleChunk(chunkIndicesToUpload[j]))
-            }
-            await Promise.all(batch)
-          }
+          // 并发分批上传
+          await runBatches(
+            missingIndices,
+            MAX_CONCURRENTS,
+            uploadSingleChunk,
+          )
 
           return { key, fileType, isUnsafe: false }
         } catch (error) {
@@ -305,7 +345,7 @@ export function FileUploadZone() {
             </div>
             <AlertDescription className="text-white/70">
               文件 "{resumePrompt.file.name}" 已上传{" "}
-              {resumePrompt.existingFile.metadata.chunkInfo!.chunks.length} /{" "}
+              {resumePrompt.existingFile.metadata.chunkInfo!.uploadedIndices.length} /{" "}
               {resumePrompt.existingFile.metadata.chunkInfo!.total} 个分片
             </AlertDescription>
             <div className="flex gap-2 mt-3">

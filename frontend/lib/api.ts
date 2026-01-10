@@ -114,7 +114,7 @@ export async function checkIncompleteUpload(
       (item) =>
         item.metadata.fileName === file.name &&
         item.metadata.fileSize === file.size &&
-        item.metadata.chunkInfo?.chunks.length !== item.metadata.chunkInfo?.total
+        item.metadata.chunkInfo?.uploadedIndices.length !== item.metadata.chunkInfo?.total
     );
     return incompleteFile || null;
   } catch (error) {

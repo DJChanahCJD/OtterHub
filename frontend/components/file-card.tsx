@@ -51,6 +51,7 @@ interface FileCardProps {
   file: FileItem;
   activeType?: FileType;
   listView?: boolean;
+  masonryView?: boolean;
 }
 
 // 文件操作菜单组件
@@ -280,7 +281,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   // 检查是否有未完成的上传
   const isIncompleteUpload =
     file.metadata?.chunkInfo &&
-    file.metadata.chunkInfo.chunks.length !== file.metadata.chunkInfo.total;
+    file.metadata.chunkInfo.uploadedIndices?.length !== file.metadata.chunkInfo.total;
 
   // 只计算一次文件类型，提高性能
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
@@ -366,7 +367,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     setIsResuming(true);
     const chunkInfo = file.metadata.chunkInfo!;
     const totalChunks = chunkInfo.total;
-    const uploadedIndices = new Set(chunkInfo.chunks.map((c) => c.idx));
+    const uploadedIndices = new Set(chunkInfo.uploadedIndices || []);
 
     try {
       // 计算需要上传的分片索引
@@ -496,7 +497,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               ) : (
                 <RotateCw className="h-4 w-4 mr-1" />
               )}
-              继续上传 ({file.metadata.chunkInfo!.chunks.length}/{file.metadata.chunkInfo!.total})
+              继续上传 ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/{file.metadata.chunkInfo!.total})
             </Button>
           )}
 
@@ -637,7 +638,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                   ) : (
                     <>
                       <RotateCw className="h-3 w-3 mr-1" />
-                      {file.metadata.chunkInfo!.chunks.length}/{file.metadata.chunkInfo!.total}
+                      {file.metadata.chunkInfo!.uploadedIndices.length}/{file.metadata.chunkInfo!.total}
                     </>
                   )}
                 </Button>
