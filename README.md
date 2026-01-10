@@ -36,6 +36,8 @@ TG_BOT_TOKEN:`your_tg_bot_token`
 
 - [ ] NSFW相关
    - [x] 支持安全浏览模式（过滤/blur遮罩？ NSFW内容）
+      智能无图（>5MB不加载）
+      省流模式（不加载图片）
    - [x] 集成NSFWJS库，用于上传图片时检测NSFW内容，打上FileTag  -> 不再需要后端调用ModerateContent API
    - NSFW检测免费API： 
       - [Moderate Content API](https://account.moderatecontent.com/login)	1 万次 / 月，但似乎无法注册了
