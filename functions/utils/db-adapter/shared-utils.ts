@@ -41,7 +41,6 @@ export function validateChunks(
 
   const { chunkInfo } = metadata;
 
-  // R2AdapterV2: chunks 从 value 中获取
   const chunksArray = chunks;
   const uploadedCount = chunkInfo.uploadedIndices?.length || chunksArray.length;
   const total = chunkInfo.total;
@@ -95,4 +94,24 @@ export function findUploadedChunk(
 
   // R2Adapter / TGAdapter: 直接在 chunks 中查找
   return chunksArray.find(c => c.idx === chunkIndex) || null;
+}
+
+/**
+ * 将 ReadableStream 转换为 Blob
+ * @param stream 要转换的 ReadableStream
+ * @returns 转换后的 Blob
+ */
+export async function streamToBlob(
+  stream: ReadableStream<Uint8Array>
+): Promise<Blob> {
+  const reader = stream.getReader();
+  const chunks: BlobPart[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+
+  return new Blob(chunks);
 }

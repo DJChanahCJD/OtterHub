@@ -330,7 +330,7 @@ export class R2Adapter implements DBAdapter {
             let object;
             if (isFullChunk) {
               // 读取完整分片，不使用 range 参数
-              object = await bucket.get(chunk.file_id);
+              object = await bucket.get(chunk.file_ID);
             } else {
               // R2 API 使用 offset 和 length 字段，而非 start 和 end
               object = await bucket.get(chunk.file_id, {

@@ -32,7 +32,7 @@ export class TGAdapter extends BaseAdapter {
     formData.append("chat_id", this.env.TG_CHAT_ID);
     formData.append(desc.field, file);
 
-    const result = await this.sendToTelegram(formData, desc.api);
+    const result = await this.sendToTelegram(formData, desc.apiEndpoint);
     if (!result.success) {
       throw new Error(result.message);
     }

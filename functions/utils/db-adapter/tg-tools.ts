@@ -55,7 +55,7 @@ export function resolveFileDescriptor(
   file: File,
   fileName: string
 ): {
-  api: string;
+  apiEndpoint: string;
   field: string;
   fileType: FileType;
   ext: string;
@@ -66,7 +66,7 @@ export function resolveFileDescriptor(
   // GIF 特判（Telegram 行为问题）
   if (mime === "image/gif" || ext === "gif") {
     return {
-      api: "sendAnimation",
+      apiEndpoint: "sendAnimation",
       field: "animation",
       fileType: FileType.Image,
       ext,
@@ -75,7 +75,7 @@ export function resolveFileDescriptor(
 
   if (mime.startsWith("image/")) {
     return {
-      api: "sendPhoto",
+      apiEndpoint: "sendPhoto",
       field: "photo",
       fileType: FileType.Image,
       ext,
@@ -84,7 +84,7 @@ export function resolveFileDescriptor(
 
   if (mime.startsWith("video/")) {
     return {
-      api: "sendVideo",
+      apiEndpoint: "sendVideo",
       field: "video",
       fileType: FileType.Video,
       ext,
@@ -93,7 +93,7 @@ export function resolveFileDescriptor(
 
   if (mime.startsWith("audio/")) {
     return {
-      api: "sendAudio",
+      apiEndpoint: "sendAudio",
       field: "audio",
       fileType: FileType.Audio,
       ext,
@@ -101,7 +101,7 @@ export function resolveFileDescriptor(
   }
 
   return {
-    api: "sendDocument",
+    apiEndpoint: "sendDocument",
     field: "document",
     fileType: FileType.Document,
     ext,

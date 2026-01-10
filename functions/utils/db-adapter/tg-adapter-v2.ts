@@ -16,6 +16,7 @@ import {
   sortChunksAndCalculateSize,
   findUploadedChunk,
   validateChunks,
+  streamToBlob,
 } from "./shared-utils";
 import {
   getTgFileId,
@@ -46,13 +47,13 @@ export class TGAdapterV2 extends BaseAdapter {
       throw new Error("Invalid file");
     }
 
-    const desc = resolveFileDescriptor(file, fileName);
+    const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(file, fileName);
 
     const formData = new FormData();
     formData.append("chat_id", this.env.TG_CHAT_ID);
-    formData.append(desc.field, file);
+    formData.append(field, file);
 
-    const result = await this.sendToTelegram(formData, desc.api);
+    const result = await this.sendToTelegram(formData, apiEndpoint);
     if (!result.success) {
       throw new Error(result.message);
     }
@@ -62,7 +63,7 @@ export class TGAdapterV2 extends BaseAdapter {
       throw new Error("Failed to extract Telegram file_id");
     }
 
-    const key = buildKeyId(desc.fileType, tgFileId, desc.ext);
+    const key = buildKeyId(fileType, tgFileId, ext);
 
     const kv = this.env[this.kvName];
     if (kv) {
@@ -147,7 +148,7 @@ export class TGAdapterV2 extends BaseAdapter {
       }
 
       // 2. 将 stream 转换为 File
-      const chunkBlob = await this.streamToBlob(chunkStream);
+      const chunkBlob = await streamToBlob(chunkStream);
       const chunkFile = new File([chunkBlob], `${chunkPrefix}${chunkIndex}`);
 
       // 3. 上传到 Telegram
@@ -214,72 +215,6 @@ export class TGAdapterV2 extends BaseAdapter {
         await kv.delete(tempChunkKey);
       } catch (e) {
         // 忽略删除错误
-      }
-    }
-  }
-
-  /**
-   * 更新分片信息（使用重试机制避免并发冲突）
-   */
-  private async updateChunkInfo(
-    key: string,
-    chunkIndex: number,
-    chunkId: string,
-    chunkSize: number,
-  ): Promise<void> {
-    const kv = this.env[this.kvName];
-    const maxRetries = 3;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        // 1. 获取最新状态
-        const metaResult = await this.getMetadata(key);
-        if (!metaResult) {
-          throw new Error(`Metadata not found for key: ${key}`);
-        }
-
-        const metadata = metaResult.metadata;
-        const chunks: Chunk[] = metaResult.value
-          ? JSON.parse(metaResult.value)
-          : [];
-
-        // 2. 检查是否已上传
-        if (metadata.chunkInfo.uploadedIndices?.includes(chunkIndex)) {
-          console.log(
-            `[TGAdapterV2] Chunk ${chunkIndex} already uploaded, skipping`
-          );
-          return;
-        }
-
-        // 3. 更新 uploadedIndices
-        if (!metadata.chunkInfo.uploadedIndices) {
-          metadata.chunkInfo.uploadedIndices = [];
-        }
-        metadata.chunkInfo.uploadedIndices.push(chunkIndex);
-
-        // 4. 更新 chunks 数组（存储在 value 中）
-        chunks.push({
-          idx: chunkIndex,
-          file_id: chunkId,
-          size: chunkSize,
-        });
-
-        // 5. 写回 KV
-        await kv.put(key, JSON.stringify(chunks), { metadata });
-
-        console.log(
-          `[TGAdapterV2] Updated chunk ${chunkIndex} (attempt ${i + 1})`
-        );
-        return;
-      } catch (error) {
-        console.error(`[TGAdapterV2] Attempt ${i + 1} failed:`, error);
-        if (i === maxRetries - 1) {
-          throw error;
-        }
-        // 指数退避
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, i) * 100)
-        );
       }
     }
   }

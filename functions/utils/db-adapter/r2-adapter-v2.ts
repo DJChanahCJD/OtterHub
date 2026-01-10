@@ -12,6 +12,7 @@ import {
   validateChunks,
   sortChunksAndCalculateSize,
   findUploadedChunk,
+  streamToBlob,
 } from "./shared-utils";
 
 // R2存储适配器实现（新版本：优化分片上传）
@@ -144,7 +145,7 @@ export class R2AdapterV2 extends BaseAdapter {
       }
 
       // 2. 将 stream 转换为 Blob/File
-      const chunkBlob = await this.streamToBlob(chunkStream);
+      const chunkBlob = await streamToBlob(chunkStream);
       const chunkFile = new File([chunkBlob], `part-${chunkIndex}`);
 
       // 3. 上传到 R2
@@ -180,72 +181,6 @@ export class R2AdapterV2 extends BaseAdapter {
         await kv.delete(tempChunkKey);
       } catch (e) {
         // 忽略删除错误
-      }
-    }
-  }
-
-  /**
-   * 更新分片信息（使用重试机制避免并发冲突）
-   */
-  private async updateChunkInfo(
-    key: string,
-    chunkIndex: number,
-    chunkId: string,
-    chunkSize: number,
-  ): Promise<void> {
-    const kv = this.env[this.kvName];
-    const maxRetries = 3;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        // 1. 获取最新状态
-        const metaResult = await this.getMetadata(key);
-        if (!metaResult) {
-          throw new Error(`Metadata not found for key: ${key}`);
-        }
-
-        const metadata = metaResult.metadata;
-        const chunks: Chunk[] = metaResult.value
-          ? JSON.parse(metaResult.value)
-          : [];
-
-        // 2. 检查是否已上传
-        if (metadata.chunkInfo.uploadedIndices?.includes(chunkIndex)) {
-          console.log(
-            `[updateChunkInfo] Chunk ${chunkIndex} already uploaded, skipping`,
-          );
-          return;
-        }
-
-        // 3. 更新 uploadedIndices
-        if (!metadata.chunkInfo.uploadedIndices) {
-          metadata.chunkInfo.uploadedIndices = [];
-        }
-        metadata.chunkInfo.uploadedIndices.push(chunkIndex);
-
-        // 4. 更新 chunks 数组（存储在 value 中）
-        chunks.push({
-          idx: chunkIndex,
-          file_id: chunkId,
-          size: chunkSize,
-        });
-
-        // 5. 写回 KV
-        await kv.put(key, JSON.stringify(chunks), { metadata });
-
-        console.log(
-          `[updateChunkInfo] Updated chunk ${chunkIndex} (attempt ${i + 1})`,
-        );
-        return;
-      } catch (error) {
-        console.error(`[updateChunkInfo] Attempt ${i + 1} failed:`, error);
-        if (i === maxRetries - 1) {
-          throw error;
-        }
-        // 指数退避
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, i) * 100),
-        );
       }
     }
   }
