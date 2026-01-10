@@ -1,79 +1,134 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag } from "lucide-react";
+import { useState, useMemo } from "react";
+
 import { Button } from "@/components/ui/button";
-import { useActiveItems, useFileStore } from "@/lib/file-store";
-import { deleteFile, getFileUrl } from "@/lib/api";
-import { downloadFile } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { BatchAddTagsDialog } from "@/components/batch-add-tags-dialog";
-import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tag } from "lucide-react";
+import { BatchAddTagsDialog } from "@/components/batch-add-tags-dialog";
+
+import { useActiveItems, useFileStore } from "@/lib/file-store";
+import { deleteFile, getFileUrl } from "@/lib/api";
+import { downloadFile } from "@/lib/utils";
+import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export function BatchOperationsBar() {
-  const fileStore = useFileStore()
-  const selectedKeys = fileStore.selectedKeys
-  const clearSelection = fileStore.clearSelection
-  const selectAll = fileStore.selectAll
-  const updateFileMetadata = fileStore.updateFileMetadata
-  const { toast } = useToast()
-  const [showBatchTags, setShowBatchTags] = useState(false)
+  const fileStore = useFileStore();
+  const {
+    selectedKeys,
+    clearSelection,
+    selectAll,
+    updateFileMetadata,
+    activeType,
+  } = fileStore;
 
-  const items = useActiveItems()
+  const { toast } = useToast();
+  const [showBatchTags, setShowBatchTags] = useState(false);
 
-  // 检查是否已全选当前页
-  const isAllSelected = items.length > 0 && selectedKeys.length === items.length &&
-    items.every(item => selectedKeys.includes(item.name))
+  const items = useActiveItems();
 
-  // 批量操作成功回调
-  const handleBatchSuccess = (updatedFiles: Array<{ name: string; tags: string[] }>) => {
-    // 更新本地状态
+  /** ===== 派生数据 ===== */
+  const selectedSet = useMemo(
+    () => new Set(selectedKeys),
+    [selectedKeys],
+  );
+
+  const itemMap = useMemo(
+    () => new Map(items.map((f) => [f.name, f])),
+    [items],
+  );
+
+  const isAllSelected =
+    items.length > 0 && selectedKeys.length === items.length;
+
+  const isMediaType =
+    activeType === FileType.Audio || activeType === FileType.Video;
+
+  /** ===== 批量标签成功回调 ===== */
+  const handleBatchSuccess = (
+    updatedFiles: Array<{ name: string; tags: string[] }>,
+  ) => {
     updatedFiles.forEach(({ name, tags }) => {
-      const file = items.find((f) => f.name === name)
-      if (file) {
-        updateFileMetadata(name, {
-          ...file.metadata,
-          tags,
-        })
-      }
-    })
-    clearSelection()
-  }
+      const file = itemMap.get(name);
+      if (!file) return;
+
+      updateFileMetadata(name, {
+        ...file.metadata,
+        tags,
+      });
+    });
+
+    clearSelection();
+  };
+
+  /** ===== 批量下载 ===== */
   const handleBatchDownload = () => {
-    selectedKeys.forEach((name) => {
-      const file = items.find((f) => f.name === name)
-      if (!file) return
+    if (selectedKeys.length === 0) return;
 
-      downloadFile(getFileUrl(name), file.metadata.fileName)
-    })
-  }
+    const oversizedFiles: string[] = [];
+
+    for (const key of selectedKeys) {
+      const file = itemMap.get(key);
+      if (!file) continue;
+
+      const { fileSize, fileName } = file.metadata;
+
+      if (isMediaType && fileSize > DIRECT_DOWNLOAD_LIMIT) {
+        oversizedFiles.push(fileName);
+        continue;
+      }
+
+      downloadFile(getFileUrl(key), file.metadata);
+    }
+
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "部分文件未自动下载",
+        description: `以下 ${oversizedFiles.length} 个文件过大，请在新页面使用浏览器原生控件下载：\n${oversizedFiles.join(
+          "、",
+        )}`,
+      });
+    }
+  };
+
+  /** ===== 批量删除（修复 async forEach 问题）===== */
   const handleBatchDelete = async () => {
-    if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return
-    selectedKeys.forEach(async (key) => {
-      await deleteFile(key).then((success) => {
-        if (success) {
-          fileStore.deleteFilesLocal([key])
-        } else {
-          toast({
-            title: "删除失败",
-            description: `${key} 删除失败`,
-          })
-        }
-      })
-    })
-    clearSelection()
-  } 
+    if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return;
 
+    const results = await Promise.all(
+      selectedKeys.map(async (key) => {
+        const success = await deleteFile(key);
+        return { key, success };
+      }),
+    );
+
+    const failed = results.filter((r) => !r.success);
+
+    results
+      .filter((r) => r.success)
+      .forEach((r) => fileStore.deleteFilesLocal([r.key]));
+
+    if (failed.length > 0) {
+      toast({
+        title: "部分文件删除失败",
+        description: failed.map((f) => f.key).join("、"),
+      });
+    }
+
+    clearSelection();
+  };
+
+  /** ===== UI ===== */
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
-        <div className="backdrop-blur-xl bg-linear-to-r from-emerald-500/90 to-teal-500/90 border border-white/20 rounded-full px-6 py-3 shadow-2xl flex items-center gap-4">
+      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4">
+        <div className="flex items-center gap-4 rounded-full border border-white/20 bg-linear-to-r from-emerald-500/90 to-teal-500/90 px-6 py-3 shadow-2xl backdrop-blur-xl">
           <span className="text-sm font-medium text-white">
             {selectedKeys.length}{" "}
             {selectedKeys.length === 1 ? "file" : "files"} selected
@@ -86,22 +141,22 @@ export function BatchOperationsBar() {
               className="text-white hover:bg-white/20"
               onClick={handleBatchDownload}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Download
             </Button>
+
             <Button
               size="sm"
               variant="ghost"
               className="text-white hover:bg-white/20"
               onClick={handleBatchDelete}
             >
-              <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+              <Trash2 className="mr-2 h-4 w-4 text-red-500" />
               Delete
             </Button>
 
-            <div className="w-px h-6 bg-white/20" />
+            <div className="h-6 w-px bg-white/20" />
 
-            {/* 工具菜单 */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -112,23 +167,29 @@ export function BatchOperationsBar() {
                   <Toolbox className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 align="end"
                 side="top"
-                className="bg-[#0d2137] border-white/10 min-w-[180px]"
+                className="min-w-[180px] border-white/10 bg-[#0d2137]"
               >
                 <DropdownMenuItem
                   onClick={isAllSelected ? clearSelection : selectAll}
-                  className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer"
+                  className="cursor-pointer text-white hover:bg-white/10"
                 >
-                  <Check className={`h-4 w-4 mr-2 ${isAllSelected ? "text-emerald-300" : "text-blue-400"}`} />
+                  <Check
+                    className={`mr-2 h-4 w-4 ${
+                      isAllSelected ? "text-emerald-300" : "text-blue-400"
+                    }`}
+                  />
                   {isAllSelected ? "取消全选" : "全选当前页"}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onClick={() => setShowBatchTags(true)}
-                  className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer"
+                  className="cursor-pointer text-white hover:bg-white/10"
                 >
-                  <Tag className="h-4 w-4 mr-2 text-emerald-400" />
+                  <Tag className="mr-2 h-4 w-4 text-emerald-400" />
                   批量添加标签
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -146,9 +207,8 @@ export function BatchOperationsBar() {
         </div>
       </div>
 
-      {/* 批量添加标签对话框 */}
       <BatchAddTagsDialog
-        files={items.filter((item) => selectedKeys.includes(item.name))}
+        files={items.filter((item) => selectedSet.has(item.name))}
         open={showBatchTags}
         onOpenChange={setShowBatchTags}
         onSuccess={handleBatchSuccess}
