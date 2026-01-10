@@ -226,6 +226,8 @@ export function FileContent({
     }
     return true;
   };
+  
+  const ICON_DISPLAY_SIZE = "h-18 w-18"
 
   if (fileType === FileType.Image) {
     const imgElement = (
@@ -236,7 +238,7 @@ export function FileContent({
           shouldBlur ? "blur-2xl scale-110" : "cursor-zoom-in"
         )}
       />) : (
-          <Image className="h-12 w-12 text-slate-400"/>
+        <Image className={`${ICON_DISPLAY_SIZE} text-slate-400`} />
       )
     );
 
@@ -249,14 +251,14 @@ export function FileContent({
   }
 
   if (fileType === FileType.Video) {
-    return <Video className="h-12 w-12 text-purple-300" />;
+    return <Video className={`${ICON_DISPLAY_SIZE} text-purple-300`} />;
   }
 
   if (fileType === FileType.Audio) {
-    return <Music className="h-12 w-12 text-emerald-300" />;
+    return <Music className={`${ICON_DISPLAY_SIZE} text-emerald-300`} />;
   }
 
-  return <FileText className="h-12 w-12 text-amber-300" />;
+  return <FileText className={`${ICON_DISPLAY_SIZE} text-amber-300`} />;
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
