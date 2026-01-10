@@ -221,7 +221,7 @@ export function FileContent({
   // 判断是否应该加载图片
   const shouldLoadImage = () => {
     if (fileType !== FileType.Image) return false;
-    if (browseMode === BrowseMode.DataSaver) return false; // 省流模式不加载任何图片
+    if (browseMode === BrowseMode.NoImage) return false; // 省流模式不加载任何图片
     if (browseMode === BrowseMode.SmartNoImage && fileSize && fileSize > SMART_NO_IMAGE_THRESHOLD) {
       return false; // 智能无图模式，大于5MB不加载
     }
