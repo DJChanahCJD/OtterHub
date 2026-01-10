@@ -1,7 +1,7 @@
 import { DBAdapter } from ".";
 import { Chunk, chunkPrefix, FileMetadata, TEMP_CHUNK_TTL } from "../types";
 import { fail, ok } from "../common";
-import { findUploadedChunk, validateChunks } from "./shared-utils";
+import { isUploadedChunk, validateChunks, streamToBlob } from "./shared-utils";
 import { getUniqueFileId } from "../file";
 
 /**
@@ -26,17 +26,84 @@ export abstract class BaseAdapter implements DBAdapter {
   abstract delete(key: string): Promise<boolean>;
 
   /**
-   * 子类必须实现的抽象方法：消费分片（上传到存储并更新 metadata）
+   * 子类必须实现的抽象方法：上传分片到目标存储
+   * @param chunkFile 要上传的分片文件
    * @param parentKey 父文件的 key
-   * @param tempChunkKey 临时分片的 KV key
    * @param chunkIndex 分片索引
-   * @returns Promise<void>
+   * @returns 上传后的分片 ID
    */
-  protected abstract consumeChunk(
+  protected abstract uploadToTarget(
+    chunkFile: File,
+    parentKey: string,
+    chunkIndex: number,
+  ): Promise<string>;
+
+  /**
+   * 消费分片（模板方法）
+   * 流程：
+   * 1. 从临时 KV 读取分片内容
+   * 2. 将 stream 转换为 File
+   * 3. 调用子类的 uploadToTarget 上传
+   * 4. 更新 KV metadata
+   * 5. 删除临时 KV
+   *
+   * 子类只需实现 uploadToTarget，其他逻辑由基类处理
+   */
+  protected async consumeChunk(
     parentKey: string,
     tempChunkKey: string,
     chunkIndex: number,
-  ): Promise<void>;
+  ): Promise<void> {
+    const kv = this.env[this.kvName];
+
+    try {
+      console.log(
+        `[consumeChunk] Processing chunk ${chunkIndex} for ${parentKey}`,
+      );
+
+      // 1. 从临时 KV 读取分片内容
+      const chunkStream = await kv.get(tempChunkKey, "stream");
+      if (!chunkStream) {
+        console.error(`[consumeChunk] Temp chunk not found: ${tempChunkKey}`);
+        return;
+      }
+
+      // 2. 将 stream 转换为 File
+      const chunkBlob = await streamToBlob(chunkStream);
+      const chunkFile = new File([chunkBlob], `part-${chunkIndex}`);
+
+      // 3. 调用子类实现的上传方法
+      const chunkId = await this.uploadToTarget(chunkFile, parentKey, chunkIndex);
+      console.log(
+        `[consumeChunk] Uploaded chunk ${chunkIndex}: ${chunkId}`,
+      );
+
+      // 4. 更新 KV metadata
+      await this.updateChunkInfo(
+        parentKey,
+        chunkIndex,
+        chunkId,
+        chunkFile.size,
+      );
+
+      // 5. 删除临时 KV
+      await kv.delete(tempChunkKey);
+
+      console.log(`[consumeChunk] Completed chunk ${chunkIndex}`);
+    } catch (error) {
+      console.error(
+        `[consumeChunk] Error processing chunk ${chunkIndex}:`,
+        error,
+      );
+      // 即使出错也要删除临时 KV，避免堆积
+      try {
+        await kv.delete(tempChunkKey);
+      } catch (e) {
+        // 忽略删除错误
+      }
+      throw error;
+    }
+  }
 
   /**
    * 子类可选实现的方法：生成分片 ID
@@ -45,11 +112,11 @@ export abstract class BaseAdapter implements DBAdapter {
    * @param chunkIndex 分片索引
    * @returns 分片 ID
    */
-  protected generateChunkId(parentKey: string, chunkIndex: number): string {
+  protected getTempChunkId(parentKey: string, chunkIndex: number): string {
     const shortFileId =
       parentKey.split("_")[1]?.slice(0, 16) ||
       getUniqueFileId();
-    return `${shortFileId}_${chunkIndex}`;
+    return `${chunkPrefix}${shortFileId}_${chunkIndex}`;
   }
 
   /**
@@ -58,7 +125,7 @@ export abstract class BaseAdapter implements DBAdapter {
    * 1. 获取当前 metadata
    * 2. 检查分片是否已上传
    * 3. 将分片内容暂存到临时 KV
-   * 4. 异步处理：调用子类的 consumeChunk
+   * 4. 异步处理：调用 consumeChunk（模板方法）
    * 5. 使用 waitUntil 异步处理或直接等待
    */
   async uploadChunk(
@@ -81,18 +148,18 @@ export abstract class BaseAdapter implements DBAdapter {
       : [];
 
     // 2. 检查分片是否已上传（使用通用工具函数）
-    const uploadedChunk = findUploadedChunk(metadata, chunkIndex, chunks);
-    if (uploadedChunk) {
-      return ok(uploadedChunk.file_id);
+    const isUploaded = isUploadedChunk(metadata, chunkIndex);
+    if (isUploaded) {
+      return ok(chunkIndex);
     }
 
     // 3. 将分片内容暂存到临时 KV（带过期时间）
-    const tempChunkKey = `${chunkPrefix}${key}-${chunkIndex}`;
+    const tempChunkKey = this.getTempChunkId(key, chunkIndex);
     await kv.put(tempChunkKey, chunkFile.stream(), {
       expirationTtl: TEMP_CHUNK_TTL,
     });
 
-    // 4. 异步处理：上传到存储并更新 metadata
+    // 4. 异步处理：使用模板方法 consumeChunk
     const uploadPromise = this.consumeChunk(key, tempChunkKey, chunkIndex);
 
     if (waitUntil) {

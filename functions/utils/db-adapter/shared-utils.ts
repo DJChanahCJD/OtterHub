@@ -26,26 +26,25 @@ export function parseRangeHeader(
 }
 
 /**
- * 检查分片文件是否完整
+ * 验证上传是否完成
+ * 职责：检查所有分片是否已上传完成（基于 uploadedIndices）
+ * 数据源：metadata.chunkInfo.uploadedIndices
+ * 用途：决定是否允许合并文件
  * @param metadata 文件元数据
- * @param chunks 分片数组（可选，用于 R2AdapterV2 从 value 中解析）
  * @returns 完整性检查结果
  */
-export function validateChunks(
+export function validateUploadCompletion(
   metadata: FileMetadata,
-  chunks?: Chunk[]
 ): { valid: boolean; uploaded: number; total: number; reason?: string } {
   if (!metadata?.chunkInfo) {
     return { valid: false, uploaded: 0, total: 0, reason: "No chunkInfo in metadata" };
   }
 
   const { chunkInfo } = metadata;
-
-  const chunksArray = chunks;
-  const uploadedCount = chunkInfo.uploadedIndices?.length || chunksArray.length;
+  const uploadedCount = chunkInfo.uploadedIndices?.length || 0;
   const total = chunkInfo.total;
 
-  if (uploadedCount !== total || chunksArray.length !== total) {
+  if (uploadedCount !== total) {
     return {
       valid: false,
       uploaded: uploadedCount,
@@ -55,6 +54,53 @@ export function validateChunks(
   }
 
   return { valid: true, uploaded: uploadedCount, total };
+}
+
+/**
+ * 验证分片是否可以合并
+ * 职责：检查分片数组是否完整且连续
+ * 数据源：从 KV value 解析的 chunks 数组
+ * 用途：在合并前验证分片数据完整性
+ * @param chunks 分片数组
+ * @param expectedTotal 期望的分片总数
+ * @returns 验证结果
+ */
+export function validateChunksForMerge(
+  chunks: Chunk[],
+  expectedTotal: number,
+): { valid: boolean; reason?: string } {
+  if (chunks.length !== expectedTotal) {
+    return {
+      valid: false,
+      reason: `Chunks count mismatch: ${chunks.length}/${expectedTotal}`,
+    };
+  }
+
+  // 检查分片索引是否连续（0, 1, 2, ..., total-1）
+  const sortedIndices = [...chunks]
+    .sort((a, b) => a.idx - b.idx)
+    .map(c => c.idx);
+
+  for (let i = 0; i < expectedTotal; i++) {
+    if (sortedIndices[i] !== i) {
+      return {
+        valid: false,
+        reason: `Chunks are not continuous: missing index ${i}`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * @deprecated 使用 validateUploadCompletion 代替
+ * 保留此函数以向后兼容
+ */
+export function validateChunks(
+  metadata: FileMetadata,
+): { valid: boolean; uploaded: number; total: number; reason?: string } {
+  return validateUploadCompletion(metadata);
 }
 
 /**
@@ -77,23 +123,12 @@ export function sortChunksAndCalculateSize(chunks: Chunk[]): {
  * @param chunkIndex 分片索引
  * @returns 已上传的分片信息或 null
  */
-export function findUploadedChunk(
+export function isUploadedChunk(
   metadata: FileMetadata,
   chunkIndex: number,
-  chunksFromValue?: Chunk[]
-): Chunk | null {
+): boolean | null {
   if (!metadata?.chunkInfo) return null;
-
-  const { chunkInfo } = metadata;
-  const chunksArray = chunksFromValue || chunkInfo.chunks;
-
-  // R2AdapterV2: 检查 uploadedIndices
-  if (chunkInfo.uploadedIndices?.includes(chunkIndex)) {
-    return chunksArray.find(c => c.idx === chunkIndex) || null;
-  }
-
-  // R2Adapter / TGAdapter: 直接在 chunks 中查找
-  return chunksArray.find(c => c.idx === chunkIndex) || null;
+  return metadata.chunkInfo.uploadedIndices?.includes(chunkIndex)
 }
 
 /**

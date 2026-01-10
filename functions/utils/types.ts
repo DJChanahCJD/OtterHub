@@ -47,7 +47,7 @@ export enum FileTag {
 export const chunkPrefix = 'chunk_';
 export type ChunkInfo = {
   total: number;          // 总分片数
-  chunks?: Chunk[];        // TODO: （待废弃）已上传的分片
+  // chunks?: Chunk[];        // TODO: （待废弃）已上传的分片
 
   uploadedIndices?: number[]; // 已上传的分片索引
 }

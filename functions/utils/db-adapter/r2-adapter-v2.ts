@@ -17,8 +17,6 @@ import {
   parseRangeHeader,
   validateChunks,
   sortChunksAndCalculateSize,
-  findUploadedChunk,
-  streamToBlob,
 } from "./shared-utils";
 
 // R2存储适配器实现（新版本：优化分片上传）
@@ -69,68 +67,24 @@ export class R2AdapterV2 extends BaseAdapter {
   }
 
   /**
-   * 消费分片：从临时 KV 读取，上传到 R2，更新 KV metadata
+   * 上传分片到 R2 存储
+   * 由基类的 consumeChunk 模板方法调用
    */
-  protected async consumeChunk(
+  protected async uploadToTarget(
+    chunkFile: File,
     parentKey: string,
-    tempChunkKey: string,
     chunkIndex: number,
-  ): Promise<void> {
-    const kv = this.env[this.kvName];
+  ): Promise<string> {
     const bucket = this.env[this.bucketName];
-    const chunkId = this.generateChunkId(parentKey, chunkIndex);
+    const chunkId = this.getTempChunkId(parentKey, chunkIndex);
 
-    try {
-      console.log(
-        `[consumeChunk] Processing chunk ${chunkIndex} for ${parentKey}`,
-      );
+    await bucket.put(chunkId, chunkFile, {
+      httpMetadata: {
+        contentType: chunkFile.type,
+      },
+    });
 
-      // 1. 从临时 KV 读取分片内容
-      const chunkStream = await kv.get(tempChunkKey, "stream");
-      if (!chunkStream) {
-        console.error(`[consumeChunk] Temp chunk not found: ${tempChunkKey}`);
-        return;
-      }
-
-      // 2. 将 stream 转换为 Blob/File
-      const chunkBlob = await streamToBlob(chunkStream);
-      const chunkFile = new File([chunkBlob], `part-${chunkIndex}`);
-
-      // 3. 上传到 R2
-      await bucket.put(chunkId, chunkFile, {
-        httpMetadata: {
-          contentType: chunkFile.type,
-        },
-      });
-
-      console.log(
-        `[consumeChunk] Uploaded chunk ${chunkIndex} to R2: ${chunkId}`,
-      );
-
-      // 4. 更新 KV（使用 CAS 机制避免并发冲突）
-      await this.updateChunkInfo(
-        parentKey,
-        chunkIndex,
-        chunkId,
-        chunkFile.size,
-      );
-
-      // 5. 删除临时 KV
-      await kv.delete(tempChunkKey);
-
-      console.log(`[consumeChunk] Completed chunk ${chunkIndex}`);
-    } catch (error) {
-      console.error(
-        `[consumeChunk] Error processing chunk ${chunkIndex}:`,
-        error,
-      );
-      // 即使出错也要删除临时 KV，避免堆积
-      try {
-        await kv.delete(tempChunkKey);
-      } catch (e) {
-        // 忽略删除错误
-      }
-    }
+    return chunkId;
   }
 
   async get(key: string, req?: Request): Promise<Response> {
@@ -210,7 +164,7 @@ export class R2AdapterV2 extends BaseAdapter {
       }
 
       // 使用通用工具函数验证分片完整性
-      const validation = validateChunks(metadata, chunks);
+      const validation = validateChunks(metadata);
       if (!validation.valid) {
         console.error(`[getMergedFile] ${validation.reason}`);
         return fail(validation.reason || "Invalid metadata", 425);

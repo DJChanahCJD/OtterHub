@@ -14,9 +14,7 @@ import {
 import {
   parseRangeHeader,
   sortChunksAndCalculateSize,
-  findUploadedChunk,
   validateChunks,
-  streamToBlob,
 } from "./shared-utils";
 import {
   getTgFileId,
@@ -77,96 +75,49 @@ export class TGAdapterV2 extends BaseAdapter {
   }
 
   /**
-   * 消费分片：从临时 KV 读取，上传到 Telegram，更新 KV metadata
+   * 上传分片到 Telegram 存储
+   * 由基类的 consumeChunk 模板方法调用
    */
-  protected async consumeChunk(
+  protected async uploadToTarget(
+    chunkFile: File,
     parentKey: string,
-    tempChunkKey: string,
     chunkIndex: number,
-  ): Promise<void> {
-    const kv = this.env[this.kvName];
+  ): Promise<string> {
+    const formData = new FormData();
+    formData.append("chat_id", this.env.TG_CHAT_ID);
+    formData.append("document", chunkFile);
+
+    const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
+
+    // 添加超时控制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
 
     try {
-      console.log(
-        `[TGAdapterV2] Processing chunk ${chunkIndex} for ${parentKey}`,
-      );
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
-      // 1. 从临时 KV 读取分片内容
-      const chunkStream = await kv.get(tempChunkKey, "stream");
-      if (!chunkStream) {
-        console.error(`[TGAdapterV2] Temp chunk not found: ${tempChunkKey}`);
-        return;
-      }
+      const result = await response.json();
 
-      // 2. 将 stream 转换为 File
-      const chunkBlob = await streamToBlob(chunkStream);
-      const chunkFile = new File([chunkBlob], `${chunkPrefix}${chunkIndex}`);
-
-      // 3. 上传到 Telegram
-      const formData = new FormData();
-      formData.append("chat_id", this.env.TG_CHAT_ID);
-      formData.append("document", chunkFile);
-
-      const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
-
-      // 添加超时控制
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
-
-      let tgFileId: string;
-      try {
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          body: formData,
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        const result = await response.json();
-
-        if (!result.ok) {
-          throw new Error(
-            `Chunk ${chunkIndex} upload failed: ${
-              result.description || "Unknown error"
-            }`,
-          );
-        }
-
-        tgFileId = result.result.document.file_id;
-        console.log(
-          `[TGAdapterV2] Uploaded chunk ${chunkIndex} to Telegram: ${tgFileId}`,
+      if (!result.ok) {
+        throw new Error(
+          `Chunk ${chunkIndex} upload failed: ${
+            result.description || "Unknown error"
+          }`,
         );
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === "AbortError") {
-          throw new Error(`Chunk ${chunkIndex} upload timeout after 60s`);
-        }
-        throw error;
       }
 
-      // 4. 更新 KV（使用重试机制避免并发冲突）
-      await this.updateChunkInfo(
-        parentKey,
-        chunkIndex,
-        tgFileId,
-        chunkFile.size,
-      );
-
-      // 5. 删除临时 KV
-      await kv.delete(tempChunkKey);
-
-      console.log(`[TGAdapterV2] Completed chunk ${chunkIndex}`);
-    } catch (error) {
-      console.error(
-        `[TGAdapterV2] Error processing chunk ${chunkIndex}:`,
-        error,
-      );
-      // 即使出错也要删除临时 KV，避免堆积
-      try {
-        await kv.delete(tempChunkKey);
-      } catch (e) {
-        // 忽略删除错误
+      return result.result.document.file_id;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        throw new Error(`Chunk ${chunkIndex} upload timeout after 60s`);
       }
+      throw error;
     }
   }
 
@@ -260,7 +211,7 @@ export class TGAdapterV2 extends BaseAdapter {
     }
 
     // 使用通用工具函数验证分片完整性
-    const validation = validateChunks(metadata, chunks);
+    const validation = validateChunks(metadata);
     if (!validation.valid) {
       console.error(`[getMergedFile] ${validation.reason}`);
       return fail(validation.reason || "Invalid metadata", 425);
