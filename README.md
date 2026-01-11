@@ -133,9 +133,7 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ## 🔧 技术原理
 
 ### 文件上传流程
-
-<details>
-<summary>以大文件分片上传为例</summary>
+> 以大文件分片上传为例
 
 1. **初始化上传**
    - 前端发送 `GET /api/upload/chunk` 请求
@@ -158,12 +156,8 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
    - 更新 uploadedIndices 元数据
    - 删除临时 KV
 
-</details>
-
 ### 文件获取流程
-
-<details>
-<summary>以大文件流式获取为例</summary>
+> 以大文件流式获取为例
 
 1. **读取元数据**
 
@@ -180,12 +174,9 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
    - 支持 Range 请求头
    - 可指定下载指定字节范围
 
-</details>
 
-### 数据存储结构（以 30MB 文件为例）
-
-<details>
-<summary>查看 KV 数据结构设计</summary>
+### 数据存储结构
+> 以 30MB 文件为例
 
 #### KV Key + Metadata 结构
 
@@ -221,21 +212,14 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
   }
 ]
 ```
-
-#### 存储容量分析
+<details>
+<summary>存储容量分析</summary>
 
 - **单文件占用**：< 500 字节（key + metadata + value 结构）
 - **KV 总容量**：1GB（免费版）
 - **理论存储数量**： **≥ 200万个**
 
 > 计算公式：`1GB / 500字节 ≈ 200万`
-
-#### 设计考虑
-
-- **KV 前缀优化**：`img:` `audio:` `video:` `doc:` 便于按类型查询
-- **分片索引**：`uploadedIndices` 支持断点续传和进度追踪
-- **临时 KV TTL**：1 小时自动清理，防止泄漏
-
 </details>
 
 
@@ -243,7 +227,7 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ## ❓ 常见问题
 
 <details>
-<summary>上传完成后立即查看，为什么文件不完整？</summary>
+<summary>1. 上传完成后立即查看，为什么文件不完整？</summary>
 
 上传过程使用了 `waitUntil` 进行异步处理，
 在分片尚未全部上传完成前，文件可能暂时显示不完整。
@@ -254,7 +238,7 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ---
 
 <details>
-<summary>Telegram 单文件限制 20MB，OtterHub 如何支持大文件？</summary>
+<summary>2. Telegram 单文件限制 20MB，OtterHub 如何支持大文件？</summary>
 
 通过 **分片上传 + 流式合并** 实现：
 
@@ -269,9 +253,9 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ---
 
 <details>
-<summary>Cloudflare Workers 免费版是否够用？</summary>
+<summary>3. Cloudflare Workers 免费版是否够用？</summary>
 
-对于**个人存储场景**通常足够。
+对于**个人存储场景**通常足够，**理论存储数量**： **≥ 200万个**
 
 主要限制（免费版）：
 
@@ -289,10 +273,9 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 > https://developers.cloudflare.com/workers/platform/limits/
 </details>
 
----
-
 <details>
-<summary>如何获取 Telegram Bot Token 和 Chat ID？</summary>
+<summary>4. 如何获取 Telegram Bot Token 和 Chat ID？</summary>
+
 以下为AI生成，详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
 
 **Bot Token**
@@ -363,4 +346,6 @@ OtterHub/
   - [ ] 文档：预览支持
 
 
-- [ ] 实现分页获取
+- [ ] 其他
+  - [ ] 实现分页获取
+  - [ ] 支持 Docker 部署
