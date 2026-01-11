@@ -25,8 +25,12 @@
 OtterHub 是一个**无需服务器、可免费部署**的个人文件存储解决方案。  
 利用 Cloudflare Workers / Pages + KV 与 Telegram Bot API，实现文件的上传、管理、分享与安全浏览。
 
-> 体验站点：[演示站Demo](https://otterhub-demo.pages.dev/)
-> 账号: `OtterHub`, 密码: `123456`
+> [!IMPORTANT]
+> 体验站点：[OtterHub Demo](https://otterhub-demo.pages.dev/)
+> 
+> 账号：`OtterHub` | 密码：`123456`
+> 
+> 限制：演示站的默认文件不可删，仅支持上传≤20MB文件（1小时自动清理）
 
 ![网站截图](public/website-screenshot.png)
 
