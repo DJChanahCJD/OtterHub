@@ -16,22 +16,22 @@ export function shouldBlur({
   return safeMode && isNSFW(tags);
 }
 
-// 判断是否应该加载图片（BrowseMode + 文件大小）
+// 判断是否应该加载图片（LoadImageMode + 文件大小）
 export function shouldLoadImage({
   fileType,
-  browseMode,
+  loadImageMode,
   fileSize,
   threshold,
 }: {
   fileType: FileType;
-  browseMode: ImageLoadMode;
+  loadImageMode: ImageLoadMode;
   fileSize?: number;
   threshold: number;
 }): boolean {
   if (fileType !== FileType.Image) return false;
-  if (browseMode === ImageLoadMode.NoImage) return false;
+  if (loadImageMode === ImageLoadMode.NoImage) return false;
   if (
-    browseMode === ImageLoadMode.DataSaver &&
+    loadImageMode === ImageLoadMode.DataSaver &&
     fileSize &&
     fileSize > threshold
   ) {

@@ -12,6 +12,7 @@ import {
 } from "./types";
 import { deleteFile, getFileList } from "./api";
 import { STORAGE_KEYS, getFromStorage, setToStorage } from "./local-storage";
+import { useMemo } from "react";
 
 type FileBucket = {
   items: FileItem[];
@@ -79,8 +80,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
   selectedKeys: [],
 
   setActiveType: async (type) => {
+    const { activeType, viewMode } = get();
     // 如果是图片瀑布流，需要切换为其他模式
-    if (get().activeType === FileType.Image && get().viewMode === ViewMode.Masonry) {
+    if (activeType === FileType.Image && viewMode === ViewMode.Masonry) {
       get().setViewMode(ViewMode.Grid);
     }
     // 先设置activeType
@@ -250,38 +252,59 @@ export const useBucketItems = (type: FileType) =>
   useFileStore((s) => s.buckets[type].items);
 
 export const useFilteredFiles = () => {
-  const searchQuery = useFileStore((s) => s.searchQuery);
-  const sortType = useFileStore((s) => s.sortType);
-  const sortOrder = useFileStore((s) => s.sortOrder);
-  const items = useActiveItems()
+  const { searchQuery, sortType, sortOrder } = useFileStore();
+  const items = useActiveItems();
 
-  let filteredItems = items.filter((item) => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
+  return useMemo(() => {
+    // 1. 预处理搜索词（只做一次）
+    const query = searchQuery.trim().toLowerCase();
 
-    const fileName = item.metadata?.fileName?.toLowerCase() || item.name.toLowerCase();
-    return fileName.includes(query);
-  });
+    // 2. 过滤
+    const filtered = items.filter((item) => {
+      if (!query) return true;
 
-  filteredItems = [...filteredItems].sort((a, b) => {
-    let comparison = 0;
+      const name =
+        item.metadata?.fileName?.toLowerCase() ?? item.name.toLowerCase();
 
-    if (sortType === SortType.Name) {
-      const nameA = a.metadata?.fileName?.toLowerCase() || a.name.toLowerCase();
-      const nameB = b.metadata?.fileName?.toLowerCase() || b.name.toLowerCase();
-      comparison = nameA.localeCompare(nameB);
-    } else if (sortType === SortType.UploadedAt) {
-      const timeA = a.metadata?.uploadedAt || 0;
-      const timeB = b.metadata?.uploadedAt || 0;
-      comparison = timeA - timeB;
-    } else if (sortType === SortType.FileSize) {
-      const sizeA = a.metadata?.fileSize || 0;
-      const sizeB = b.metadata?.fileSize || 0;
-      comparison = sizeA - sizeB;
-    }
+      // 文件名命中
+      if (name.includes(query)) return true;
 
-    return sortOrder === SortOrder.Asc ? comparison : -comparison;
-  });
+      // 搜索词较长时，额外匹配原始 name
+      if (query.length >= 3) {
+        return item.name.toLowerCase().includes(query);
+      }
 
-  return filteredItems;
+      return false;
+    });
+
+    // 3. 排序
+    const sorted = filtered.slice().sort((a, b) => {
+      let diff = 0;
+
+      switch (sortType) {
+        case SortType.Name: {
+          const nameA =
+            a.metadata?.fileName?.toLowerCase() ?? a.name.toLowerCase();
+          const nameB =
+            b.metadata?.fileName?.toLowerCase() ?? b.name.toLowerCase();
+          diff = nameA.localeCompare(nameB);
+          break;
+        }
+
+        case SortType.UploadedAt: {
+          diff = (a.metadata?.uploadedAt ?? 0) - (b.metadata?.uploadedAt ?? 0);
+          break;
+        }
+
+        case SortType.FileSize: {
+          diff = (a.metadata?.fileSize ?? 0) - (b.metadata?.fileSize ?? 0);
+          break;
+        }
+      }
+
+      return sortOrder === SortOrder.Asc ? diff : -diff;
+    });
+
+    return sorted;
+  }, [items, searchQuery, sortType, sortOrder]);
 };

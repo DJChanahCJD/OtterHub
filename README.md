@@ -25,9 +25,8 @@
 OtterHub 是一个**无需服务器、可免费部署**的个人文件存储解决方案。  
 利用 Cloudflare Workers / Pages + KV 与 Telegram Bot API，实现文件的上传、管理、分享与安全浏览。
 
-- 无需自建存储
-- 支持大文件（分片）
-- 面向个人与轻量私有场景
+> 体验站点：[演示站Demo](https://otterhub-demo.pages.dev/)
+> 账号: `OtterHub`, 密码: `123456`
 
 ![网站截图](public/website-screenshot.png)
 
@@ -85,7 +84,8 @@ npm run dev
 ```
 
 > [!TIP]
-> 开发环境下后端采用R2存储，可以直接上传文件，方便调试。
+> 开发环境下采用本地R2存储，可以直接上传文件，方便调试。
+> 修改 functions 代码后，可运行`npm run ci-test`快速测试文件上传和下载功能是否正常。
 
 #### 预览模式
 
@@ -123,7 +123,7 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ### 3. 绑定 KV Namespace
 
 1. 在 Cloudflare Dashboard 创建 KV 命名空间 `oh_file_url`
-2. 将 `oh_file_url` 绑定到 Pages 项目
+2. 将 `oh_file_url` 绑定到 Pages 项目，变量名也设为 `oh_file_url`
 
 > `TG_CHAT_ID` 和 `TG_BOT_TOKEN` 需在 Telegram 中获取。
 > 💡 详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
