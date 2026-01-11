@@ -28,9 +28,8 @@ jobs:
           cache: 'npm'
       - name: Install root dependencies
         run: npm install
-      - name: Install frontend dependencies
-        run: npm install
-        working-directory: ./frontend
+      - name: Build frontend
+        run: npm run build:frontend
       - name: Run CI tests
         run: npm run ci-test
 
@@ -63,9 +62,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+      - name: Install root dependencies
+        run: npm install
       - name: Install frontend dependencies
         run: npm install
         working-directory: ./frontend
       - name: Run linter
         run: npm run lint
-        working-directory: ./frontend
