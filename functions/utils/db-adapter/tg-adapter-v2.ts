@@ -66,7 +66,8 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const kv = this.env[this.kvName];
     if (kv) {
-      await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
+      await kv.put(key, "", { metadata });
+      // await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
     }
 
     return ok(key, JSON.stringify(result));
