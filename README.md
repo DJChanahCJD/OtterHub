@@ -132,8 +132,8 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 
 ## 🔧 技术原理
 
-### 文件上传流程
-> 以大文件分片上传为例
+### 文件上传
+> 以大文件分片上传流程为例
 
 1. **初始化上传**
    - 前端发送 `GET /api/upload/chunk` 请求
@@ -156,8 +156,8 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
    - 更新 uploadedIndices 元数据
    - 删除临时 KV
 
-### 文件获取流程
-> 以大文件流式获取为例
+### 文件下载
+> 以大文件流式获取流程为例
 
 1. **读取元数据**
 
@@ -212,15 +212,13 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
   }
 ]
 ```
-<details>
-<summary>存储容量分析</summary>
+#### 存储容量分析
 
 - **单文件占用**：< 500 字节（key + metadata + value 结构）
 - **KV 总容量**：1GB（免费版）
 - **理论存储数量**： **≥ 200万个**
 
 > 计算公式：`1GB / 500字节 ≈ 200万`
-</details>
 
 
 
@@ -235,7 +233,6 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 通常只需 **稍等片刻并刷新页面** 即可正常显示。
 </details>
 
----
 
 <details>
 <summary>2. Telegram 单文件限制 20MB，OtterHub 如何支持大文件？</summary>
@@ -250,27 +247,15 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 👉 当前最大支持 **1GB 文件（50 × 20MB）**。
 </details>
 
----
 
 <details>
 <summary>3. Cloudflare Workers 免费版是否够用？</summary>
 
 对于**个人存储场景**通常足够，**理论存储数量**： **≥ 200万个**
+但大文件上传会占用较多内存和CPU资源，**不建议并发上传多个大文件**。
 
-主要限制（免费版）：
+> 具体限制参考官方文档：https://developers.cloudflare.com/workers/platform/limits/
 
-- 请求：100,000 次 / 天
-- KV 读取：100,000 次 / 天
-- KV 写入：1,000 次 / 天
-- KV 总容量：1GB
-- 单 KV value：≤25MB
-- Worker 内存：128MB
-- CPU 时间：≤10ms / 请求
-
-大文件上传会消耗更多资源，**不建议并发上传多个大文件**。
-
-> 参考官方文档：
-> https://developers.cloudflare.com/workers/platform/limits/
 </details>
 
 <details>
@@ -323,6 +308,7 @@ OtterHub/
 ## 🔍 参考资料
 
 - [Cloudflare API](https://developers.cloudflare.com/api)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
 - [Telegraph-Image](https://github.com/cf-pages/Telegraph-Image) - CF + TG 文件存储方案来源
 - [CloudFlare-ImgBed](https://github.com/MarSeventh/CloudFlare-ImgBed) - DB 适配器 & 分片上传设计的灵感来源
 - [Solara](https://github.com/akudamatata/Solara)
