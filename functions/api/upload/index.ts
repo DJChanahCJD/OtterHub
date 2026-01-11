@@ -1,10 +1,14 @@
 import { fail } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
-import { FileMetadata, FileTag, MAX_CHUNK_SIZE } from "../../utils/types";
+import { CF, FileMetadata, FileTag, MAX_CHUNK_SIZE } from "../../utils/types";
 
 // 单个文件上传
 export async function onRequestPost(context: any) {
     const { request, env } = context;
+    const isOverLimit = await checkFileCountLimit(env);
+    if (isOverLimit) {
+        return fail('File count exceeds limit, please try again later', 400);
+    }
 
     try {
         const clonedRequest = request.clone();
@@ -42,4 +46,24 @@ export async function onRequestPost(context: any) {
         console.error('Upload error:', error);
         return fail(`Failed to upload file: ${error.message}`, 500);
     }
+}
+
+/**
+ * 检查文件数量是否超过限制
+ * @param env Cloudflare环境变量
+ * @param maxFiles 最大文件数量
+ * @returns 是否超过限制
+ */
+async function checkFileCountLimit(
+  env: any,
+  maxFiles: number = 100,
+): Promise<boolean> {
+  try {
+    const kv = env[CF.KV_NAME];
+    const list = await kv.list({ limit: maxFiles });
+    return list.keys.length >= maxFiles;
+  } catch (error) {
+    console.error("检查文件数量失败:", error);
+    return false;
+  }
 }

@@ -73,6 +73,13 @@ export function FileUploadZone() {
 
   const processFiles = useCallback(
     async (files: FileList, skipResumeCheck = false, resumeFile?: FileItem) => {
+      if (files.length >= 5) {
+        toast({
+          title: "最多同时上传 5 个文件",
+          variant: "destructive",
+        })
+        return
+      }
       const fileArray = Array.from(files)
       if (!fileArray.length) return
 
