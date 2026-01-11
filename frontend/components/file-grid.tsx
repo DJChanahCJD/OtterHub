@@ -26,7 +26,7 @@ export function FileGrid() {
     setSortType(getFromStorage(STORAGE_KEYS.SORT_TYPE, SortType.UploadedAt));
     setSortOrder(getFromStorage(STORAGE_KEYS.SORT_ORDER, SortOrder.Desc));
     setSafeMode(getFromStorage(STORAGE_KEYS.SAFE_MODE, true));
-    setBrowseMode(getFromStorage(STORAGE_KEYS.BROWSE_MODE, BrowseMode.Default));
+    setBrowseMode(getFromStorage(STORAGE_KEYS.BROWSE_MODE, BrowseMode.SmartNoImage));
   }, [setViewMode, setSortType, setSortOrder, setSafeMode]);
 
   return (

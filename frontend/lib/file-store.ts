@@ -67,7 +67,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortType: SortType.UploadedAt,
   sortOrder: SortOrder.Desc,
   safeMode: true, // 默认开启安全浏览模式
-  browseMode: BrowseMode.Default, // 默认模式：正常显示所有内容
+  browseMode: BrowseMode.SmartNoImage, // 默认为省流模式
 
   buckets: {
     [FileType.Image]: emptyBucket(),
