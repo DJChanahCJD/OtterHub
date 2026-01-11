@@ -20,6 +20,51 @@ export interface NSFWResult {
 // https://nsfwjs.com/
 const MODEL_PATH = "MobileNetV2Mid";
 
+type ProbMap = Record<NSFWClass, number>;
+
+// 将 predictions 转换为概率映射（一次遍历，O(n)）
+function toProbMap(predictions: nsfwjs.PredictionType[]): ProbMap {
+  const map: ProbMap = {
+    Drawing: 0,
+    Hentai: 0,
+    Neutral: 0,
+    Porn: 0,
+    Sexy: 0,
+  };
+
+  for (const p of predictions) {
+    map[p.className as NSFWClass] = p.probability;
+  }
+  return map;
+}
+
+function judgeUnsafe(p: ProbMap): boolean {
+  const hard = p.Porn + p.Hentai; // 硬色情概率
+  const soft = p.Sexy * (1 - p.Neutral); // 软色情概率
+
+  return hard * 3 + soft >= 1;
+}
+
+// 模型 warm-up：提升首帧性能
+async function warmupModel(model: nsfwjs.NSFWJS) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 224;
+  try {
+    await model.classify(canvas);
+  } catch {
+    // warm-up 失败不影响主流程
+  }
+}
+
+// 图片尺寸缩放：提升检测性能
+function resizeImage(img: HTMLImageElement, size = 224): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, size, size);
+  return canvas;
+}
+
 class NSFWDetector {
   private model?: nsfwjs.NSFWJS;
   private loading?: Promise<nsfwjs.NSFWJS>;
@@ -27,7 +72,10 @@ class NSFWDetector {
   private async getModel() {
     if (this.model) return this.model;
     if (!this.loading) {
-      this.loading = nsfwjs.load(MODEL_PATH).then((m) => (this.model = m));
+      this.loading = nsfwjs.load(MODEL_PATH).then(async (m) => {
+        await warmupModel(m);
+        return m;
+      });
     }
     return this.loading;
   }
@@ -38,43 +86,21 @@ class NSFWDetector {
     try {
       const model = await this.getModel();
       const predictions = await model.classify(el);
-      /*
-        [
-          ({ className: "Sexy", probability: 0.9975076913833618 },
-          { className: "Neutral", probability: 0.0015533771365880966 },
-          { className: "Porn", probability: 0.0009368911851197481 },
-          { className: "Hentai", probability: 0.0000010140705626326962 },
-          { className: "Drawing", probability: 9.612167559680529e-7 })
-        ];
-      */
-      const prob = (cls: NSFWClass) =>
-        predictions.find((p) => p.className === cls)?.probability ?? 0;
 
-      const porn = prob(NSFWClass.Porn);
-      const hentai = prob(NSFWClass.Hentai);
-      const sexy = prob(NSFWClass.Sexy);
-      const neutral = prob(NSFWClass.Neutral);
-      const drawing = prob(NSFWClass.Drawing);
+      const prob = toProbMap(predictions);
+      const isUnsafe = judgeUnsafe(prob);
 
-      // 核心评分
-      const hardUnsafeScore = porn + hentai;
-      const softUnsafeScore = sexy * (1 - neutral);
-
-      const isUnsafe = hardUnsafeScore >= 0.4 || hardUnsafeScore + softUnsafeScore >= 1;
-
-      // console.table({
-      //   porn,
-      //   hentai,
-      //   sexy,
-      //   neutral,
-      //   drawing,
-      //   hardUnsafeScore,
-      //   softUnsafeScore,
-      //   isUnsafe,
-      // });
+      // 仅开发环境输出详细日志
+      if (process.env.NODE_ENV === "development") {
+        console.table({
+          ...prob,
+          isUnsafe,
+        });
+      }
 
       return isUnsafe;
-    } catch {
+    } catch (err) {
+      console.warn("NSFW detect failed:", err);
       return false;
     }
   }
@@ -92,7 +118,9 @@ class NSFWDetector {
         img.onerror = () => rej();
         img.src = url;
       });
-      return await this.detect(img);
+      // 使用缩放后的图片进行检测
+      const canvas = resizeImage(img);
+      return await this.detect(canvas);
     } catch {
       return false;
     } finally {
