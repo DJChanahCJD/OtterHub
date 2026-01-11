@@ -24,11 +24,11 @@ export enum SortOrder {
   Desc = "desc",
 }
 
-// 图片浏览模式
-export enum BrowseMode {
+// 图片加载模式
+export enum ImageLoadMode {
   Default = "default",      // 默认模式：正常显示所有内容
-  SmartNoImage = "smart",   // 省流模式：不加载 >5MB 的图片
-  NoImage = "noImage", // 无图模式：不加载任何图片
+  DataSaver = "data-saver",   // 省流模式：不加载 >5MB 的图片
+  NoImage = "no-image", // 无图模式：不加载任何图片
 }
 
 // 文件类型

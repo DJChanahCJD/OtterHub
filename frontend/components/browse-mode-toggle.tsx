@@ -9,17 +9,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFileStore } from "@/lib/file-store";
-import { BrowseMode } from "@/lib/types";
+import { ImageLoadMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const MODES = {
-  [BrowseMode.Default]: { label: "默认", icon: Image, desc: "全量加载" },
-  [BrowseMode.SmartNoImage]: { label: "省流", icon: ZapOff, desc: ">5MB跳过" },
-  [BrowseMode.NoImage]: { label: "无图", icon: ImageOff, desc: "禁用图片" },
+  [ImageLoadMode.Default]: { label: "默认", icon: Image, desc: "全量加载" },
+  [ImageLoadMode.DataSaver]: { label: "省流", icon: ZapOff, desc: ">5MB跳过" },
+  [ImageLoadMode.NoImage]: { label: "无图", icon: ImageOff, desc: "禁用图片" },
 };
 
-export function BrowseModeToggle() {
-  const { browseMode, setBrowseMode } = useFileStore();
+export function ImageLoadModeToggle() {
+  const { imageLoadMode: browseMode, setImageLoadMode: setBrowseMode } = useFileStore();
   const Icon = MODES[browseMode].icon;
 
   return (
@@ -30,7 +30,7 @@ export function BrowseModeToggle() {
           size="icon"
           className={cn(
             "h-8 w-8 transition-colors",
-            browseMode !== BrowseMode.Default
+            browseMode !== ImageLoadMode.Default
               ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
               : "text-white/60 hover:text-white hover:bg-white/10"
           )}
@@ -43,7 +43,7 @@ export function BrowseModeToggle() {
         {Object.entries(MODES).map(([id, { label, icon: ModeIcon, desc }]) => (
           <DropdownMenuItem
             key={id}
-            onClick={() => setBrowseMode(id as BrowseMode)}
+            onClick={() => setBrowseMode(id as ImageLoadMode)}
             className={cn(
               "flex items-center justify-between px-2 py-1.5 cursor-pointer focus:bg-white/10 text-white/80",
               browseMode === id && "bg-emerald-500/10 text-emerald-400 focus:bg-emerald-500/20"

@@ -13,7 +13,7 @@ interface MasonryImageCardProps {
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const safeMode = useFileStore((state) => state.safeMode);
-  const browseMode = useFileStore((state) => state.browseMode);
+  const browseMode = useFileStore((state) => state.imageLoadMode);
 
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const load = shouldLoadImage({

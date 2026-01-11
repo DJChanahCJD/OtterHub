@@ -37,7 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
 import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
 import { getFileUrl, deleteFile, toggleLike, uploadChunk } from "@/lib/api";
-import { FileItem, FileTag, BrowseMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
+import { FileItem, FileTag, ImageLoadMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
 import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
 import { PhotoProvider } from "react-photo-view";
 
@@ -205,7 +205,7 @@ export function FileContent({
   safeMode: boolean;
   tags?: FileTag[] | string[];
   fileSize?: number;
-  browseMode: BrowseMode;
+  browseMode: ImageLoadMode;
 }) {
   const blur = shouldBlur({ safeMode, tags });
   const load = shouldLoadImage({
@@ -245,7 +245,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
   const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
   const safeMode = useFileStore((state) => state.safeMode);
-  const browseMode = useFileStore((state) => state.browseMode);
+  const browseMode = useFileStore((state) => state.imageLoadMode);
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [isResuming, setIsResuming] = useState(false);

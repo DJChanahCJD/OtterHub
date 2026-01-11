@@ -1,14 +1,15 @@
 // utils/local-storage.ts
 // 统一管理localStorage操作
 
+const projectName = 'otterhub';
 // 存储键名常量
 export const STORAGE_KEYS = {
-  ACTIVE_TYPE: 'otterhub_active_type',
-  VIEW_MODE: 'otterhub_view_mode',
-  SORT_TYPE: 'otterhub_sort_type',
-  SORT_ORDER: 'otterhub_sort_order',
-  SAFE_MODE: 'otterhub_safe_mode',
-  BROWSE_MODE: 'otterhub_browse_mode',
+  ACTIVE_TYPE: `${projectName}_active_type`,
+  VIEW_MODE: `${projectName}_view_mode`,
+  SORT_TYPE: `${projectName}_sort_type`,
+  SORT_ORDER: `${projectName}_sort_order`,
+  SAFE_MODE: `${projectName}_safe_mode`,
+  IMAGE_LOAD_MODE: `${projectName}_image_load_mode`,
 } as const;
 
 /**

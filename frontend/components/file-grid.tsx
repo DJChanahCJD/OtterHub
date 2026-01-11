@@ -5,7 +5,7 @@ import { FileCard } from "@/components/file-card"
 import { MasonryImageCard } from "@/components/masonry-image-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { SortTypeDropdown } from "@/components/sort-type-dropdown"
-import { FileType, ViewMode, SortType, SortOrder, BrowseMode } from "@/lib/types"
+import { FileType, ViewMode, SortType, SortOrder, ImageLoadMode } from "@/lib/types"
 import { useEffect } from "react"
 import { getFromStorage } from "@/lib/local-storage"
 import { STORAGE_KEYS } from "@/lib/local-storage"
@@ -18,7 +18,7 @@ export function FileGrid() {
   const setSortType = useFileStore((state) => state.setSortType)
   const setSortOrder = useFileStore((state) => state.setSortOrder)
   const setSafeMode = useFileStore((state) => state.setSafeMode)
-  const setBrowseMode = useFileStore((state) => state.setBrowseMode)
+  const setBrowseMode = useFileStore((state) => state.setImageLoadMode)
   const filteredFiles = useFilteredFiles()
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function FileGrid() {
     setSortType(getFromStorage(STORAGE_KEYS.SORT_TYPE, SortType.UploadedAt));
     setSortOrder(getFromStorage(STORAGE_KEYS.SORT_ORDER, SortOrder.Desc));
     setSafeMode(getFromStorage(STORAGE_KEYS.SAFE_MODE, true));
-    setBrowseMode(getFromStorage(STORAGE_KEYS.BROWSE_MODE, BrowseMode.SmartNoImage));
+    setBrowseMode(getFromStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, ImageLoadMode.DataSaver));
   }, [setViewMode, setSortType, setSortOrder, setSafeMode]);
 
   return (

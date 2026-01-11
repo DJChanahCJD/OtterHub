@@ -1,4 +1,4 @@
-import { BrowseMode, FileTag, FileType } from "./types";
+import { ImageLoadMode, FileTag, FileType } from "./types";
 
 // 判断是否为 NSFW 内容
 export function isNSFW(tags?: (FileTag | string)[]): boolean {
@@ -24,14 +24,14 @@ export function shouldLoadImage({
   threshold,
 }: {
   fileType: FileType;
-  browseMode: BrowseMode;
+  browseMode: ImageLoadMode;
   fileSize?: number;
   threshold: number;
 }): boolean {
   if (fileType !== FileType.Image) return false;
-  if (browseMode === BrowseMode.NoImage) return false;
+  if (browseMode === ImageLoadMode.NoImage) return false;
   if (
-    browseMode === BrowseMode.SmartNoImage &&
+    browseMode === ImageLoadMode.DataSaver &&
     fileSize &&
     fileSize > threshold
   ) {

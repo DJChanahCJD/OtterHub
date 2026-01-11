@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { FileTypeTabs } from "@/components/file-type-tabs";
 import { FileTypeDropdown } from "@/components/file-type-dropdown";
 import { SafeModeToggle } from "@/components/safe-mode-toggle";
-import { BrowseModeToggle } from "@/components/browse-mode-toggle";
+import { ImageLoadModeToggle } from "@/components/browse-mode-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -121,8 +121,8 @@ export function Header() {
             </div>
             {/* 安全模式切换按钮 */}
             <SafeModeToggle />
-            {/* 图片浏览模式切换按钮 */}
-            <BrowseModeToggle />
+            {/* 图片加载模式切换按钮 */}
+            <ImageLoadModeToggle />
           </div>
         </div>
       </div>

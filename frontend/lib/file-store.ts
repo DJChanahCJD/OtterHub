@@ -8,7 +8,7 @@ import {
   ViewMode,
   SortType,
   SortOrder,
-  BrowseMode,
+  ImageLoadMode,
 } from "./types";
 import { deleteFile, getFileList } from "./api";
 import { STORAGE_KEYS, getFromStorage, setToStorage } from "./local-storage";
@@ -27,7 +27,7 @@ interface FileStore {
   sortType: SortType;
   sortOrder: SortOrder;
   safeMode: boolean; // 安全浏览模式
-  browseMode: BrowseMode; // 图片浏览模式
+  imageLoadMode: ImageLoadMode; // 图片加载模式
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
@@ -43,7 +43,7 @@ interface FileStore {
   setSortType: (type: SortType) => void;
   setSortOrder: (order: SortOrder) => void;
   setSafeMode: (enabled: boolean) => void;
-  setBrowseMode: (mode: BrowseMode) => void;
+  setImageLoadMode: (mode: ImageLoadMode) => void;
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -67,7 +67,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortType: SortType.UploadedAt,
   sortOrder: SortOrder.Desc,
   safeMode: true, // 默认开启安全浏览模式
-  browseMode: BrowseMode.SmartNoImage, // 默认为省流模式
+  imageLoadMode: ImageLoadMode.DataSaver, // 默认为省流模式
 
   buckets: {
     [FileType.Image]: emptyBucket(),
@@ -161,9 +161,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
     setToStorage(STORAGE_KEYS.SAFE_MODE, enabled);
   },
 
-  setBrowseMode: (mode) => {
-    set({ browseMode: mode });
-    setToStorage(STORAGE_KEYS.BROWSE_MODE, mode);
+  setImageLoadMode: (mode) => {
+    set({ imageLoadMode: mode });
+    setToStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, mode);
   },
 
   addFileLocal: (file, fileType) => {
