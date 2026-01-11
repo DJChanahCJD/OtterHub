@@ -1,9 +1,15 @@
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 
+const NOT_ALLOWED_DELETE = [] //  TODO: Demo演示站默认展示文件，不允许删除
+
 // 只支持 POST 请求进行删除
 export async function onRequestPost({ env, params, request }: any) {
   try {
+    if (NOT_ALLOWED_DELETE.includes(params.key)) {
+      return fail('You can not delete default file', 403);
+    }
+
     const db = DBAdapterFactory.getAdapter(env);
     const isDeleted = await db.delete(params.key);
     if (!isDeleted) {
