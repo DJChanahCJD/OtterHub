@@ -1,8 +1,6 @@
 import { isDev } from "../common";
 import { FileMetadata, CF } from "../types";
-import { R2Adapter } from "./r2-adaper";
 import { R2AdapterV2 } from "./r2-adapter-v2";
-import { TGAdapter } from "./tg-adapter";
 import { TGAdapterV2 } from "./tg-adapter-v2";
 
 // 存储适配器接口定义
