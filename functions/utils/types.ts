@@ -81,5 +81,5 @@ export type ListFilesResponse = {
 export const TEMP_CHUNK_TTL = 3600; // 1小时， 在Demo演示站可以用于所有文件KV的TTL
 export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB
 
-export const MAX_CHUNK_NUM = 20 // TODO: Demo演示站不得上传大文件
+export const MAX_CHUNK_NUM = 1 // TODO: Demo演示站不得上传大文件
 export const MAX_FILE_SIZE = MAX_CHUNK_SIZE * MAX_CHUNK_NUM

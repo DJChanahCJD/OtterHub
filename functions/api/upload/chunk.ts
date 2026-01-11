@@ -9,8 +9,8 @@ import { CF, FileMetadata, FileType, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TT
 
 // 初始化分片上传, 返回唯一文件key
 export async function onRequestGet(context: any): Promise<Response> {
-  // // Demo演示站不得初始化分片上传
-  // return fail(`Forbidden: not allowed to init chunk upload in demo`, 403);
+  // TODO: Demo演示站不得初始化分片上传
+  return fail(`Forbidden: not allowed to init chunk upload in demo`, 403);
 
   const { request, env } = context;
   const url = new URL(request.url);
@@ -46,7 +46,7 @@ export async function onRequestGet(context: any): Promise<Response> {
 // 上传分片
 export async function onRequestPost(context: any): Promise<Response> {
   // TODO: Demo演示站不得上传分片
-  // return fail(`Forbidden: not allowed to upload chunk in demo`, 403);
+  return fail(`Forbidden: not allowed to upload chunk in demo`, 403);
 
   const { request, env, waitUntil } = context;
 

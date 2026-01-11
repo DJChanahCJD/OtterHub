@@ -66,8 +66,9 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const kv = this.env[this.kvName];
     if (kv) {
-      await kv.put(key, "", { metadata });
-      // TODO: await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
+      // await kv.put(key, "", { metadata });
+      // TODO: 演示站必须设置过期时间
+      await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
     }
 
     return ok(key, JSON.stringify(result));
@@ -124,8 +125,9 @@ export class TGAdapterV2 extends BaseAdapter {
     const { fileId, isChunk } = getFileIdFromKey(key);
     // 检查是否为分片文件
     if (isChunk) {
-      return await this.getMergedFile(key);
-      // TODO: return fail(`Forbidden: not allowed to get chunk file in demo`, 403);
+      // return await this.getMergedFile(key);
+      // TODO: Demo演示站不得获取分片文件
+      return fail(`Forbidden: not allowed to get chunk file in demo`, 403);
     }
     return await this.getSingleFile(key, req);
   }
