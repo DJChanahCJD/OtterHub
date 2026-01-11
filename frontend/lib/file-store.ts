@@ -79,6 +79,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
   selectedKeys: [],
 
   setActiveType: async (type) => {
+    // 如果是图片瀑布流，需要切换为其他模式
+    if (get().activeType === FileType.Image && get().viewMode === ViewMode.Masonry) {
+      get().setViewMode(ViewMode.Grid);
+    }
     // 先设置activeType
     set((state) => ({
       activeType: type,

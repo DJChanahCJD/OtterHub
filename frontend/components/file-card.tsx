@@ -196,6 +196,8 @@ function ToolbarButton({
   );
 }
 
+export const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
+export const ICON_DISPLAY_SIZE = "h-18 w-18"
 export function FileContent({
   fileType,
   fileKey,
@@ -215,9 +217,6 @@ export function FileContent({
   const shouldBlur = safeMode && isNSFW;
   const canPreview = !shouldBlur; // 只有在非安全模式或非NSFW时才能预览
 
-  // 5MB 阈值
-  const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
-
   // 判断是否应该加载图片
   const shouldLoadImage = () => {
     if (fileType !== FileType.Image) return false;
@@ -228,7 +227,6 @@ export function FileContent({
     return true;
   };
   
-  const ICON_DISPLAY_SIZE = "h-18 w-18"
 
   if (fileType === FileType.Image) {
     const imgElement = (
