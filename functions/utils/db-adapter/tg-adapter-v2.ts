@@ -138,9 +138,10 @@ export class TGAdapterV2 extends BaseAdapter {
 
       const file = await getTgFile(fileId, this.env.TG_BOT_TOKEN);
 
+      const { metadata } = await this.getMetadata(key);
       const headers = new Headers();
       headers.set("Content-Type", contentType);
-      headers.set("Content-Disposition", `inline; filename="${fileId}.${ext}"`);
+      headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
       headers.set("Cache-Control", "public, max-age=3600");
       headers.set("Accept-Ranges", "bytes");
 
