@@ -335,3 +335,7 @@ OtterHub/
 - [ ] 其他
   - [ ] 实现分页获取
   - [ ] 支持 Docker 部署
+
+## 🤝 Contributing
+欢迎提交 **Issue** 反馈问题或建议新功能，也欢迎 **Pull Request** 一起完善项目！  
+觉得有用的话，点个 ⭐️ 支持一下吧！
