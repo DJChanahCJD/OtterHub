@@ -130,6 +130,7 @@ export function FileUploadZone() {
         if (file.size >= MAX_FILE_SIZE) {
           toast({
             title: `文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`,
+            description: `Demo演示站不支持上传大文件`,
             variant: "destructive",
           })
           return null

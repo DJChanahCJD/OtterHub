@@ -1,6 +1,6 @@
 import { fail } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
-import { FileMetadata, FileTag } from "../../utils/types";
+import { FileMetadata, FileTag, MAX_CHUNK_SIZE } from "../../utils/types";
 
 // 单个文件上传
 export async function onRequestPost(context: any) {
@@ -13,6 +13,10 @@ export async function onRequestPost(context: any) {
         const uploadFile = formData.get('file');
         if (!uploadFile) {
             return fail('No file uploaded', 400);
+        }
+
+        if (uploadFile.size > MAX_CHUNK_SIZE) {
+            return fail(`File size exceeds ${MAX_CHUNK_SIZE / (1024 * 1024)}MB limit`, 400);
         }
 
         const fileName = uploadFile.name.substring(0, 100);  //  不超过100个字符 

@@ -9,6 +9,9 @@ import { CF, FileMetadata, FileType, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TT
 
 // 初始化分片上传, 返回唯一文件key
 export async function onRequestGet(context: any): Promise<Response> {
+  // Demo演示站不得初始化分片上传
+  return fail(`Forbidden: not allowed to init chunk upload in demo`, 403);
+
   const { request, env } = context;
   const url = new URL(request.url);
   const params = url.searchParams;
@@ -17,7 +20,7 @@ export async function onRequestGet(context: any): Promise<Response> {
   const fileSize = parseInt(params.get("fileSize"), 10);
   const totalChunks = parseInt(params.get("totalChunks"), 10);
 
-  if (fileSize > MAX_FILE_SIZE || totalChunks > MAX_CHUNK_NUM) {
+  if (fileSize >= MAX_FILE_SIZE || totalChunks >= MAX_CHUNK_NUM) {
     return fail("File size exceeds the limit", 400);
   }
 
@@ -42,6 +45,9 @@ export async function onRequestGet(context: any): Promise<Response> {
 
 // 上传分片
 export async function onRequestPost(context: any): Promise<Response> {
+  // Demo演示站不得上传分片
+  return fail(`Forbidden: not allowed to upload chunk in demo`, 403);
+
   const { request, env, waitUntil } = context;
 
   const clonedRequest = request.clone();

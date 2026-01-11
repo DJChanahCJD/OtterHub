@@ -7,6 +7,7 @@ import {
   ApiResponse,
   MAX_CHUNK_SIZE,
   Chunk,
+  TEMP_CHUNK_TTL,
 } from "../types";
 import {
   parseRangeHeader,
@@ -65,7 +66,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const kv = this.env[this.kvName];
     if (kv) {
-      await kv.put(key, "", { metadata });
+      await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
     }
 
     return ok(key, JSON.stringify(result));
@@ -122,7 +123,7 @@ export class TGAdapterV2 extends BaseAdapter {
     const { fileId, isChunk } = getFileIdFromKey(key);
     // 检查是否为分片文件
     if (isChunk) {
-      return await this.getMergedFile(key, req);
+      return fail(`Forbidden: not allowed to get chunk file in demo`, 403);
     }
     return await this.getSingleFile(key, req);
   }

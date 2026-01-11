@@ -2,6 +2,7 @@
 import { CF } from "../utils/types";
 import { ok, fail } from "../utils/common";
 
+const listLimit = 100
 // https://developers.cloudflare.com/kv/api/list-keys/
 export async function onRequestGet(context: any) {
   try {
@@ -14,11 +15,9 @@ export async function onRequestGet(context: any) {
     
     const prefix = fileType ? `${fileType}:` : "";
     // 构建KV list参数
-    //  TODO: 限制最大1000, 无法应付较大数据量时的搜索
-    // TODO: 考虑用D1数据库？
     const options = {
       prefix,
-      limit: limit === null ? "1000" : Math.min(Math.max(1, parseInt(limit)), 1000),
+      limit: limit === null ? listLimit : Math.min(Math.max(1, parseInt(limit)), listLimit),
       cursor,
     };
 
