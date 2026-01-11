@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import "react-photo-view/dist/react-photo-view.css"
 
 
 export const metadata: Metadata = {

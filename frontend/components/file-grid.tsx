@@ -5,35 +5,113 @@ import { FileCard } from "@/components/file-card"
 import { MasonryImageCard } from "@/components/masonry-image-card"
 import { ViewModeToggle } from "@/components/view-mode-toggle"
 import { SortTypeDropdown } from "@/components/sort-type-dropdown"
-import { FileType, ViewMode, SortType, SortOrder, ImageLoadMode } from "@/lib/types"
-import { useEffect } from "react"
-import { getFromStorage } from "@/lib/local-storage"
-import { STORAGE_KEYS } from "@/lib/local-storage"
+import { ViewMode } from "@/lib/types"
 import { PhotoProvider } from "react-photo-view"
+import { ZoomIn, ZoomOut, RotateCw } from "lucide-react"
+import { Button } from "./ui/button"
+import { useInitFileStore } from "@/hooks/use-init-file-store"
 
-export function FileGrid() {
-  const activeType = useFileStore((state) => state.activeType)
-  const viewMode = useFileStore((state) => state.viewMode)
-  const setViewMode = useFileStore((state) => state.setViewMode)
-  const setSortType = useFileStore((state) => state.setSortType)
-  const setSortOrder = useFileStore((state) => state.setSortOrder)
-  const setSafeMode = useFileStore((state) => state.setSafeMode)
-  const setBrowseMode = useFileStore((state) => state.setImageLoadMode)
-  const filteredFiles = useFilteredFiles()
+function PhotoToolbar({
+  rotate,
+  onRotate,
+  scale,
+  onScale,
+}: any) {
+  return (
+    <div className="flex items-center gap-1">
+      <ToolbarButton onClick={() => onScale(scale + 0.2)}>
+        <ZoomIn className="h-5 w-5" />
+      </ToolbarButton>
+      <ToolbarButton onClick={() => onScale(scale - 0.2)}>
+        <ZoomOut className="h-5 w-5" />
+      </ToolbarButton>
+      <ToolbarButton onClick={() => onRotate(rotate + 90)}>
+        <RotateCw className="h-5 w-5" />
+      </ToolbarButton>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
-    setSortType(getFromStorage(STORAGE_KEYS.SORT_TYPE, SortType.UploadedAt));
-    setSortOrder(getFromStorage(STORAGE_KEYS.SORT_ORDER, SortOrder.Desc));
-    setSafeMode(getFromStorage(STORAGE_KEYS.SAFE_MODE, true));
-    setBrowseMode(getFromStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, ImageLoadMode.DataSaver));
-  }, [setViewMode, setSortType, setSortOrder, setSafeMode]);
+
+// 通用工具栏按钮组件
+function ToolbarButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      className="
+        text-white/80
+        hover:text-white
+        hover:bg-white/10
+        backdrop-blur-sm
+      "
+    >
+      {children}
+    </Button>
+  );
+}
+
+function FileListRenderer({
+  viewMode,
+  files,
+}: {
+  viewMode: ViewMode;
+  files: any[];
+}) {
+  if (viewMode === ViewMode.Grid) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {files.map((file) => (
+          <FileCard key={file.name} file={file} />
+        ))}
+      </div>
+    );
+  }
+
+  if (viewMode === ViewMode.Masonry) {
+    return (
+      <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+        {files.map((file) => (
+          <div key={file.name} className="break-inside-avoid">
+            <MasonryImageCard file={file} />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="space-y-2">
+      {files.map((file) => (
+        <FileCard key={file.name} file={file} listView />
+      ))}
+    </div>
+  );
+}
+
+
+export function FileGrid() {
+  useInitFileStore();
+
+  const viewMode = useFileStore((s) => s.viewMode);
+  const filteredFiles = useFilteredFiles();
+
+  return (
+    <PhotoProvider
+      maskOpacity={0.85}
+      toolbarRender={(props) => <PhotoToolbar {...props} />}
+    >
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-white/60">
-          {filteredFiles.length} {filteredFiles.length === 1 ? "file" : "files"}
+          {filteredFiles.length}{" "}
+          {filteredFiles.length === 1 ? "file" : "files"}
         </div>
         <div className="flex items-center gap-2">
           <SortTypeDropdown />
@@ -41,29 +119,7 @@ export function FileGrid() {
         </div>
       </div>
 
-      {viewMode === ViewMode.Grid ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredFiles.map((file) => (
-            <FileCard key={file.name} file={file} />
-          ))}
-        </div>
-      ) : viewMode === ViewMode.Masonry ? (
-        <PhotoProvider maskOpacity={0.85}>
-          <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
-            {filteredFiles.map((file) => (
-              <div key={file.name} className="break-inside-avoid">
-                <MasonryImageCard file={file} />
-              </div>
-            ))}
-          </div>
-        </PhotoProvider>
-      ) : (
-        <div className="space-y-2">
-          {filteredFiles.map((file) => (
-            <FileCard key={file.name} file={file} listView />
-          ))}
-        </div>
-      )}
-    </div>
-  )
+      <FileListRenderer viewMode={viewMode} files={filteredFiles} />
+    </PhotoProvider>
+  );
 }

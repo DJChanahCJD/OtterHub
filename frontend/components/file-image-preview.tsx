@@ -27,6 +27,8 @@ export function FileImagePreview({
     <img
       src={src}
       alt={alt}
+      loading="lazy"
+      decoding="async"
       className={cn(
         "w-full h-full object-cover transition-all duration-300",
         shouldBlur && "blur-2xl scale-110",
@@ -34,16 +36,16 @@ export function FileImagePreview({
       )}
     />
   ) : (
-    <Image className={cn(iconSizeClass, "text-white/40")} />
+    <div className="flex items-center justify-center w-full h-full">
+      <Image className={cn(iconSizeClass, "text-white/40")} />
+    </div>
   );
 
-  if (!shouldLoad || !canPreview) {
-    return <div className={className}>{img}</div>;
+
+  // 只有：加载了图片 + 允许预览 + 非模糊状态 才启用 PhotoView
+  if (shouldLoad && canPreview && !shouldBlur) {
+    return <PhotoView src={src}>{img}</PhotoView>;
   }
 
-  return (
-    <PhotoView src={src}>
-      <div className={className}>{img}</div>
-    </PhotoView>
-  );
+  return img;
 }
