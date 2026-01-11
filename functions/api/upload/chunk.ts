@@ -13,7 +13,7 @@ export async function onRequestGet(context: any): Promise<Response> {
   const url = new URL(request.url);
   const params = url.searchParams;
   const fileType = params.get("fileType") as FileType;
-  const fileName = params.get("fileName");
+  const fileName = params.get("fileName").substring(0, 100);  //  不超过100个字符 
   const fileSize = parseInt(params.get("fileSize"), 10);
   const totalChunks = parseInt(params.get("totalChunks"), 10);
 

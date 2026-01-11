@@ -15,7 +15,7 @@ export async function onRequestPost(context: any) {
             return fail('No file uploaded', 400);
         }
 
-        const fileName = uploadFile.name;
+        const fileName = uploadFile.name.substring(0, 100);  //  不超过100个字符 
         const fileSize = uploadFile.size;
 
         // 创建存储适配器实例
