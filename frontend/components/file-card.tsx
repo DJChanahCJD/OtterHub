@@ -22,7 +22,6 @@ import {
   Info,
   AlertTriangle,
   Loader2,
-  Image,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,20 +31,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFileStore } from "@/lib/file-store";
-import {
-  cn,
-  getFileTypeFromKey,
-  formatFileSize,
-  downloadFile,
-  formatTime,
-} from "@/lib/utils";
-import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS, BrowseMode } from "@/lib/types";
-import { getFileUrl, toggleLike, deleteFile, uploadChunk } from "@/lib/api";
-import { PhotoProvider, PhotoView } from "react-photo-view";
-import "react-photo-view/dist/react-photo-view.css";
+import { isNSFW, shouldBlur, shouldLoadImage } from "@/lib/file-preview";
+import { FileImagePreview } from "@/components/file-image-preview";
 import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
 import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
+import { getFileUrl, deleteFile, toggleLike, uploadChunk } from "@/lib/api";
+import { FileItem, FileTag, BrowseMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
+import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
+import { PhotoProvider } from "react-photo-view";
 
 interface FileCardProps {
   file: FileItem;
@@ -196,7 +190,8 @@ function ToolbarButton({
 }
 
 export const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
-export const ICON_DISPLAY_SIZE = "h-18 w-18"
+export const ICON_DISPLAY_SIZE = "h-18 w-18";
+
 export function FileContent({
   fileType,
   fileKey,
@@ -212,39 +207,24 @@ export function FileContent({
   fileSize?: number;
   browseMode: BrowseMode;
 }) {
-  const isNSFW = tags?.includes(FileTag.NSFW) || false;
-  const shouldBlur = safeMode && isNSFW;
-  const canPreview = !shouldBlur; // 只有在非安全模式或非NSFW时才能预览
-
-  // 判断是否应该加载图片
-  const shouldLoadImage = () => {
-    if (fileType !== FileType.Image) return false;
-    if (browseMode === BrowseMode.NoImage) return false; // 省流模式不加载任何图片
-    if (browseMode === BrowseMode.SmartNoImage && fileSize && fileSize > SMART_NO_IMAGE_THRESHOLD) {
-      return false; // 智能无图模式，大于5MB不加载
-    }
-    return true;
-  };
-  
+  const blur = shouldBlur({ safeMode, tags });
+  const load = shouldLoadImage({
+    fileType,
+    browseMode,
+    fileSize,
+    threshold: SMART_NO_IMAGE_THRESHOLD,
+  });
 
   if (fileType === FileType.Image) {
-    const imgElement = (
-      shouldLoadImage() ? (<img
+    return (
+      <FileImagePreview
         src={getFileUrl(fileKey)}
-        className={cn(
-          "w-full h-full object-cover transition-all duration-300",
-          shouldBlur ? "blur-2xl scale-110" : "cursor-zoom-in"
-        )}
-      />) : (
-        <Image className={`${ICON_DISPLAY_SIZE} text-slate-400`} />
-      )
-    );
-
-    // 只有非 NSFW 或安全模式关闭时才能预览
-    return canPreview ? (
-      <PhotoView src={getFileUrl(fileKey)}>{imgElement}</PhotoView>
-    ) : (
-      imgElement
+        alt={fileKey}
+        shouldLoad={load}
+        shouldBlur={blur}
+        canPreview={!blur}
+        iconSizeClass={ICON_DISPLAY_SIZE}
+      />
     );
   }
 
@@ -274,11 +254,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   const isSelected = selectedKeys.includes(file.name);
 
-  // 检查是否为 NSFW 内容
-  const isNSFW = file.metadata?.tags?.includes(FileTag.NSFW) || false;
-  const shouldBlur = safeMode && isNSFW;
-
-  // 检查是否有未完成的上传
+  const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const isIncompleteUpload =
     file.metadata?.chunkInfo &&
     file.metadata.chunkInfo.uploadedIndices?.length !== file.metadata.chunkInfo.total;
@@ -448,10 +424,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                   alt={file.name}
                   className={cn(
                     "w-full h-full object-cover rounded transition-all duration-300",
-                    shouldBlur && "blur-xl"
+                    blur && "blur-xl"
                   )}
                 />
-                {shouldBlur && (
+                {blur && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
                     <AlertTriangle className="h-5 w-5 text-amber-400" />
                   </div>
@@ -595,7 +571,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 fileSize={file.metadata.fileSize}
                 browseMode={browseMode}
               />
-              {shouldBlur && (
+              {blur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="flex flex-col items-center gap-2 bg-black/60 backdrop-blur-sm px-4 py-3 rounded-xl">
                     <AlertTriangle className="h-8 w-8 text-amber-400" />
@@ -613,7 +589,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               <p className="text-sm font-medium text-white truncate">
                 {file.metadata.fileName || file.name}
               </p>
-              {isNSFW && (
+              {isNSFW(file.metadata?.tags) && (
                 <span className="px-1.5 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">
                   NSFW
                 </span>
