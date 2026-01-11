@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   MoreVertical,
   Download,
@@ -38,7 +38,6 @@ import {
   formatFileSize,
   downloadFile,
   formatTime,
-  downloadFileV2,
 } from "@/lib/utils";
 import { FileItem, FileType, FileTag, MAX_CHUNK_SIZE, MAX_CONCURRENTS, BrowseMode } from "@/lib/types";
 import { getFileUrl, toggleLike, deleteFile, uploadChunk } from "@/lib/api";
