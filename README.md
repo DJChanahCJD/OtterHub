@@ -339,6 +339,7 @@ OtterHub/
 - [ ] 其他
   - [ ] 实现分页获取
   - [ ] 支持 Docker 部署
+  - [ ] 实现Private功能，仅授权用户可访问标有Private标签的文件
 
 ## 🤝 Contributing
 欢迎提交 **Issue** 反馈问题或建议新功能，也欢迎 **Pull Request** 一起完善项目！  
