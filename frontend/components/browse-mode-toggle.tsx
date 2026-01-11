@@ -19,8 +19,8 @@ const MODES = {
 };
 
 export function ImageLoadModeToggle() {
-  const { imageLoadMode: browseMode, setImageLoadMode: setBrowseMode } = useFileStore();
-  const Icon = MODES[browseMode].icon;
+  const { imageLoadMode, setImageLoadMode } = useFileStore();
+  const Icon = MODES[imageLoadMode].icon;
 
   return (
     <DropdownMenu>
@@ -30,7 +30,7 @@ export function ImageLoadModeToggle() {
           size="icon"
           className={cn(
             "h-8 w-8 transition-colors",
-            browseMode !== ImageLoadMode.Default
+            imageLoadMode !== ImageLoadMode.Default
               ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
               : "text-white/60 hover:text-white hover:bg-white/10"
           )}
@@ -43,10 +43,10 @@ export function ImageLoadModeToggle() {
         {Object.entries(MODES).map(([id, { label, icon: ModeIcon, desc }]) => (
           <DropdownMenuItem
             key={id}
-            onClick={() => setBrowseMode(id as ImageLoadMode)}
+            onClick={() => setImageLoadMode(id as ImageLoadMode)}
             className={cn(
               "flex items-center justify-between px-2 py-1.5 cursor-pointer focus:bg-white/10 text-white/80",
-              browseMode === id && "bg-emerald-500/10 text-emerald-400 focus:bg-emerald-500/20"
+              imageLoadMode === id && "bg-emerald-500/10 text-emerald-400 focus:bg-emerald-500/20"
             )}
           >
             <div className="flex items-center gap-2">

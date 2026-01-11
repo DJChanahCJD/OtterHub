@@ -39,7 +39,6 @@ import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
 import { getFileUrl, deleteFile, toggleLike, uploadChunk } from "@/lib/api";
 import { FileItem, FileTag, ImageLoadMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
 import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
-import { PhotoProvider } from "react-photo-view";
 
 interface FileCardProps {
   file: FileItem;
@@ -164,31 +163,6 @@ function FileActions({
   );
 }
 
-// 通用工具栏按钮组件
-function ToolbarButton({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      className="
-        text-white/80
-        hover:text-white
-        hover:bg-white/10
-        backdrop-blur-sm
-      "
-    >
-      {children}
-    </Button>
-  );
-}
-
 export const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
 export const ICON_DISPLAY_SIZE = "h-18 w-18";
 
@@ -198,19 +172,19 @@ export function FileContent({
   safeMode,
   tags,
   fileSize,
-  browseMode,
+  loadImageMode,
 }: {
   fileType: FileType;
   fileKey: string;
   safeMode: boolean;
   tags?: FileTag[] | string[];
   fileSize?: number;
-  browseMode: ImageLoadMode;
+  loadImageMode: ImageLoadMode;
 }) {
   const blur = shouldBlur({ safeMode, tags });
   const load = shouldLoadImage({
     fileType,
-    browseMode,
+    loadImageMode,
     fileSize,
     threshold: SMART_NO_IMAGE_THRESHOLD,
   });
@@ -240,12 +214,7 @@ export function FileContent({
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
-  const selectedKeys = useFileStore((state) => state.selectedKeys);
-  const toggleSelection = useFileStore((state) => state.toggleSelection);
-  const deleteFileLocal = useFileStore((state) => state.deleteFilesLocal);
-  const updateFileMetadata = useFileStore((state) => state.updateFileMetadata);
-  const safeMode = useFileStore((state) => state.safeMode);
-  const browseMode = useFileStore((state) => state.imageLoadMode);
+  const {selectedKeys, toggleSelection, deleteFilesLocal, updateFileMetadata, safeMode, imageLoadMode} = useFileStore();
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
@@ -272,7 +241,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   const handleDelete = () => {
     if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
     deleteFile(file.name).then(() => {
-      deleteFileLocal([file.name]);
+      deleteFilesLocal([file.name]);
     });
   };
 
@@ -422,6 +391,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 <img
                   src={getFileUrl(file.name)}
                   alt={file.name}
+                  loading="lazy"
+                  decoding="async"
                   className={cn(
                     "w-full h-full object-cover rounded transition-all duration-300",
                     blur && "blur-xl"
@@ -507,22 +478,6 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   return (
     <>
-      <PhotoProvider
-        maskOpacity={0.85}
-        toolbarRender={({ rotate, onRotate, scale, onScale }) => (
-          <div className="flex items-center gap-1">
-            <ToolbarButton onClick={() => onScale(scale + 0.2)}>
-              <ZoomIn className="h-5 w-5" />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => onScale(scale - 0.2)}>
-              <ZoomOut className="h-5 w-5" />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => onRotate(rotate + 90)}>
-              <RotateCw className="h-5 w-5" />
-            </ToolbarButton>
-          </div>
-        )}
-      >
         <div
           className={cn(
             "group relative aspect-square rounded-xl overflow-hidden backdrop-blur-xl border transition-all cursor-pointer",
@@ -569,7 +524,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 safeMode={safeMode}
                 tags={file.metadata?.tags}
                 fileSize={file.metadata.fileSize}
-                browseMode={browseMode}
+                loadImageMode={imageLoadMode}
               />
               {blur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -623,7 +578,6 @@ export function FileCard({ file, listView = false }: FileCardProps) {
             </div>
           </div>
         </div>
-      </PhotoProvider>
       <FileDetailDialog
         file={file}
         open={showDetail}
