@@ -45,8 +45,8 @@ export async function onRequestGet(context: any): Promise<Response> {
 
 // 上传分片
 export async function onRequestPost(context: any): Promise<Response> {
-  // Demo演示站不得上传分片
-  return fail(`Forbidden: not allowed to upload chunk in demo`, 403);
+  // TODO: Demo演示站不得上传分片
+  // return fail(`Forbidden: not allowed to upload chunk in demo`, 403);
 
   const { request, env, waitUntil } = context;
 
