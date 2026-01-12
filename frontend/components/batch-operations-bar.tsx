@@ -10,13 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BatchAddTagsDialog } from "@/components/batch-add-tags-dialog";
 
 import { useActiveItems, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { BatchEditTagsDialog } from "./batch-operations/batch-edit-tags-dialog";
 
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
@@ -51,7 +51,7 @@ export function BatchOperationsBar() {
     activeType === FileType.Audio || activeType === FileType.Video;
 
   /** ===== 批量标签成功回调 ===== */
-  const handleBatchSuccess = (
+  const handleBatchTagSuccess = (
     updatedFiles: Array<{ name: string; tags: string[] }>,
   ) => {
     updatedFiles.forEach(({ name, tags }) => {
@@ -63,8 +63,6 @@ export function BatchOperationsBar() {
         tags,
       });
     });
-
-    clearSelection();
   };
 
   /** ===== 批量下载 ===== */
@@ -208,7 +206,7 @@ export function BatchOperationsBar() {
                   className="cursor-pointer text-white hover:bg-white/10"
                 >
                   <Tag className="mr-2 h-4 w-4 text-emerald-400" />
-                  批量添加标签
+                  批量编辑标签
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -233,11 +231,11 @@ export function BatchOperationsBar() {
         </div>
       </div>
 
-      <BatchAddTagsDialog
+      <BatchEditTagsDialog
         files={items.filter((item) => selectedSet.has(item.name))}
         open={showBatchTags}
         onOpenChange={setShowBatchTags}
-        onSuccess={handleBatchSuccess}
+        onSuccess={handleBatchTagSuccess}
       />
     </>
   );
