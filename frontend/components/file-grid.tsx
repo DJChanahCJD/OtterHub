@@ -15,6 +15,7 @@ import { PhotoProvider } from "react-photo-view";
 import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
+import Masonry from "react-masonry-css";
 
 function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
   return (
@@ -76,13 +77,20 @@ function FileListRenderer({
 
   if (viewMode === ViewMode.Masonry) {
     return (
-      <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+      <Masonry
+        breakpointCols={{
+          default: 4,
+          1280: 3,
+          768: 2,
+          640: 1,
+        }}
+        className="flex gap-4"
+        columnClassName="flex-1 flex flex-col gap-4"
+      >
         {files.map((file) => (
-          <div key={file.name} className="break-inside-avoid">
-            <MasonryImageCard file={file} />
-          </div>
+          <MasonryImageCard key={file.name} file={file} />
         ))}
-      </div>
+      </Masonry>
     );
   }
 
