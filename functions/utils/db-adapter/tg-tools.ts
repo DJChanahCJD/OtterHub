@@ -64,10 +64,10 @@ export function resolveFileDescriptor(
   const mime = file.type;
 
   // GIF 特判（Telegram 行为问题）
-  if (mime === "image/gif" || ext === "gif") {
+  if (mime === "image/gif" || ext === "gif" || ext === "webp" || mime === "image/webp") {
     return {
-      apiEndpoint: "sendAnimation",
-      field: "animation",
+      apiEndpoint: "sendDocument",
+      field: "document",
       fileType: FileType.Image,
       ext,
     };
