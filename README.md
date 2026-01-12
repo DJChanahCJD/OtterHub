@@ -331,16 +331,13 @@ OtterHub/
 
 ## 📋 TODO
 
-- [ ] 优化 NSFW 检测
-  - [x] 集成 NSFWJS 库，客户端检测
-  - [ ] 评估 NSFWJS 性能开销，是否改用 Moderate Content/Sightengine 的免费 API
-  - [ ] 支持视频、音频检测？
 
+- [x] 集成 NSFWJS 库，客户端检测
 - [ ] 文件类型定制
   - [ ] 图片
     - [x] 静态 Masonry 瀑布流布局
     - [ ] 动态瀑布流支持，虚拟滚动加载
-    - [ ] 适配GIF格式
+    - [x] 适配GIF格式
     
   - [ ] 音频：播放列表功能，对接 GD's Studio API
   - [ ] 视频：在线播放支持
@@ -349,8 +346,7 @@ OtterHub/
 - [ ] 其他
   - [ ] 实现分页获取
   - [ ] 批量操作
-    - [ ] 批量分享
-  - [ ] 支持 Docker 部署
+    - [ ] 批量复制
   - [ ] 实现 Private 功能，仅授权用户可访问标有 Private 标签的文件
 
 ---
