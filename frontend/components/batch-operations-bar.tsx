@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag, Copy } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { BatchEditTagsDialog } from "./batch-operations/batch-edit-tags-dialog";
+import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
 
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
@@ -30,6 +31,7 @@ export function BatchOperationsBar() {
 
   const { toast } = useToast();
   const [showBatchTags, setShowBatchTags] = useState(false);
+  const [showBatchRename, setShowBatchRename] = useState(false);
 
   const items = useActiveItems();
 
@@ -61,6 +63,21 @@ export function BatchOperationsBar() {
       updateFileMetadata(name, {
         ...file.metadata,
         tags,
+      });
+    });
+  };
+
+  /** ===== 批量重命名成功回调 ===== */
+  const handleBatchRenameSuccess = (
+    updatedFiles: Array<{ name: string; fileName: string }>,
+  ) => {
+    updatedFiles.forEach(({ name, fileName }) => {
+      const file = itemMap.get(name);
+      if (!file) return;
+
+      updateFileMetadata(name, {
+        ...file.metadata,
+        fileName,
       });
     });
   };
@@ -210,6 +227,14 @@ export function BatchOperationsBar() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
+                  onClick={() => setShowBatchRename(true)}
+                  className="cursor-pointer text-white hover:bg-white/10"
+                >
+                  <FilePen className="mr-2 h-4 w-4 text-blue-400" />
+                  批量重命名
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
                   onClick={handleBatchCopy}
                   className="cursor-pointer text-white hover:bg-white/10"
                 >
@@ -236,6 +261,13 @@ export function BatchOperationsBar() {
         open={showBatchTags}
         onOpenChange={setShowBatchTags}
         onSuccess={handleBatchTagSuccess}
+      />
+
+      <BatchRenameDialog
+        files={items.filter((item) => selectedSet.has(item.name))}
+        open={showBatchRename}
+        onOpenChange={setShowBatchRename}
+        onSuccess={handleBatchRenameSuccess}
       />
     </>
   );
