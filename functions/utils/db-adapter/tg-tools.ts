@@ -131,6 +131,7 @@ export function getTgFileId(response: any): string | null {
   if (!response.ok || !response.result) return null;
 
   const result = response.result;
+
   if (result.photo) {
     return result.photo.reduce((prev: any, current: any) =>
       prev.file_size > current.file_size ? prev : current
@@ -139,6 +140,9 @@ export function getTgFileId(response: any): string | null {
   if (result.document) return result.document.file_id;
   if (result.video) return result.video.file_id;
   if (result.audio) return result.audio.file_id;
+  // 表情包/动图
+  if (result.sticker) return result.sticker.file_id;
+  if (result.animation) return result.animation.file_id;
 
   return null;
 }
