@@ -1,22 +1,21 @@
-"use client"
+"use client";
+import {
+  useFileStore,
+  useFilteredFiles,
+  useActiveBucket,
+} from "@/lib/file-store";
+import { FileCard } from "@/components/file-card";
+import { MasonryImageCard } from "@/components/masonry-image-card";
+import { ViewModeToggle } from "@/components/view-mode-toggle";
+import { SortTypeDropdown } from "@/components/sort-type-dropdown";
+import { LoadMoreButton } from "@/components/pagination/load-more-button";
+import { ViewMode } from "@/lib/types";
+import { PhotoProvider } from "react-photo-view";
+import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Button } from "./ui/button";
+import { useInitFileStore } from "@/hooks/use-init-file-store";
 
-import { useFileStore, useFilteredFiles } from "@/lib/file-store"
-import { FileCard } from "@/components/file-card"
-import { MasonryImageCard } from "@/components/masonry-image-card"
-import { ViewModeToggle } from "@/components/view-mode-toggle"
-import { SortTypeDropdown } from "@/components/sort-type-dropdown"
-import { ViewMode } from "@/lib/types"
-import { PhotoProvider } from "react-photo-view"
-import { ZoomIn, ZoomOut, RotateCw } from "lucide-react"
-import { Button } from "./ui/button"
-import { useInitFileStore } from "@/hooks/use-init-file-store"
-
-function PhotoToolbar({
-  rotate,
-  onRotate,
-  scale,
-  onScale,
-}: any) {
+function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
   return (
     <div className="flex items-center gap-1">
       <ToolbarButton onClick={() => onScale(scale + 0.2)}>
@@ -31,7 +30,6 @@ function PhotoToolbar({
     </div>
   );
 }
-
 
 // 通用工具栏按钮组件
 function ToolbarButton({
@@ -101,7 +99,9 @@ export function FileGrid() {
   useInitFileStore();
 
   const viewMode = useFileStore((s) => s.viewMode);
-  const filteredFiles = useFilteredFiles();
+  const fetchNextPage = useFileStore((s) => s.fetchNextPage);
+  const files = useFilteredFiles();
+  const bucket = useActiveBucket();
 
   return (
     <PhotoProvider
@@ -110,8 +110,7 @@ export function FileGrid() {
     >
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-white/60">
-          {filteredFiles.length}{" "}
-          {filteredFiles.length === 1 ? "file" : "files"}
+          {files.length} 个文件
         </div>
         <div className="flex items-center gap-2">
           <SortTypeDropdown />
@@ -119,7 +118,14 @@ export function FileGrid() {
         </div>
       </div>
 
-      <FileListRenderer viewMode={viewMode} files={filteredFiles} />
+      <FileListRenderer viewMode={viewMode} files={files} />
+
+      <LoadMoreButton
+        currentCount={files.length}
+        hasMore={bucket.hasMore}
+        loading={bucket.loading}
+        onLoadMore={fetchNextPage}
+      />
     </PhotoProvider>
   );
 }
