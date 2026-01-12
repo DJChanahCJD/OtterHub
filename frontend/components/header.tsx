@@ -87,7 +87,7 @@ export function Header() {
               <div>
                 <h1 className="font-bold text-xl text-white">OtterHub</h1>
                 <p className="text-xs text-emerald-300/80">
-                  All your resources, one place
+                  Stash your files like an otter
                 </p>
               </div>
             </div>

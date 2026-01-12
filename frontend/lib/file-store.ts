@@ -21,6 +21,28 @@ type FileBucket = {
   loading: boolean;
 };
 
+/**
+ * 按文件名合并本地和服务端文件列表
+ * @param local 本地文件列表（乐观更新）
+ * @param remote 服务端文件列表（权威数据）
+ * @returns 合并后的文件列表
+ */
+function mergeByName(local: FileItem[], remote: FileItem[]): FileItem[] {
+  const map = new Map<string, FileItem>();
+
+  // 1. 先放本地（乐观）
+  for (const item of local) {
+    map.set(item.name, item);
+  }
+
+  // 2. 再放服务端（权威，覆盖本地）
+  for (const item of remote) {
+    map.set(item.name, item);
+  }
+
+  return Array.from(map.values());
+}
+
 interface FileStore {
   activeType: FileType;
   viewMode: ViewMode;
@@ -123,10 +145,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
     const data = await getFileList(params);
 
     set((state) => {
+      const prev = state.buckets[activeType];
       const newBuckets = {
         ...state.buckets,
         [activeType]: {
-          items: [...bucket.items, ...data.keys],
+          items: mergeByName(prev.items, data.keys),
           cursor: data.cursor,
           hasMore: !data.list_complete,
           loading: false,

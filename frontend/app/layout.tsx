@@ -6,7 +6,7 @@ import "react-photo-view/dist/react-photo-view.css"
 
 
 export const metadata: Metadata = {
-  title: "OtterHub - All your resources, one place",
+  title: "OtterHub - A Serverless Personal Cloud Drive",
   description: "A resource management platform for images, audio, videos, and documents",
   icons: {
     icon: [
