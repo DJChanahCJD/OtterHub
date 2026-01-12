@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
-import { FileUploadZone } from "@/components/file-upload-zone"
+import { FileUploadZone } from "@/components/upload/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
 import { EmptyState } from "@/components/empty-state"
