@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag, Copy } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -124,6 +124,24 @@ export function BatchOperationsBar() {
     clearSelection();
   };
 
+  /** ===== 批量复制 ===== */
+  const handleBatchCopy = async () => {
+    const urls = selectedKeys
+      .map((key) => {
+        const file = itemMap.get(key);
+        if (!file) return null;
+        return getFileUrl(key);
+      })
+      .filter(Boolean);
+
+    const text = urls.join("\n");
+    await navigator.clipboard.writeText(text);
+
+    toast({
+      title: `已复制 ${urls.length} 个文件链接`,
+    });
+  };
+
   /** ===== UI ===== */
   return (
     <>
@@ -191,6 +209,14 @@ export function BatchOperationsBar() {
                 >
                   <Tag className="mr-2 h-4 w-4 text-emerald-400" />
                   批量添加标签
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={handleBatchCopy}
+                  className="cursor-pointer text-white hover:bg-white/10"
+                >
+                  <Copy className="mr-2 h-4 w-4 text-blue-400" />
+                  批量复制链接
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
