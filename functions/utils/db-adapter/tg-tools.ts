@@ -51,6 +51,25 @@ export async function getTgFile(fileId: string, botToken: string): Promise<Respo
   return fetch(url);
 }
 
+export async function processGifFile(
+  file: File,
+  fileName: string
+): Promise<{ file: File; fileName: string }> {
+  if (file.type !== "image/gif") return { file, fileName };
+
+  // GIF 转 WebP
+  // 将文件转为 webp, 避免TG存储成 mp4
+  // 利用 OffscreenCanvas + WebP MIME 转换
+  const bitmap = await createImageBitmap(file);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0);
+  const blob = await canvas.convertToBlob({ type: "image/webp", quality: 0.9 });
+  const newFileName = fileName.replace(/\.gif$/, ".webp");
+
+  return { file: new File([blob], newFileName, { type: "image/webp" }), fileName: newFileName };
+}
+
 export function resolveFileDescriptor(
   file: File,
   fileName: string
@@ -63,8 +82,8 @@ export function resolveFileDescriptor(
   const ext = getFileExt(fileName).toLowerCase();
   const mime = file.type;
 
-  // GIF 特判（Telegram 行为问题）
-  if (mime === "image/gif" || ext === "gif" || ext === "webp" || mime === "image/webp") {
+  // GIF 特判
+  if (mime === "image/gif" || ext === "gif" || mime === "image/webp" || ext === "webp") {
     return {
       apiEndpoint: "sendDocument",
       field: "document",

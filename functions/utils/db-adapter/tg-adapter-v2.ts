@@ -20,6 +20,7 @@ import {
   buildTgFileUrl,
   getTgFilePath,
   getTgFile,
+  processGifFile,
 } from "./tg-tools";
 
 // Telegram存储适配器实现（新版本：优化分片上传）
@@ -42,9 +43,12 @@ export class TGAdapterV2 extends BaseAdapter {
       throw new Error("Invalid file");
     }
 
+    const { file: processedFile, fileName: processedFileName } =
+      await processGifFile(file, fileName);
+
     const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(
-      file,
-      fileName,
+      processedFile,
+      processedFileName,
     );
 
     const formData = new FormData();
