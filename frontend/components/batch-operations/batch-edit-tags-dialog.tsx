@@ -11,9 +11,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { BatchTagEditor } from "@/components/batch-tag-editor";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Tag, Info } from "lucide-react";
+import { BatchTagEditor } from "./batch-tag-editor";
+import { applyTagStates, calcOriginalTagStates, hasAnyTagChange, nextTagState, TagStateMap } from "@/lib/tag-utils";
 
 interface BatchAddTagsDialogProps {
   files: FileItem[];
@@ -22,7 +23,7 @@ interface BatchAddTagsDialogProps {
   onSuccess?: (updatedFiles: Array<{ name: string; tags: string[] }>) => void;
 }
 
-export function BatchAddTagsDialog({
+export function BatchEditTagsDialog({
   files,
   open,
   onOpenChange,
@@ -31,72 +32,60 @@ export function BatchAddTagsDialog({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 初始化选中标签：所有文件都有的标签默认选中
-  const initialCheckedTags = useMemo(() => {
-    const checked = new Set<FileTag>();
-    const allTags = Object.values(FileTag);
-    const fileCount = files.length;
+  // 计算原始状态（只算一次，作为基准）
+  const originalStates = useMemo(() => calcOriginalTagStates(files), [files]);
 
-    if (fileCount === 0) return checked;
-
-    allTags.forEach((tag) => {
-      const filesWithTag = files.filter(
-        (file) => file.metadata?.tags?.includes(tag)
-      ).length;
-      // 只有当所有文件都有这个标签时，才默认选中
-      if (filesWithTag === fileCount) {
-        checked.add(tag);
-      }
-    });
-
-    return checked;
-  }, [files]);
-
-  // 当前选中的标签状态
-  const [checkedTags, setCheckedTags] = useState<Set<FileTag>>(initialCheckedTags);
+  // 当前的标签状态
+  const [currentStates, setTagStates] = useState<TagStateMap>(originalStates);
 
   // 对话框打开时重置状态
   useEffect(() => {
     if (open) {
-      setCheckedTags(initialCheckedTags);
+      setTagStates(originalStates);
     }
-  }, [open, initialCheckedTags]);
+  }, [open, originalStates]);
 
   // 切换标签状态
-  const handleTagToggle = (tag: FileTag) => {
-    setCheckedTags((prev) => {
-      const newChecked = new Set(prev);
-      if (newChecked.has(tag)) {
-        newChecked.delete(tag);
-      } else {
-        newChecked.add(tag);
-      }
-      return newChecked;
-    });
+  const handleToggle = (tag: FileTag) => {
+    setTagStates((prev) => ({
+      ...prev,
+      [tag]: nextTagState(prev[tag], originalStates[tag]),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 如果没有任何变化，直接退出
+    if (!hasAnyTagChange(currentStates, originalStates)) {
+      toast({
+        title: "没有标签变更",
+      });
+      onOpenChange(false);
+      return;
+    }
+  
     setIsSubmitting(true);
 
     try {
-      const targetTags = Array.from(checkedTags);
       const updatedFiles: Array<{ name: string; tags: string[] }> = [];
 
-      // 批量更新每个文件的标签
-      const updatePromises = files.map(async (file) => {
-        await editMetadata(file.name, {
-          tags: targetTags,
-        });
+      await Promise.all(
+        files.map(async (file) => {
+          const newTags = applyTagStates(
+            (file.metadata?.tags ?? []) as FileTag[],
+            currentStates,
+            originalStates,
+          );
 
-        updatedFiles.push({
-          name: file.name,
-          tags: targetTags,
-        });
-      });
+          await editMetadata(file.name, { tags: newTags });
 
-      await Promise.all(updatePromises);
+          updatedFiles.push({
+            name: file.name,
+            tags: newTags,
+          });
+        }),
+      );
 
       toast({
         title: `成功更新 ${files.length} 个文件的标签`,
@@ -137,16 +126,19 @@ export function BatchAddTagsDialog({
           <div className="p-3 rounded-lg bg-white/5 border border-white/10">
             <p className="text-sm text-white/80 flex items-center gap-2">
               <Info className="h-4 w-4 text-blue-400" />
-              已选中 <span className="font-bold text-emerald-400">{files.length}</span>{" "}
+              已选中{" "}
+              <span className="font-bold text-emerald-400">
+                {files.length}
+              </span>{" "}
               个文件
             </p>
           </div>
 
           {/* 批量标签编辑器 */}
           <BatchTagEditor
-            files={files}
-            checkedTags={checkedTags}
-            onTagToggle={handleTagToggle}
+            currentStates={currentStates}
+            originalStates={originalStates}
+            onToggle={handleToggle}
             disabled={isSubmitting}
           />
 

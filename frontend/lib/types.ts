@@ -10,7 +10,7 @@ export interface ApiResponse<T = any> {
 export enum ViewMode {
   Grid = "grid",
   List = "list",
-  Masonry = "masonry",  //  TODO: 之后可尝试实现瀑布流（低优先级）
+  Masonry = "masonry",
 }
 
 export enum SortType {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BatchAddTagsDialog } from "@/components/batch-add-tags-dialog";
 
 import { useActiveItems, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { BatchEditTagsDialog } from "./batch-operations/batch-edit-tags-dialog";
+import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
 
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
@@ -30,6 +31,7 @@ export function BatchOperationsBar() {
 
   const { toast } = useToast();
   const [showBatchTags, setShowBatchTags] = useState(false);
+  const [showBatchRename, setShowBatchRename] = useState(false);
 
   const items = useActiveItems();
 
@@ -51,7 +53,7 @@ export function BatchOperationsBar() {
     activeType === FileType.Audio || activeType === FileType.Video;
 
   /** ===== 批量标签成功回调 ===== */
-  const handleBatchSuccess = (
+  const handleBatchTagSuccess = (
     updatedFiles: Array<{ name: string; tags: string[] }>,
   ) => {
     updatedFiles.forEach(({ name, tags }) => {
@@ -63,8 +65,21 @@ export function BatchOperationsBar() {
         tags,
       });
     });
+  };
 
-    clearSelection();
+  /** ===== 批量重命名成功回调 ===== */
+  const handleBatchRenameSuccess = (
+    updatedFiles: Array<{ name: string; fileName: string }>,
+  ) => {
+    updatedFiles.forEach(({ name, fileName }) => {
+      const file = itemMap.get(name);
+      if (!file) return;
+
+      updateFileMetadata(name, {
+        ...file.metadata,
+        fileName,
+      });
+    });
   };
 
   /** ===== 批量下载 ===== */
@@ -122,6 +137,24 @@ export function BatchOperationsBar() {
     }
 
     clearSelection();
+  };
+
+  /** ===== 批量复制 ===== */
+  const handleBatchCopy = async () => {
+    const urls = selectedKeys
+      .map((key) => {
+        const file = itemMap.get(key);
+        if (!file) return null;
+        return getFileUrl(key);
+      })
+      .filter(Boolean);
+
+    const text = urls.join("\n");
+    await navigator.clipboard.writeText(text);
+
+    toast({
+      title: `已复制 ${urls.length} 个文件链接`,
+    });
   };
 
   /** ===== UI ===== */
@@ -190,7 +223,23 @@ export function BatchOperationsBar() {
                   className="cursor-pointer text-white hover:bg-white/10"
                 >
                   <Tag className="mr-2 h-4 w-4 text-emerald-400" />
-                  批量添加标签
+                  批量编辑标签
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => setShowBatchRename(true)}
+                  className="cursor-pointer text-white hover:bg-white/10"
+                >
+                  <FilePen className="mr-2 h-4 w-4 text-blue-400" />
+                  批量重命名
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={handleBatchCopy}
+                  className="cursor-pointer text-white hover:bg-white/10"
+                >
+                  <Copy className="mr-2 h-4 w-4 text-blue-400" />
+                  批量复制链接
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -207,11 +256,18 @@ export function BatchOperationsBar() {
         </div>
       </div>
 
-      <BatchAddTagsDialog
+      <BatchEditTagsDialog
         files={items.filter((item) => selectedSet.has(item.name))}
         open={showBatchTags}
         onOpenChange={setShowBatchTags}
-        onSuccess={handleBatchSuccess}
+        onSuccess={handleBatchTagSuccess}
+      />
+
+      <BatchRenameDialog
+        files={items.filter((item) => selectedSet.has(item.name))}
+        open={showBatchRename}
+        onOpenChange={setShowBatchRename}
+        onSuccess={handleBatchRenameSuccess}
       />
     </>
   );

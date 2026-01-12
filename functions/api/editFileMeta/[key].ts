@@ -22,7 +22,7 @@ export async function onRequestPatch(context: any) {
 
     // 更新 fileName
     if (fileName !== undefined) {
-      metadata.fileName = fileName;
+      metadata.fileName = fileName.substring(0, 100);
     }
 
     // 更新 tags

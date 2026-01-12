@@ -22,6 +22,12 @@ export interface DBAdapter {
   // 删除文件
   // TODO: 是否要在key不存在时直接返回
   delete(key: string): Promise<boolean>;
+
+  // 获取文件元数据（用于权限检查）
+  getPublicMetadata?(key: string): Promise<{
+    metadata: FileMetadata;
+    value: string | null;
+  } | null>;
 }
 
 export enum DBAdapterType {

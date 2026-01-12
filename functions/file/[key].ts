@@ -1,49 +1,61 @@
-// functions/file/[key].ts
 import { DBAdapterFactory } from "../utils/db-adapter";
+import { checkAuthOrFail } from "../utils/auth";
+import { fail } from "../utils/common";
 
-// https://developers.cloudflare.com/pages/functions/api-reference/#onrequests
 export async function onRequestGet({ env, params, request }: any) {
   const db = DBAdapterFactory.getAdapter(env);
   const key = params.key;
 
-  // Range 请求直接返回，不缓存，不修改 Response
-  if (request.headers.has('Range')) {
-    console.log('[File] Range request detected, bypassing cache');
+  // 1. 读取元数据
+  const meta = await db.getPublicMetadata?.(key);
+  if (!meta) {
+    return fail(`File not found: ${key}`, 404);
+  }
+
+  // 2. 访问控制
+  const authError = checkAuthOrFail(
+    meta.metadata.tags,
+    request,
+    env
+  );
+  if (authError) return authError;
+
+  // 3. Range 请求：不缓存
+  if (request.headers.has("Range")) {
     return db.get(key, request);
   }
 
-  console.log('Cache key:', request.url);
+  // 4. Cache
   const cache = caches.default;
-  const cacheKey = new Request(request.url, { method: 'GET' });
+  const cacheKey = new Request(request.url, { method: "GET" });
 
   const cached = await cache.match(cacheKey);
-  if (cached) {
-    console.log('Cache hit:', params.key);
-    return cached;
+  if (cached) return cached;
+
+  const resp = await db.get(key, request);
+
+  if (resp.ok) {
+    await cache.put(cacheKey, resp.clone());
   }
 
-  const response = await db.get(key, request);
-
-  // 非 Range 请求可以缓存
-  if (response.ok) {
-    // 先克隆原始响应，确保 body 流可以被多次读取
-    const clonedResponse = response.clone();
-    const cachedResp = new Response(clonedResponse.body, clonedResponse);
-    await cache.put(cacheKey, cachedResp.clone());
-    console.log('Cache stored:', params.key);
-    return cachedResp;
-  }
-
-  return response;
+  return resp;
 }
 
-// 处理 HEAD 请求
-export async function onRequestHead({ env, params, request }: any) {
-  const db = DBAdapterFactory.getAdapter(env);
-  const key = params.key;
+// export async function onRequestHead({ env, params, request }: any) {
+//   const db = DBAdapterFactory.getAdapter(env);
+//   const key = params.key;
 
-  console.log('[File] HEAD request:', params.key);
-  return db.get(key, request);
-}
+//   const meta = await db.getPublicMetadata?.(key);
+//   if (!meta) {
+//     return fail(`File not found: ${key}`, 404);
+//   }
 
+//   const authError = checkAuthOrFail(
+//     meta.metadata.tags,
+//     request,
+//     env
+//   );
+//   if (authError) return authError;
 
+//   return db.get(key, request);
+// }
