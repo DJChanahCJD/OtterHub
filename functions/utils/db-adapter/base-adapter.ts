@@ -220,6 +220,16 @@ export abstract class BaseAdapter implements DBAdapter {
   }
 
   /**
+   * 获取文件元数据（公开方法，用于权限检查）
+   */
+  async getPublicMetadata(key: string): Promise<{
+    metadata: FileMetadata;
+    value: string | null;
+  } | null> {
+    return this.getMetadata(key);
+  }
+
+  /**
    * 更新分片信息（使用重试机制避免并发冲突）
    */
   protected async updateChunkInfo(
