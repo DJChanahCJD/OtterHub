@@ -5,7 +5,6 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "eslint .",
     "start": "next start"
   },
   "dependencies": {
@@ -53,6 +52,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.60.0",
+    "react-paginate": "^8.3.0",
     "react-photo-view": "^1.2.7",
     "react-resizable-panels": "^2.1.7",
     "sonner": "^1.7.4",

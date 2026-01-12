@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import {
   useFileStore,
   useFilteredFiles,
@@ -8,7 +9,7 @@ import { FileCard } from "@/components/file-card";
 import { MasonryImageCard } from "@/components/masonry-image-card";
 import { ViewModeToggle } from "@/components/view-mode-toggle";
 import { SortTypeDropdown } from "@/components/sort-type-dropdown";
-import { LoadMoreButton } from "@/components/pagination/load-more-button";
+import { PaginationWithLoadMore } from "@/components/pagination/pagination-with-load-more";
 import { ViewMode } from "@/lib/types";
 import { PhotoProvider } from "react-photo-view";
 import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
@@ -75,7 +76,7 @@ function FileListRenderer({
 
   if (viewMode === ViewMode.Masonry) {
     return (
-      <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+      <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
         {files.map((file) => (
           <div key={file.name} className="break-inside-avoid">
             <MasonryImageCard file={file} />
@@ -85,6 +86,7 @@ function FileListRenderer({
     );
   }
 
+  // 列表模式
   return (
     <div className="space-y-2">
       {files.map((file) => (
@@ -103,6 +105,21 @@ export function FileGrid() {
   const files = useFilteredFiles();
   const bucket = useActiveBucket();
 
+  const [currentPage, setCurrentPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+
+  const handlePageChange = (selectedItem: { selected: number }) => {
+    setCurrentPage(selectedItem.selected);
+  };
+
+  const handleItemsPerPageChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(0);
+  };
+
+  const offset = currentPage * itemsPerPage;
+  const currentFiles = files.slice(offset, offset + itemsPerPage);
+
   return (
     <PhotoProvider
       maskOpacity={0.85}
@@ -118,13 +135,16 @@ export function FileGrid() {
         </div>
       </div>
 
-      <FileListRenderer viewMode={viewMode} files={files} />
+      <FileListRenderer viewMode={viewMode} files={currentFiles} />
 
-      <LoadMoreButton
-        currentCount={files.length}
+      <PaginationWithLoadMore
+        totalItems={files.length}
+        itemsPerPage={itemsPerPage}
         hasMore={bucket.hasMore}
         loading={bucket.loading}
+        onPageChange={handlePageChange}
         onLoadMore={fetchNextPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
     </PhotoProvider>
   );
