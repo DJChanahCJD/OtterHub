@@ -129,9 +129,9 @@ export class TGAdapterV2 extends BaseAdapter {
     const { fileId, isChunk } = getFileIdFromKey(key);
     // 检查是否为分片文件
     if (isChunk) {
-      // return await this.getMergedFile(key);
-      // TODO: Demo演示站不得获取分片文件
-      return fail(`Forbidden: not allowed to get chunk file in demo`, 403);
+      return await this.getMergedFile(key);
+      // // TODO: Demo演示站不得获取分片文件
+      // return fail(`Forbidden: not allowed to get chunk file in demo`, 403);
     }
     return await this.getSingleFile(key, req);
   }
