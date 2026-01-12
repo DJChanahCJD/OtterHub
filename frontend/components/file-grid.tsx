@@ -145,6 +145,7 @@ export function FileGrid() {
         onPageChange={handlePageChange}
         onLoadMore={fetchNextPage}
         onItemsPerPageChange={handleItemsPerPageChange}
+        showPagination={viewMode !== ViewMode.Masonry}
       />
     </PhotoProvider>
   );
