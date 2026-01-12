@@ -10,12 +10,12 @@ import { MasonryImageCard } from "@/components/masonry-image-card";
 import { ViewModeToggle } from "@/components/view-mode-toggle";
 import { SortTypeDropdown } from "@/components/sort-type-dropdown";
 import { PaginationWithLoadMore } from "@/components/pagination/pagination-with-load-more";
+import { VirtualMasonryGrid } from "@/components/virtual-masonry-grid";
 import { ViewMode } from "@/lib/types";
 import { PhotoProvider } from "react-photo-view";
-import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCw, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
-import Masonry from "react-masonry-css";
 
 function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
   return (
@@ -76,22 +76,7 @@ function FileListRenderer({
   }
 
   if (viewMode === ViewMode.Masonry) {
-    return (
-      <Masonry
-        breakpointCols={{
-          default: 4,
-          1280: 3,
-          768: 2,
-          640: 1,
-        }}
-        className="flex gap-4"
-        columnClassName="flex-1 flex flex-col gap-4"
-      >
-        {files.map((file) => (
-          <MasonryImageCard key={file.name} file={file} />
-        ))}
-      </Masonry>
-    );
+    return <VirtualMasonryGrid files={files} />;
   }
 
   // 列表模式
@@ -103,7 +88,6 @@ function FileListRenderer({
     </div>
   );
 }
-
 
 export function FileGrid() {
   useInitFileStore();
@@ -126,7 +110,10 @@ export function FileGrid() {
   };
 
   const offset = currentPage * itemsPerPage;
-  const currentFiles = files.slice(offset, offset + itemsPerPage);
+  const currentFiles =
+    viewMode === ViewMode.Masonry
+      ? files
+      : files.slice(offset, offset + itemsPerPage);
 
   return (
     <PhotoProvider
@@ -134,9 +121,7 @@ export function FileGrid() {
       toolbarRender={(props) => <PhotoToolbar {...props} />}
     >
       <div className="flex items-center justify-between mb-6">
-        <div className="text-sm text-white/60">
-          {files.length} 个文件
-        </div>
+        <div className="text-sm text-white/60">{files.length} 个文件</div>
         <div className="flex items-center gap-2">
           <SortTypeDropdown />
           <ViewModeToggle />
@@ -145,16 +130,29 @@ export function FileGrid() {
 
       <FileListRenderer viewMode={viewMode} files={currentFiles} />
 
-      <PaginationWithLoadMore
-        totalItems={files.length}
-        itemsPerPage={itemsPerPage}
-        hasMore={bucket.hasMore}
-        loading={bucket.loading}
-        onPageChange={handlePageChange}
-        onLoadMore={fetchNextPage}
-        onItemsPerPageChange={handleItemsPerPageChange}
-        showPagination={viewMode !== ViewMode.Masonry}
-      />
+      {viewMode !== ViewMode.Masonry && (
+        <PaginationWithLoadMore
+          totalItems={files.length}
+          itemsPerPage={itemsPerPage}
+          hasMore={bucket.hasMore}
+          loading={bucket.loading}
+          onPageChange={handlePageChange}
+          onLoadMore={fetchNextPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
+      )}
+
+      {viewMode === ViewMode.Masonry && bucket.hasMore && (
+        <div className="flex justify-center py-8">
+          <button
+            onClick={fetchNextPage}
+            disabled={bucket.loading}
+            className="px-6 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </PhotoProvider>
   );
 }
