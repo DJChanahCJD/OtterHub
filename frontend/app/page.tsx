@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Header } from "@/components/header"
-import { Sidebar } from "@/components/sidebar"
+import { Footer } from "@/components/footer"
 import { FileUploadZone } from "@/components/upload/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
@@ -10,8 +10,6 @@ import { EmptyState } from "@/components/empty-state"
 import { useActiveItems, useFileStore } from "@/lib/file-store"
 
 export default function OtterHubPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-
   const activeItems = useActiveItems()
   const selectedKeys = useFileStore((state) => state.selectedKeys)
   const fetchNextPage = useFileStore((state) => state.fetchNextPage)
@@ -29,14 +27,14 @@ export default function OtterHubPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white overflow-hidden">
-      <div className="relative z-10 flex flex-col h-screen">
+    <div className="relative min-h-screen bg-linear-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white">
+      <div className="relative z-10 flex flex-col min-h-screen">
         <Header/>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1">
           {/* <Sidebar isOpen={sidebarOpen} /> */}
 
-          <main className="flex-1 overflow-auto p-6 md:p-8">
+          <main className="p-6 md:p-8">
             <FileUploadZone />
 
             {activeItems.length === 0 ? <EmptyState /> : <FileGrid />}
@@ -44,6 +42,8 @@ export default function OtterHubPage() {
         </div>
 
         {selectedKeys.length > 0 && <BatchOperationsBar />}
+
+        <Footer />
       </div>
     </div>
   )
