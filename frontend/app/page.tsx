@@ -30,12 +30,6 @@ export default function OtterHubPage() {
 
   return (
     <div className="relative min-h-screen bg-linear-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-
       <div className="relative z-10 flex flex-col h-screen">
         <Header/>
 
