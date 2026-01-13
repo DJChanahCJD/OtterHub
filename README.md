@@ -349,6 +349,9 @@ OtterHub/
   - [ ] 视频缩影图🌟（TG上传会返回thumbnail, 可以异步获取到完整url，然后存在metadata，需要时通过functions获取，让cloudflare fetch后返回）
   - [ ] 演示站Demo通过环境变量控制上传文件限制（方便后期补充）
 
+- [] 不必要的？
+  - [ ] KV key 添加一个时间戳前缀（Cloudflare list只按key字典序，这样能够实现按时间排序）
+
 ---
 
 ## 🤝 Contributing
