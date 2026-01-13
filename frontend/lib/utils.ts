@@ -107,3 +107,7 @@ export function buildTmpFileKey(file: File): string {
   const fileType = getFileType(file.type);
   return `${fileType}:${crypto.randomUUID()}`;
 }
+
+export function openExternalLink(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}

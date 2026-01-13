@@ -2,6 +2,8 @@ import { MusicSource, MusicTrack, SearchOptions, LyricResponse } from "./types";
 
 const API_BASE_URL = "https://music-api.gdstudio.xyz/api.php";
 
+export const FREE_MUSIC_URL = "https://music.gdstudio.org/";
+
 // GD Studio 音乐 API 集成类
 export class MusicApi {
   // 搜索音乐

@@ -5,7 +5,7 @@ import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
 import { FileImagePreview } from "@/components/file-image-preview";
-import { SMART_NO_IMAGE_THRESHOLD } from "./file-card";
+import { SMART_NO_IMAGE_THRESHOLD } from "../file-card";
 
 interface MasonryImageCardProps {
   file: FileItem;

@@ -6,57 +6,13 @@ import {
   useActiveBucket,
 } from "@/lib/file-store";
 import { FileCard } from "@/components/file-card";
-import { MasonryImageCard } from "@/components/masonry-image-card";
 import { ViewModeToggle } from "@/components/view-mode-toggle";
 import { SortTypeDropdown } from "@/components/sort-type-dropdown";
 import { PaginationWithLoadMore } from "@/components/pagination/pagination-with-load-more";
-import { VirtualMasonryGrid } from "@/components/virtual-masonry-grid";
 import { ViewMode } from "@/lib/types";
-import { PhotoProvider } from "react-photo-view";
-import { ZoomIn, ZoomOut, RotateCw, ChevronDown } from "lucide-react";
-import { Button } from "./ui/button";
+import { ChevronDown } from "lucide-react";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
-
-function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
-  return (
-    <div className="flex items-center gap-1">
-      <ToolbarButton onClick={() => onScale(scale + 0.2)}>
-        <ZoomIn className="h-5 w-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => onScale(scale - 0.2)}>
-        <ZoomOut className="h-5 w-5" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => onRotate(rotate + 90)}>
-        <RotateCw className="h-5 w-5" />
-      </ToolbarButton>
-    </div>
-  );
-}
-
-// 通用工具栏按钮组件
-function ToolbarButton({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      className="
-        text-white/80
-        hover:text-white
-        hover:bg-white/10
-        backdrop-blur-sm
-      "
-    >
-      {children}
-    </Button>
-  );
-}
+import { VirtualMasonryGrid } from "./masonry/virtual-masonry-grid";
 
 function FileListRenderer({
   viewMode,
@@ -76,7 +32,11 @@ function FileListRenderer({
   }
 
   if (viewMode === ViewMode.Masonry) {
-    return <VirtualMasonryGrid files={files} />;
+    return (
+      <div className="w-full min-w-0">
+        <VirtualMasonryGrid files={files} />
+      </div>
+    );
   }
 
   // 列表模式
@@ -116,10 +76,7 @@ export function FileGrid() {
       : files.slice(offset, offset + itemsPerPage);
 
   return (
-    <PhotoProvider
-      maskOpacity={0.85}
-      toolbarRender={(props) => <PhotoToolbar {...props} />}
-    >
+    <>
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-white/60">{files.length} 个文件</div>
         <div className="flex items-center gap-2">
@@ -153,6 +110,6 @@ export function FileGrid() {
           </button>
         </div>
       )}
-    </PhotoProvider>
+    </>
   );
 }

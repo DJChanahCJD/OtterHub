@@ -1,10 +1,12 @@
 "use client"
 
-import { Grid3x3, LayoutTemplate, List } from "lucide-react"
+import { Grid3x3, LayoutTemplate, List, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useFileStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
 import { FileType, ViewMode } from "@/lib/types"
+import { openExternalLink } from "@/lib/utils"
+import { FREE_MUSIC_URL } from "@/lib/music-api"
 
 export function ViewModeToggle() {
   const viewMode = useFileStore((state) => state.viewMode)
@@ -28,7 +30,19 @@ export function ViewModeToggle() {
           <LayoutTemplate className="h-4 w-4" />
         </Button>
       )}
-
+      {activeType === FileType.Audio && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => openExternalLink(FREE_MUSIC_URL)}
+          title="GD Studio's Online Music Platform"
+          className={cn(
+            "h-8 px-3 text-white/60 hover:text-white hover:bg-white/10",
+          )}
+        >
+          <Music className="h-4 w-4" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
