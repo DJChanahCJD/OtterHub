@@ -7,11 +7,11 @@ import { FileUploadZone } from "@/components/upload/file-upload-zone"
 import { FileGrid } from "@/components/file-grid"
 import { BatchOperationsBar } from "@/components/batch-operations-bar"
 import { EmptyState } from "@/components/empty-state"
-import { useActiveItems, useFileStore } from "@/lib/file-store"
+import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store"
 
 export default function OtterHubPage() {
   const activeItems = useActiveItems()
-  const selectedKeys = useFileStore((state) => state.selectedKeys)
+  const selectedKeys = useActiveSelectedKeys()
   const fetchNextPage = useFileStore((state) => state.fetchNextPage)
 
   // 从后端获取文件列表

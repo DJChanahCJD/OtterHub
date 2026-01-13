@@ -30,7 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFileStore } from "@/lib/file-store";
+import { useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
 import { isNSFW, shouldBlur, shouldLoadImage } from "@/lib/file-preview";
 import { FileImagePreview } from "@/components/file-image-preview";
 import { useToast } from "@/hooks/use-toast";
@@ -228,7 +228,9 @@ export function FileContent({
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
-  const {selectedKeys, toggleSelection, deleteFilesLocal, updateFileMetadata, safeMode, imageLoadMode} = useFileStore();
+  const {toggleSelection, deleteFilesLocal, updateFileMetadata, safeMode, imageLoadMode} = useFileStore();
+  const selectedKeys = useActiveSelectedKeys();
+
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [isResuming, setIsResuming] = useState(false);

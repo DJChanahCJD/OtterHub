@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useActiveItems, useFileStore } from "@/lib/file-store";
+import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
@@ -22,12 +22,13 @@ import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
   const {
-    selectedKeys,
     clearSelection,
     selectAll,
     updateFileMetadata,
     activeType,
   } = fileStore;
+
+  const selectedKeys = useActiveSelectedKeys();
 
   const { toast } = useToast();
   const [showBatchTags, setShowBatchTags] = useState(false);

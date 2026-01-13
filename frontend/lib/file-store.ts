@@ -55,8 +55,8 @@ interface FileStore {
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
 
-  // selection 全局，暂不考虑分桶
-  selectedKeys: string[];
+  // selection 按桶管理
+  selectedKeys: Record<FileType, string[]>;
 
   // actions
   setActiveType: (type: FileType) => Promise<void>;
@@ -99,7 +99,12 @@ export const useFileStore = create<FileStore>((set, get) => ({
     [FileType.Document]: emptyBucket(),
   },
 
-  selectedKeys: [],
+  selectedKeys: {
+    [FileType.Image]: [],
+    [FileType.Audio]: [],
+    [FileType.Video]: [],
+    [FileType.Document]: [],
+  },
 
   setActiveType: async (type) => {
     const { activeType, viewMode } = get();
@@ -249,20 +254,38 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }),
 
   toggleSelection: (name) =>
-    set((state) => ({
-      selectedKeys: state.selectedKeys.includes(name)
-        ? state.selectedKeys.filter((key) => key !== name)
-        : [...state.selectedKeys, name],
-    })),
+    set((state) => {
+      const currentType = state.activeType;
+      const current = state.selectedKeys[currentType];
+      const isSelected = current.includes(name);
+      return {
+        selectedKeys: {
+          ...state.selectedKeys,
+          [currentType]: isSelected
+            ? current.filter((key) => key !== name)
+            : [...current, name],
+        },
+      };
+    }),
 
   selectAll: () =>
-    set((state) => ({
-      selectedKeys: state.buckets[state.activeType].items.map(
-        (item) => item.name
-      ),
-    })),
+    set((state) => {
+      const { activeType, buckets } = state;
+      return {
+        selectedKeys: {
+          ...state.selectedKeys,
+          [activeType]: buckets[activeType].items.map((item) => item.name),
+        },
+      };
+    }),
 
-  clearSelection: () => set({ selectedKeys: [] }),
+  clearSelection: () =>
+    set((state) => ({
+      selectedKeys: {
+        ...state.selectedKeys,
+        [state.activeType]: [],
+      },
+    })),
 }));
 
 export const useActiveBucket = () =>
@@ -273,6 +296,9 @@ export const useActiveItems = () =>
 
 export const useBucketItems = (type: FileType) =>
   useFileStore((s) => s.buckets[type].items);
+
+export const useActiveSelectedKeys = () =>
+  useFileStore((s) => s.selectedKeys[s.activeType]);
 
 export const useFilteredFiles = () => {
   const { searchQuery, sortType, sortOrder } = useFileStore();
