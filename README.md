@@ -348,6 +348,9 @@ OtterHub/
   - [x] 实现 Private 功能，仅授权用户可访问标有 Private 标签的文件
   - [ ] 视频缩影图🌟（TG上传会返回thumbnail, 可以异步获取到完整url，然后存在metadata，需要时通过functions获取，让cloudflare fetch后返回）
   - [ ] 演示站Demo通过环境变量控制上传文件限制（方便后期补充）
+  - [ ] 是否保持全局selection
+  - [ ] 支持调整卡片大小、判断分页组件是否固定位置
+  - [ ] 只有grid模式近checkbox选中，其他点击卡片即可？
 
 - [] 不必要的？
   - [ ] KV key 添加一个时间戳前缀（Cloudflare list只按key字典序，这样能够实现按时间排序）
