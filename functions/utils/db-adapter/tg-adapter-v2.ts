@@ -7,6 +7,7 @@ import {
   ApiResponse,
   MAX_CHUNK_SIZE,
   Chunk,
+  FileType,
 } from "../types";
 import {
   parseRangeHeader,
@@ -15,6 +16,7 @@ import {
 } from "./shared-utils";
 import {
   getTgFileId,
+  getVideoThumbId,
   resolveFileDescriptor,
   buildTgApiUrl,
   buildTgFileUrl,
@@ -63,6 +65,14 @@ export class TGAdapterV2 extends BaseAdapter {
     const tgFileId = getTgFileId(result.data);
     if (!tgFileId) {
       throw new Error("Failed to extract Telegram file_id");
+    }
+
+    // 如果是视频类型，尝试获取缩略图
+    if (fileType === FileType.Video) {
+      const thumbFileId = getVideoThumbId(result.data);
+      if (thumbFileId) {
+        metadata.thumbUrl = `/api/thumb/${thumbFileId}`;
+      }
     }
 
     const key = buildKeyId(fileType, tgFileId, ext);

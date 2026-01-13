@@ -173,6 +173,7 @@ export function FileContent({
   tags,
   fileSize,
   loadImageMode,
+  thumbUrl,
 }: {
   fileType: FileType;
   fileKey: string;
@@ -180,6 +181,7 @@ export function FileContent({
   tags?: FileTag[] | string[];
   fileSize?: number;
   loadImageMode: ImageLoadMode;
+  thumbUrl?: string;
 }) {
   const blur = shouldBlur({ safeMode, tags });
   const load = shouldLoadImage({
@@ -203,6 +205,18 @@ export function FileContent({
   }
 
   if (fileType === FileType.Video) {
+    // 如果有缩略图，显示缩略图
+    if (thumbUrl) {
+      return (
+        <img
+          src={thumbUrl}
+          alt={fileKey}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover"
+        />
+      );
+    }
     return <Video className={`${ICON_DISPLAY_SIZE} text-purple-300`} />;
   }
 
@@ -385,7 +399,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           </div>
 
           {/* File Icon/Preview */}
-          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0 relative">
+          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
             {fileType === FileType.Image ? (
               <>
                 <img
@@ -405,7 +419,17 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 )}
               </>
             ) : fileType === FileType.Video ? (
-              <Video className="h-6 w-6 text-purple-400" />
+              file.metadata.thumbUrl ? (
+                <img
+                  src={file.metadata.thumbUrl}
+                  alt={file.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover rounded"
+                />
+              ) : (
+                <Video className="h-6 w-6 text-purple-400" />
+              )
             ) : fileType === FileType.Audio ? (
               <Music className="h-6 w-6 text-emerald-400" />
             ) : (
@@ -525,6 +549,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 tags={file.metadata?.tags}
                 fileSize={file.metadata.fileSize}
                 loadImageMode={imageLoadMode}
+                thumbUrl={file.metadata.thumbUrl}
               />
               {blur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

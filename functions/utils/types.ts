@@ -36,6 +36,7 @@ export type FileMetadata = {
   liked: boolean;      // 是否被收藏
   tags?: FileTag[] | string[];
   chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
+  thumbUrl?: string; // 缩略图URL
 };
 
 export enum FileTag {
@@ -47,8 +48,6 @@ export enum FileTag {
 export const chunkPrefix = 'chunk_';
 export type ChunkInfo = {
   total: number;          // 总分片数
-  // chunks?: Chunk[];        // TODO: （待废弃）已上传的分片
-
   uploadedIndices?: number[]; // 已上传的分片索引
 }
 export type Chunk = {

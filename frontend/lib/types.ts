@@ -52,6 +52,7 @@ export type FileMetadata = {
   liked: boolean;      // 是否被收藏
   tags?: FileTag[] | string[];
   chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
+  thumbUrl?: string; // 缩略图url
 };
 
 export enum FileTag {
