@@ -1,5 +1,16 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { FileItem } from "@/lib/types"
+
+/**
+ * 音频播放器 Hook
+ */
+
+enum PlayMode {
+  Sequence = 'sequence',
+  SingleLoop = 'singleLoop',
+  ListLoop = 'listLoop',
+  Shuffle = 'shuffle'
+}
 
 export interface AudioPlayerState {
   currentTrackIndex: number
@@ -7,7 +18,6 @@ export interface AudioPlayerState {
   currentTime: number
   duration: number
   volume: number
-  isMuted: boolean
   isRepeat: boolean
   isShuffle: boolean
 }
@@ -15,143 +25,166 @@ export interface AudioPlayerState {
 export interface AudioPlayerControls {
   playTrack: (index: number) => void
   togglePlay: () => void
-  handleNext: () => void
-  handlePrevious: () => void
-  handleSeek: (value: number[]) => void
-  handleVolumeChange: (value: number[]) => void
+  next: () => void
+  previous: () => void
+  seek: (value: number[]) => void
+  setVolume: (value: number[]) => void
   toggleRepeat: () => void
   toggleShuffle: () => void
   toggleMute: () => void
 }
 
 export function useAudioPlayer(audioFiles: FileItem[]) {
+  /* ---------- 播放状态 ---------- */
+
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.7)
-  const [isMuted, setIsMuted] = useState(false)
   const [isRepeat, setIsRepeat] = useState(false)
   const [isShuffle, setIsShuffle] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const currentFile = audioFiles[currentTrackIndex]
 
-  /* ---------- 播放控制核心 ---------- */
+  /* ---------- 工具函数 ---------- */
 
+  /**
+   * 计算下一首索引
+   * - shuffle 时避免连续重复
+   * - 非 shuffle 时循环播放
+   */
+  const getNextIndex = useCallback(
+    (from: number) => {
+      if (audioFiles.length === 0) return 0
+
+      if (isShuffle) {
+        let next = from
+        while (next === from && audioFiles.length > 1) {
+          next = Math.floor(Math.random() * audioFiles.length)
+        }
+        return next
+      }
+
+      return (from + 1) % audioFiles.length
+    },
+    [audioFiles.length, isShuffle],
+  )
+
+  /* ---------- 播放控制（唯一入口） ---------- */
+
+  /**
+   * 播放指定索引的音频
+   * - 统一入口，避免多处直接操作 audio
+   */
   const playTrack = (index: number) => {
+    if (!audioRef.current || audioFiles.length === 0) return
+
     setCurrentTrackIndex(index)
     setIsPlaying(true)
+
+    // 切歌时重置时间，防止残留
+    audioRef.current.currentTime = 0
   }
 
   const togglePlay = () => {
-    setIsPlaying(!isPlaying)
+    setIsPlaying((v) => !v)
   }
 
-  const getNextIndex = () => {
-    if (audioFiles.length === 0) return 0
-
-    if (isShuffle) {
-      let next = currentTrackIndex
-      while (next === currentTrackIndex && audioFiles.length > 1) {
-        next = Math.floor(Math.random() * audioFiles.length)
-      }
-      return next
-    }
-
-    return (currentTrackIndex + 1) % audioFiles.length
+  const next = () => {
+    playTrack(getNextIndex(currentTrackIndex))
   }
 
-  const handleNext = () => {
-    playTrack(getNextIndex())
-  }
-
-  const handlePrevious = () => {
-    if (currentTime > 3 && audioRef.current) {
-      audioRef.current.currentTime = 0
-    } else {
-      const prevIndex = (currentTrackIndex - 1 + audioFiles.length) % audioFiles.length
-      playTrack(prevIndex)
-    }
-  }
-
-  const handleSeek = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0]
-      setCurrentTime(value[0])
-    }
-  }
-
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0])
-    setIsMuted(false)
-  }
-
-  const toggleRepeat = () => {
-    setIsRepeat(!isRepeat)
-  }
-
-  const toggleShuffle = () => {
-    setIsShuffle(!isShuffle)
-  }
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted)
-  }
-
-  /* ---------- audio DOM 同步 ---------- */
-
-  useEffect(() => {
+  const previous = () => {
     const audio = audioRef.current
     if (!audio) return
 
-    audio.volume = isMuted ? 0 : volume
-  }, [volume, isMuted])
+    const prevIndex =
+      (currentTrackIndex - 1 + audioFiles.length) % audioFiles.length
+    playTrack(prevIndex)
+  }
 
+  const seek = (value: number[]) => {
+    if (!audioRef.current) return
+
+    audioRef.current.currentTime = value[0]
+    setCurrentTime(value[0])
+  }
+
+  /* ---------- 音量控制 ---------- */
+
+  const toggleMute = () => {
+    // volume = 0 视为 mute，避免双状态源
+    setVolume((v) => (v === 0 ? 0.7 : 0))
+  }
+
+  /* ---------- DOM 同步 ---------- */
+
+  // 同步音量
+  useEffect(() => {
+    if (!audioRef.current) return
+    audioRef.current.volume = volume
+  }, [volume])
+
+  // 同步播放 / 暂停
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
     if (isPlaying) {
-      audio.play().catch(() => {})
+      audio.play().catch(() => {
+        // 浏览器策略可能拒绝自动播放，保持状态即可
+        setIsPlaying(false)
+      })
     } else {
       audio.pause()
     }
   }, [isPlaying, currentTrackIndex])
 
+  // 监听音频事件
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const onTime = () => setCurrentTime(audio.currentTime)
-    const onDuration = () => setDuration(audio.duration)
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onDurationChange = () => setDuration(audio.duration || 0)
     const onEnded = () => {
       if (isRepeat) {
         audio.currentTime = 0
         audio.play()
       } else {
-        handleNext()
+        playTrack(getNextIndex(currentTrackIndex))
       }
     }
 
-    audio.addEventListener("timeupdate", onTime)
-    audio.addEventListener("durationchange", onDuration)
+    audio.addEventListener("timeupdate", onTimeUpdate)
+    audio.addEventListener("durationchange", onDurationChange)
     audio.addEventListener("ended", onEnded)
 
     return () => {
-      audio.removeEventListener("timeupdate", onTime)
-      audio.removeEventListener("durationchange", onDuration)
+      audio.removeEventListener("timeupdate", onTimeUpdate)
+      audio.removeEventListener("durationchange", onDurationChange)
       audio.removeEventListener("ended", onEnded)
     }
-  }, [isRepeat, currentTrackIndex, audioFiles.length])
+  }, [currentTrackIndex, isRepeat, getNextIndex])
 
-  /* ---------- 确保索引有效 ---------- */
+  /* ---------- 边界处理 ---------- */
+
+  // 列表为空或变更时，重置播放器
   useEffect(() => {
-    if (currentTrackIndex >= audioFiles.length && audioFiles.length > 0) {
+    if (audioFiles.length === 0) {
+      setIsPlaying(false)
+      setCurrentTime(0)
+      setDuration(0)
+      setCurrentTrackIndex(0)
+    } else if (currentTrackIndex >= audioFiles.length) {
       setCurrentTrackIndex(0)
       setIsPlaying(false)
     }
   }, [audioFiles.length, currentTrackIndex])
+
+  /* ---------- 对外暴露 ---------- */
 
   return {
     state: {
@@ -160,19 +193,18 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       currentTime,
       duration,
       volume,
-      isMuted,
       isRepeat,
       isShuffle,
     },
     controls: {
       playTrack,
       togglePlay,
-      handleNext,
-      handlePrevious,
-      handleSeek,
-      handleVolumeChange,
-      toggleRepeat,
-      toggleShuffle,
+      next,
+      previous,
+      seek,
+      setVolume,
+      toggleRepeat: () => setIsRepeat((v) => !v),
+      toggleShuffle: () => setIsShuffle((v) => !v),
       toggleMute,
     },
     audioRef,
