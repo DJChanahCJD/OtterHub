@@ -23,7 +23,8 @@ function FileListRenderer({
 }) {
   if (viewMode === ViewMode.Grid) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      // 100%缩放时每行5个文件
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(320px,1fr))]">
         {files.map((file) => (
           <FileCard key={file.name} file={file} />
         ))}
