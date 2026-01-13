@@ -7,6 +7,7 @@ import { FileTypeTabs } from "@/components/file-type-tabs";
 import { FileTypeDropdown } from "@/components/file-type-dropdown";
 import { SafeModeToggle } from "@/components/safe-mode-toggle";
 import { ImageLoadModeToggle } from "@/components/browse-mode-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -123,6 +124,8 @@ export function Header() {
             <SafeModeToggle />
             {/* 图片加载模式切换按钮 */}
             <ImageLoadModeToggle />
+            {/* 主题切换按钮 */}
+            <ThemeToggle />
           </div>
         </div>
       </div>
