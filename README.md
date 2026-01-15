@@ -346,6 +346,7 @@ OtterHub/
   - [x] 批量操作（复制、删除、重命名等）
   - [x] 实现 Private 功能，仅授权用户可访问标有 Private 标签的文件
   - [x] 视频缩影图（TG上传会返回thumbnail）
+  - [x] 日夜模式
 
 - [] 不必要的？
   - [ ] KV key 添加一个时间戳前缀（Cloudflare list只按key字典序，这样能够实现按时间排序）

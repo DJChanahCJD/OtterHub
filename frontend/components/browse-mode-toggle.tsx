@@ -31,22 +31,22 @@ export function ImageLoadModeToggle() {
           className={cn(
             "h-8 w-8 transition-colors",
             imageLoadMode !== ImageLoadMode.Default
-              ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-              : "text-white/60 hover:text-white hover:bg-white/10"
+              ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
+              : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
           )}
         >
           <Icon className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end" className="bg-[#0d2137] border-white/10 w-40 p-1">
+      <DropdownMenuContent align="end" className="bg-popover border-glass-border w-40 p-1">
         {Object.entries(MODES).map(([id, { label, icon: ModeIcon, desc }]) => (
           <DropdownMenuItem
             key={id}
             onClick={() => setImageLoadMode(id as ImageLoadMode)}
             className={cn(
-              "flex items-center justify-between px-2 py-1.5 cursor-pointer focus:bg-white/10 text-white/80",
-              imageLoadMode === id && "bg-emerald-500/10 text-emerald-400 focus:bg-emerald-500/20"
+              "flex items-center justify-between px-2 py-1.5 cursor-pointer focus:bg-secondary/50 text-foreground/80",
+              imageLoadMode === id && "bg-primary/10 text-primary focus:bg-primary/20"
             )}
           >
             <div className="flex items-center gap-2">

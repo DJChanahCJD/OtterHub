@@ -21,14 +21,14 @@ export function Header() {
   // 移动端头部导航栏
   if (isMobile) {
     return (
-      <header className="relative border-b border-white/10 backdrop-blur-xl bg-white/5">
+      <header className="relative border-b border-glass-border backdrop-blur-xl bg-glass-bg">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-xl">
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-xl">
                 🦦
               </div>
-              <h1 className="font-bold text-lg text-white">OtterHub</h1>
+              <h1 className="font-bold text-lg text-foreground">OtterHub</h1>
             </div>
             <div className="flex items-center gap-2">
               <FileTypeDropdown />
@@ -37,7 +37,7 @@ export function Header() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowMobileSearch(!showMobileSearch)}
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-secondary/50"
               >
                 {showMobileSearch ? (
                   <X className="h-5 w-5" />
@@ -50,19 +50,19 @@ export function Header() {
 
           {showMobileSearch && (
             <div className="mt-3 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search files..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 w-full bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400"
+                className="pl-10 pr-10 w-full bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-white/40 hover:text-white hover:bg-white/10"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -76,18 +76,18 @@ export function Header() {
 
   // 桌面端头部导航栏
   return (
-    <header className="relative border-b border-white/10 backdrop-blur-xl bg-white/5">
+    <header className="relative border-b border-glass-border backdrop-blur-xl bg-glass-bg">
       <div className="px-4 md:px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-2xl">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-2xl">
                 🦦
               </div>
               <div>
-                <h1 className="font-bold text-xl text-white">OtterHub</h1>
-                <p className="text-xs text-emerald-300/80">
+                <h1 className="font-bold text-xl text-foreground">OtterHub</h1>
+                <p className="text-xs text-primary/80">
                   Stash your files like an otter
                 </p>
               </div>
@@ -102,19 +102,19 @@ export function Header() {
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
             <div className="hidden sm:block relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search files..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 w-64 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400"
+                className="pl-10 pr-10 w-64 bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-white/40 hover:text-white hover:bg-white/10"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 >
                   <X className="h-3 w-3" />
                 </Button>

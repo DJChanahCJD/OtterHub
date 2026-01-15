@@ -26,7 +26,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const imageUrl = getFileUrl(file.name);
 
   return (
-    <div className="relative group rounded-xl overflow-hidden bg-white/10 border border-white/10">
+    <div className="relative group rounded-xl overflow-hidden bg-glass-bg border border-glass-border">
       <FileImagePreview
         src={imageUrl}
         alt={file.metadata.fileName}
@@ -38,8 +38,8 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
 
       {/* NSFW 提示 */}
       {blur && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <span className="text-sm font-medium text-amber-300">NSFW Content</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 backdrop-blur-sm">
+          <span className="text-sm font-medium text-amber-500">NSFW Content</span>
         </div>
       )}
 

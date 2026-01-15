@@ -73,7 +73,7 @@ function FileActions({
       <Button
         variant="ghost"
         size="icon"
-        className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+        className="text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         onClick={(e) => {
           e.stopPropagation();
           onToggleLike();
@@ -83,7 +83,7 @@ function FileActions({
           className={`h-4 w-4 transition-colors ${
             isLiked
               ? "text-pink-400 fill-pink-400"
-              : "text-white/80 hover:text-pink-300"
+              : "text-foreground/80 hover:text-pink-300"
           }`}
         />
       </Button>
@@ -94,7 +94,7 @@ function FileActions({
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/80 hover:text-white bg-black/50 hover:bg-black/75 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            className="text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreVertical className="h-4 w-4" />
@@ -102,12 +102,12 @@ function FileActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="bg-[#0d2137] border-white/10"
+          className="bg-popover border-glass-border"
         >
           {/* 查看 */}
           <DropdownMenuItem
             onClick={onView}
-            className="text-white hover:bg-white/10"
+            className="text-foreground hover:bg-secondary/50"
           >
             <Eye className="h-4 w-4 mr-2" />
             View
@@ -116,7 +116,7 @@ function FileActions({
           {/* 复制链接 */}
           <DropdownMenuItem
             onClick={onCopyLink}
-            className="text-white hover:bg-white/10"
+            className="text-foreground hover:bg-secondary/50"
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy Link
@@ -125,7 +125,7 @@ function FileActions({
           {/* 编辑 */}
           <DropdownMenuItem
             onClick={onEdit}
-            className="text-white hover:bg-white/10"
+            className="text-foreground hover:bg-secondary/50"
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -134,7 +134,7 @@ function FileActions({
           {/* 下载 */}
           <DropdownMenuItem
             onClick={onDownload}
-            className="text-white hover:bg-white/10"
+            className="text-foreground hover:bg-secondary/50"
           >
             <Download className="h-4 w-4 mr-2" />
             Download
@@ -143,7 +143,7 @@ function FileActions({
           {/* 详情 */}
           <DropdownMenuItem
             onClick={onShowDetail}
-            className="text-white hover:bg-white/10"
+            className="text-foreground hover:bg-secondary/50"
           >
             <Info className="h-4 w-4 mr-2" />
             Details
@@ -382,8 +382,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           className={cn(
             "group flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl border transition-all cursor-pointer",
             isSelected
-              ? "bg-emerald-500/20 border-emerald-400/50"
-              : "bg-white/5 border-white/10 hover:border-emerald-400/30 hover:bg-white/10"
+              ? "bg-primary/20 border-primary/50"
+              : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/30"
           )}
           // onClick={handleSelect}
         >
@@ -392,8 +392,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
             className={cn(
               "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
               isSelected
-                ? "bg-emerald-500 border-emerald-500"
-                : "border-white/30 group-hover:border-emerald-400/50"
+                ? "bg-primary border-primary"
+                : "border-glass-border group-hover:border-primary/50"
             )}
             onClick={handleSelect}
           >
@@ -401,7 +401,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           </div>
 
           {/* File Icon/Preview */}
-          <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+          <div className="w-12 h-12 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden">
             {fileType === FileType.Image ? (
               <>
                 <img
@@ -441,16 +441,16 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
           {/* File Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {file.metadata.fileName}
             </p>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-muted-foreground">
               {formatFileSize(file.metadata.fileSize || 0)}
             </p>
           </div>
 
           {/* Date */}
-          <div className="hidden md:block text-xs text-white/40" title="上传时间">
+          <div className="hidden md:block text-xs text-muted-foreground" title="上传时间">
             {formatTime(file.metadata.uploadedAt || 0)}
           </div>
 
@@ -508,8 +508,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
           className={cn(
             "group relative aspect-square rounded-xl overflow-hidden backdrop-blur-xl border transition-all cursor-pointer",
             isSelected
-              ? "bg-emerald-500/20 border-emerald-400/50 ring-2 ring-emerald-400/50"
-              : "bg-white/10 border-white/10 hover:border-emerald-400/50"
+              ? "bg-primary/20 border-primary/50 ring-2 ring-primary/50"
+              : "bg-glass-bg border-glass-border hover:border-primary/50"
           )}
         >
           {/* Checkbox */}
@@ -518,8 +518,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               className={cn(
                 "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
                 isSelected
-                  ? "bg-emerald-500 border-emerald-500"
-                  : "bg-black/50 border-white/50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                  ? "bg-primary border-primary"
+                  : "bg-secondary/50 border-glass-border opacity-100 md:opacity-0 md:group-hover:opacity-100"
               )}
               onClick={handleSelect}
             >
@@ -555,10 +555,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               />
               {blur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="flex flex-col items-center gap-2 bg-black/60 backdrop-blur-sm px-4 py-3 rounded-xl">
+                  <div className="flex flex-col items-center gap-2 bg-secondary/80 backdrop-blur-sm px-4 py-3 rounded-xl border border-glass-border">
                     <AlertTriangle className="h-8 w-8 text-amber-400" />
-                    <span className="text-sm font-medium text-amber-300">NSFW Content</span>
-                    <span className="text-xs text-white/60">Safe mode is on</span>
+                    <span className="text-sm font-medium text-amber-500">NSFW Content</span>
+                    <span className="text-xs text-muted-foreground">Safe mode is on</span>
                   </div>
                 </div>
               )}
@@ -578,7 +578,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               )}
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-xs text-white/60">
+              <p className="text-xs text-muted-foreground">
                 {formatFileSize(file.metadata.fileSize || 0)}
               </p>
               {isIncompleteUpload && (

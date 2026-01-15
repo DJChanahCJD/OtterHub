@@ -42,7 +42,7 @@ export function LoadMoreButton({
   if (status === "done") {
     return (
       <div className={wrapperCls}>
-        <CheckCircle className="h-5 w-5 text-emerald-400" />
+        <CheckCircle className="h-5 w-5 text-primary" />
         <CountText count={currentCount} label="已加载全部" />
       </div>
     );
@@ -51,7 +51,7 @@ export function LoadMoreButton({
   if (status === "loading") {
     return (
       <div className={wrapperCls}>
-        <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
         <CountText count={currentCount} label="正在加载..." />
       </div>
     );
@@ -79,7 +79,7 @@ export function LoadMoreButton({
       <Button
         onClick={onLoadMore}
         variant="outline"
-        className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+        className="border-primary/30 text-primary hover:bg-primary/10"
       >
         <ChevronDown className="h-4 w-4 mr-2" />
         加载更多
@@ -90,9 +90,9 @@ export function LoadMoreButton({
 
 function CountText({ count, label }: { count: number; label: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-white/60">
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <span>{label}</span>
-      <span className="text-emerald-400">{count}</span>
+      <span className="text-primary">{count}</span>
       <span>个文件</span>
     </div>
   );

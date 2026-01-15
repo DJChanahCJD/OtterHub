@@ -22,7 +22,7 @@ function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
         variant="ghost"
         size="icon"
         onClick={() => onScale(scale + 0.2)}
-        className="text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+        className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 backdrop-blur-sm"
       >
         <ZoomIn className="h-5 w-5" />
       </Button>
@@ -30,7 +30,7 @@ function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
         variant="ghost"
         size="icon"
         onClick={() => onScale(scale - 0.2)}
-        className="text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+        className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 backdrop-blur-sm"
       >
         <ZoomOut className="h-5 w-5" />
       </Button>
@@ -38,7 +38,7 @@ function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
         variant="ghost"
         size="icon"
         onClick={() => onRotate(rotate + 90)}
-        className="text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+        className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 backdrop-blur-sm"
       >
         <RotateCw className="h-5 w-5" />
       </Button>
@@ -69,7 +69,7 @@ export function FileImagePreview({
     />
   ) : (
     <div className="flex items-center justify-center w-full h-full">
-      <Image className={cn(iconSizeClass, "text-white/40")} />
+      <Image className={cn(iconSizeClass, "text-muted-foreground")} />
     </div>
   );
 

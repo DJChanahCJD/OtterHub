@@ -64,14 +64,14 @@ export function PaginationWithLoadMore({
         renderOnZeroPageCount={null}
         containerClassName="flex items-center gap-1"
         pageClassName="flex items-center justify-center"
-        pageLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-white/80 hover:bg-white/10 transition-colors"
+        pageLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
         previousClassName="flex items-center justify-center"
-        previousLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-white/80 hover:bg-white/10 transition-colors px-3"
+        previousLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-foreground/80 hover:bg-secondary/50 transition-colors px-3"
         nextClassName="flex items-center justify-center"
-        nextLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-white/80 hover:bg-white/10 transition-colors px-3"
+        nextLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-foreground/80 hover:bg-secondary/50 transition-colors px-3"
         breakClassName="flex items-center justify-center"
-        breakLinkClassName="min-w-[36px] h-9 flex items-center justify-center text-white/40"
-        activeClassName="bg-emerald-500/20 text-emerald-400 font-medium"
+        breakLinkClassName="min-w-[36px] h-9 flex items-center justify-center text-muted-foreground"
+        activeClassName="bg-primary/20 text-primary font-medium"
         disabledClassName="opacity-50 cursor-not-allowed"
         forcePage={undefined}
       />
@@ -83,7 +83,7 @@ export function PaginationWithLoadMore({
           variant="ghost"
           size="sm"
           title={loading ? "加载中" : error ? "加载失败" : "加载更多"}
-          className="h-9 min-w-[36px] px-3 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-9 min-w-[36px] px-3 border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -97,12 +97,12 @@ export function PaginationWithLoadMore({
 
       <>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-white/60">每页:</span>
+          <span className="text-sm text-muted-foreground">每页:</span>
           <Select
             value={itemsPerPage.toString()}
             onValueChange={(value) => onItemsPerPageChange(Number(value))}
           >
-            <SelectTrigger className="h-8 w-20 bg-white/5 border-white/10 text-white/80">
+            <SelectTrigger className="h-8 w-20 bg-secondary/30 border-glass-border text-foreground/80">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -115,9 +115,9 @@ export function PaginationWithLoadMore({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-white/60">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>共</span>
-          <span className="text-emerald-400 font-medium">{totalItems}</span>
+          <span className="text-primary font-medium">{totalItems}</span>
           <span>个文件</span>
         </div>
       </>

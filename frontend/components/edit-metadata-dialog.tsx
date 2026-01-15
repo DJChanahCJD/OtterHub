@@ -88,15 +88,15 @@ export function EditMetadataDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0d2137] border-white/10 text-white max-w-md">
+      <DialogContent className="bg-popover border-glass-border text-foreground max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">编辑元数据</DialogTitle>
+          <DialogTitle className="text-foreground">编辑元数据</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 文件名 */}
           <div className="space-y-2">
-            <Label htmlFor="fileName" className="text-white/80">
+            <Label htmlFor="fileName" className="text-muted-foreground">
               文件名
             </Label>
             <Input
@@ -104,14 +104,14 @@ export function EditMetadataDialog({
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="输入文件名"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400"
+              className="bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               disabled={isSubmitting}
             />
           </div>
 
           {/* 标签 */}
           <div className="space-y-2">
-            <Label className="text-white/80">标签</Label>
+            <Label className="text-muted-foreground">标签</Label>
             <TagSelector
               tags={tags}
               onChange={setTags}
@@ -126,14 +126,14 @@ export function EditMetadataDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-glass-border text-foreground hover:bg-secondary/50"
             >
               取消
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 <>

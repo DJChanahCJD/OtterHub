@@ -131,28 +131,28 @@ export function BatchRenameDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#0d2137] border-white/10 text-white max-w-lg">
+      <DialogContent className="bg-popover border-glass-border text-foreground max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
-            <FilePen className="h-5 w-5 text-blue-400" />
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <FilePen className="h-5 w-5 text-primary" />
             批量重命名
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 选中的文件数量 */}
-          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-            <p className="text-sm text-white/80 flex items-center gap-2">
-              <Info className="h-4 w-4 text-blue-400" />
+          <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
               已选中{" "}
-              <span className="font-bold text-emerald-400">{files.length}</span>{" "}
+              <span className="font-bold text-primary">{files.length}</span>{" "}
               个文件
             </p>
           </div>
 
           {/* 模式选择 */}
           <div className="space-y-3">
-            <Label className="text-white/80 text-sm">重命名模式</Label>
+            <Label className="text-muted-foreground text-sm">重命名模式</Label>
             <RadioGroup
               value={mode}
               onValueChange={(v) => setMode(v as BatchRenameMode)}
@@ -165,21 +165,21 @@ export function BatchRenameDialog({
                   return (
                     <div
                       key={m}
-                      className="flex items-start gap-3 p-3 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
+                      className="flex items-start gap-3 p-3 rounded-lg border border-glass-border hover:bg-secondary/50 cursor-pointer transition-colors"
                       onClick={() => setMode(m)}
                     >
                       <RadioGroupItem value={m} id={m} className="mt-0.5" />
                       <div className="flex-1">
                         <Label
                           htmlFor={m}
-                          className="cursor-pointer font-medium text-white/90"
+                          className="cursor-pointer font-medium text-foreground"
                         >
                           {config.label}
                         </Label>
-                        <p className="text-xs text-white/50 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {config.description}
                         </p>
-                        <p className="text-xs text-blue-400 mt-1 font-mono">
+                        <p className="text-xs text-primary mt-1 font-mono">
                           {config.example}
                         </p>
                       </div>
@@ -192,7 +192,7 @@ export function BatchRenameDialog({
           {/* 输入框 */}
           {mode !== "none" && (
             <div className="space-y-2">
-              <Label htmlFor="rename-value" className="text-white/80 text-sm">
+              <Label htmlFor="rename-value" className="text-muted-foreground text-sm">
                 {MODE_LABELS[mode].label}内容
               </Label>
               <Input
@@ -201,7 +201,7 @@ export function BatchRenameDialog({
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={mode === "basename" ? "输入新文件名（不含扩展名）" : "输入要添加的内容"}
                 disabled={isSubmitting}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-blue-500"
+                className="bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
                 autoFocus
               />
             </div>
@@ -210,22 +210,22 @@ export function BatchRenameDialog({
           {/* 预览 */}
           {mode !== "none" && value && previews.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-white/80 text-sm">预览（前5个）</Label>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+              <Label className="text-muted-foreground text-sm">预览（前5个）</Label>
+              <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border space-y-2">
                 {previews.map((preview, index) => (
                   <div
                     key={index}
                     className="flex items-center gap-2 text-sm font-mono"
                   >
-                    <span className="text-white/60 truncate flex-1" title={preview.original}>
+                    <span className="text-muted-foreground truncate flex-1" title={preview.original}>
                       {preview.original}
                     </span>
-                    <ArrowRight className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                    <ArrowRight className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                     <span
                       className={
                         preview.original !== preview.renamed
-                          ? "text-emerald-400 truncate flex-1"
-                          : "text-white/60 truncate flex-1"
+                          ? "text-primary truncate flex-1"
+                          : "text-muted-foreground truncate flex-1"
                       }
                       title={preview.renamed}
                     >
@@ -234,7 +234,7 @@ export function BatchRenameDialog({
                   </div>
                 ))}
                 {files.length > 5 && (
-                  <p className="text-xs text-white/40 text-center pt-1">
+                  <p className="text-xs text-muted-foreground text-center pt-1">
                     ...还有 {files.length - 5} 个文件
                   </p>
                 )}
@@ -248,14 +248,14 @@ export function BatchRenameDialog({
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-glass-border text-foreground hover:bg-secondary/50"
             >
               取消
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || mode === "none" || !value}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 <>

@@ -27,7 +27,7 @@ export default function OtterHubPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0a1628] via-[#0d2137] to-[#134e4a] text-white">
+    <div className="relative min-h-screen bg-linear-to-br from-gradient-from via-gradient-via to-gradient-to">
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header/>
 

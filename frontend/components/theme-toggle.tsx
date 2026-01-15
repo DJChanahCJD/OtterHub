@@ -24,7 +24,7 @@ export function ThemeToggle() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10"
+        className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
       />
     )
   }
@@ -37,7 +37,7 @@ export function ThemeToggle() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10"
+            className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
           >
             {theme === "dark" ? (
               <Moon className="h-4 w-4" />

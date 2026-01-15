@@ -2,7 +2,7 @@ import { Github } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="flex items-center justify-center gap-2 py-4 text-white/60 hover:text-white/80 transition-colors">
+    <footer className="flex items-center justify-center gap-2 py-4 text-foreground/60 hover:text-foreground/80 transition-colors">
       <a 
         href="https://github.com/DJChanahCJD/OtterHub" 
         target="_blank" 

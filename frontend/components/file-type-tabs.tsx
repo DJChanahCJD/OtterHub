@@ -37,8 +37,8 @@ export function FileTypeTabs() {
               transition-all duration-200
               ${
                 activeType === type.id
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50"
-                  : "text-white/60 hover:text-white hover:bg-white/10"
+                  ? "bg-primary/20 text-primary border border-primary/50"
+                  : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
               }
             `}
           >

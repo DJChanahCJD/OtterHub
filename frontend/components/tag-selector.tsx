@@ -63,9 +63,9 @@ export function TagSelector({
       {!disabled && availableTags.length > 0 ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+            <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg bg-secondary/30 border border-glass-border cursor-pointer hover:bg-secondary/50 transition-colors">
               {tags.length === 0 ? (
-                <span className="text-sm text-white/40 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   {placeholder}
                 </span>
@@ -77,9 +77,9 @@ export function TagSelector({
                       key={tag}
                       className={cn(
                         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-sm font-medium transition-colors",
-                        config?.bgColor || "bg-white/10",
-                        config?.textColor || "text-white/80",
-                        config?.borderColor || "border-white/20"
+                        config?.bgColor || "bg-secondary/30",
+                        config?.textColor || "text-foreground/80",
+                        config?.borderColor || "border-glass-border"
                       )}
                     >
                       <Tag className="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ export function TagSelector({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="bg-[#0d2137] border-white/10 min-w-[200px]"
+            className="bg-popover border-glass-border min-w-[200px]"
           >
             {availableTags.map((tag) => {
               const config = TAG_CONFIG[tag as FileTag];
@@ -110,14 +110,14 @@ export function TagSelector({
                 <DropdownMenuItem
                   key={tag}
                   onClick={() => handleAddTag(tag as FileTag)}
-                  className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer"
+                  className="text-foreground hover:bg-secondary/50 focus:bg-secondary/50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
                       <Tag
                         className={cn(
                           "h-4 w-4",
-                          config?.textColor || "text-white/60"
+                          config?.textColor || "text-muted-foreground"
                         )}
                       />
                       <span>{config?.label || tag}</span>
@@ -125,8 +125,8 @@ export function TagSelector({
                     <span
                       className={cn(
                         "text-xs px-2 py-0.5 rounded",
-                        config?.bgColor || "bg-white/10",
-                        config?.textColor || "text-white/60"
+                        config?.bgColor || "bg-secondary/30",
+                        config?.textColor || "text-muted-foreground"
                       )}
                     >
                       {config?.description || ""}
@@ -138,9 +138,9 @@ export function TagSelector({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg bg-secondary/30 border border-glass-border">
           {tags.length === 0 ? (
-            <span className="text-sm text-white/40">{placeholder}</span>
+            <span className="text-sm text-muted-foreground">{placeholder}</span>
           ) : (
             tags.map((tag) => {
               const config = TAG_CONFIG[tag as FileTag];
@@ -149,9 +149,9 @@ export function TagSelector({
                   key={tag}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-sm font-medium transition-colors",
-                    config?.bgColor || "bg-white/10",
-                    config?.textColor || "text-white/80",
-                    config?.borderColor || "border-white/20"
+                    config?.bgColor || "bg-secondary/30",
+                    config?.textColor || "text-foreground/80",
+                    config?.borderColor || "border-glass-border"
                   )}
                 >
                   <Tag className="h-3.5 w-3.5" />

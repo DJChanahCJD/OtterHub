@@ -186,14 +186,14 @@ export function FileUploadZone() {
         onClick={() => fileInputRef.current?.click()}
         className={`
           border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
-          transition-all backdrop-blur-sm bg-white/5
+          transition-all backdrop-blur-sm bg-glass-bg
           ${isDragging
-            ? "border-emerald-400 bg-emerald-400/10"
-            : "border-white/20 hover:border-emerald-400/50"}
+            ? "border-primary bg-primary/10"
+            : "border-glass-border hover:border-primary/50"}
         `}
       >
-        <Upload className="h-8 w-8 mx-auto mb-3 text-white/40" />
-        <p className="text-sm text-white/60">
+        <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">
           Drag & drop files here, or click to browse
         </p>
 
@@ -209,8 +209,8 @@ export function FileUploadZone() {
       {Object.keys(uploadProgress).length > 0 && (
         <div className="mt-4 space-y-2">
           {Object.entries(uploadProgress).map(([k, v]) => (
-            <div key={k} className="bg-white/10 p-3 rounded-lg">
-              <div className="flex justify-between text-xs mb-1">
+            <div key={k} className="bg-secondary/30 p-3 rounded-lg border border-glass-border">
+              <div className="flex justify-between text-xs mb-1 text-foreground/80">
                 <span>Uploading</span>
                 <span>{v}%</span>
               </div>
