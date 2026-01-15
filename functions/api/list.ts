@@ -2,7 +2,7 @@
 import { CF, FileType } from "../utils/types";
 import { ok, fail } from "../utils/common";
 
-const DEFAULT_LIMIT = 20; //  默认 list 返回数量
+const DEFAULT_LIMIT = 50; //  默认 list 返回数量
 const MAX_LIMIT = 1000;   //  最大 list 返回数量
 
 export async function onRequestGet({ request, env }: any) {
