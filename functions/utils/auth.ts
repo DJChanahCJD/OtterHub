@@ -1,17 +1,19 @@
 import { fail } from "./common";
 import { FileTag } from "./types";
 
+export const BASIC_REALM = "OtterHub";
+
 /**
  * 是否需要认证（private 文件）
  */
-function isPrivate(tags?: readonly string[]): boolean {
+export function isPrivate(tags?: readonly string[]): boolean {
   return Array.isArray(tags) && tags.includes(FileTag.Private);
 }
 
 /**
  * 解析 Basic Auth
  */
-function parseBasicAuth(
+export function parseBasicAuth(
   header: string | null
 ): { user: string; pass: string } | null {
   if (!header?.startsWith("Basic ")) return null;
@@ -55,7 +57,7 @@ export function checkAuthOrFail(
     cred.pass !== env.BASIC_PASS
   ) {
     return fail("Unauthorized", 401, {
-      "WWW-Authenticate": 'Basic realm="OtterHub Private File", charset="UTF-8"',
+      "WWW-Authenticate": `Basic realm="${BASIC_REALM}", charset="UTF-8"`,
       "Cache-Control": "no-store",
     });
   }

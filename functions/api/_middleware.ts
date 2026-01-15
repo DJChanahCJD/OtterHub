@@ -1,4 +1,5 @@
 import { fail } from "../utils/common";
+import { parseBasicAuth, BASIC_REALM } from "../utils/auth";
 
 async function errorHandling(context: any) {
   try {
@@ -13,26 +14,6 @@ async function errorHandling(context: any) {
   }
 }
 
-// 解析Basic Authentication请求头
-function parseBasicAuth(
-  authHeader: string | null
-): { username: string; password: string } | null {
-  if (!authHeader || !authHeader.startsWith("Basic ")) {
-    return null;
-  }
-
-  const credentials = atob(authHeader.slice(6)); // 去掉 "Basic " 前缀并做Base64 解码
-  const separatorIndex = credentials.indexOf(":");
-  if (separatorIndex === -1) {
-    return null;
-  }
-
-  return {
-    username: credentials.slice(0, separatorIndex),
-    password: credentials.slice(separatorIndex + 1),
-  };
-}
-
 // Basic Authentication主逻辑
 async function basicAuthentication(
   request: Request,
@@ -43,16 +24,16 @@ async function basicAuthentication(
     return null;
   }
 
-  const credentials = parseBasicAuth(request.headers.get("Authorization"));
+  const cred = parseBasicAuth(request.headers.get("Authorization"));
 
   if (
-    !credentials ||
-    credentials.username !== env.BASIC_USER ||
-    credentials.password !== env.BASIC_PASS
+    !cred ||
+    cred.user !== env.BASIC_USER ||
+    cred.pass !== env.BASIC_PASS
   ) {
     // 认证失败，返回401状态码，浏览器自动弹出登录对话框
     return fail("Unauthorized", 401, {
-      "WWW-Authenticate": 'Basic realm="OtterHub Admin", charset="UTF-8"',
+      "WWW-Authenticate": `Basic realm="${BASIC_REALM}", charset="UTF-8"`,
     });
   }
   // 认证成功

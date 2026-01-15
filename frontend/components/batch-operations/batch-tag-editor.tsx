@@ -38,7 +38,7 @@ export function BatchTagEditor({
 }: BatchTagEditorProps) {
   return (
     <div className="space-y-2">
-      <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
+      <div className="p-4 rounded-lg bg-secondary/30 border border-glass-border space-y-3">
 
         <div className="space-y-2">
           {Object.values(FileTag).map((tag) => {
@@ -59,11 +59,11 @@ export function BatchTagEditor({
             const getCheckboxStyle = () => {
               switch (current) {
                 case BatchTagState.All:
-                  return "bg-emerald-500 border-emerald-500";
+                  return "bg-primary border-primary";
                 case BatchTagState.Partial:
                   return "bg-amber-500 border-amber-500";
                 default:
-                  return "border-white/30 bg-white/5";
+                  return "border-glass-border bg-secondary/30";
               }
             };
 
@@ -71,9 +71,9 @@ export function BatchTagEditor({
               const intent = getTagIntent(current, original);
 
               const statusText = {
-                keep: <span className="text-xs text-amber-400">保持不变</span>,
-                add: <span className="text-xs text-emerald-400">将添加</span>,
-                remove: <span className="text-xs text-red-400">将移除</span>,
+                keep: <span className="text-xs text-amber-500">保持不变</span>,
+                add: <span className="text-xs text-primary">将添加</span>,
+                remove: <span className="text-xs text-red-500">将移除</span>,
               }[intent];
 
               return statusText;
@@ -86,9 +86,9 @@ export function BatchTagEditor({
                   "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
                   disabled
                     ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-white/5",
-                  config?.bgColor || "bg-white/5",
-                  config?.borderColor || "border-white/10",
+                    : "hover:bg-secondary/50",
+                  config?.bgColor || "bg-secondary/30",
+                  config?.borderColor || "border-glass-border",
                 )}
               >
                 <div className="relative">
@@ -114,13 +114,13 @@ export function BatchTagEditor({
                     <Tag
                       className={cn(
                         "h-4 w-4",
-                        config?.textColor || "text-white/60",
+                        config?.textColor || "text-muted-foreground",
                       )}
                     />
                     <span
                       className={cn(
                         "text-sm font-medium",
-                        config?.textColor || "text-white/80",
+                        config?.textColor || "text-foreground/80",
                       )}
                     >
                       {config?.label || tag}
@@ -132,8 +132,8 @@ export function BatchTagEditor({
                     <span
                       className={cn(
                         "text-xs px-2 py-0.5 rounded",
-                        config?.bgColor || "bg-white/10",
-                        config?.textColor || "text-white/60",
+                        config?.bgColor || "bg-secondary/30",
+                        config?.textColor || "text-muted-foreground",
                       )}
                     >
                       {config?.description || ""}

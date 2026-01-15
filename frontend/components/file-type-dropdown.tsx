@@ -30,14 +30,14 @@ export function FileTypeDropdown() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-white/80 hover:text-white hover:bg-white/10 gap-2"
+          className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
         >
           {currentType?.icon && <currentType.icon className="h-4 w-4" />}
           {currentType?.label}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-[#0d2137] border-white/10">
+      <DropdownMenuContent align="start" className="bg-popover border-glass-border">
         {fileTypes.map((type) => {
           const Icon = type.icon;
 
@@ -46,12 +46,12 @@ export function FileTypeDropdown() {
               key={type.id}
               onClick={() => setActiveType(type.id)}
               className={`
-                text-white
-                hover:bg-white/10
-                focus:bg-white/10
+                text-foreground
+                hover:bg-secondary/50
+                focus:bg-secondary/50
                 ${
                   activeType === type.id
-                    ? "bg-emerald-500/20 text-emerald-300"
+                    ? "bg-primary/20 text-primary"
                     : ""
                 }
               `}

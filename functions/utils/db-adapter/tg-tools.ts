@@ -146,3 +146,13 @@ export function getTgFileId(response: any): string | null {
 
   return null;
 }
+
+export function getVideoThumbId(response: any): string | null {
+  if (!response.ok || !response.result) return null;
+
+  const result = response.result;
+  if (!result.video) return null;
+  
+  // 拿到file_id 还需要通过getFilePath获取到具体文件路径，然后存到video的元数据中
+  return result.video.thumb.file_id;
+}

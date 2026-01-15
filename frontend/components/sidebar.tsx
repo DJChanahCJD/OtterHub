@@ -23,12 +23,12 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
 
   return (
-    <aside className="w-64 border-r border-white/10 backdrop-blur-xl bg-white/5 p-4 overflow-y-auto">
+    <aside className="w-64 border-r border-glass-border backdrop-blur-xl bg-glass-bg p-4 overflow-y-auto">
       {/* -------- Navigation -------- */}
       <nav className="space-y-2">
         <Button
           variant="ghost"
-          className="w-full justify-start bg-emerald-500/20 text-emerald-300"
+          className="w-full justify-start bg-primary/20 text-primary"
         >
           <Home className="h-4 w-4 mr-3" />
           My Resources
@@ -38,7 +38,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
 
       {/* -------- File Types -------- */}
       <div className="mt-6 space-y-2">
-        <p className="text-xs font-medium text-white/40 uppercase tracking-wider">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           File Types
         </p>
 
@@ -63,7 +63,7 @@ function FileTypeRow({
 }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-white/60">{label}</span>
+      <span className="text-foreground/60">{label}</span>
       <span className={`font-medium ${color}`}>{count}</span>
     </div>
   )

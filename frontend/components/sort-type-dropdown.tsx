@@ -54,18 +54,18 @@ export function SortTypeDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex items-center p-1 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex items-center p-1 rounded-lg bg-glass-bg border border-glass-border">
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/80 hover:text-white hover:bg-white/10 gap-2"
+            className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
           >
             {CurrentIcon && <CurrentIcon className="h-4 w-4" />}
             <span>{currentOption?.label || "排序"}</span>
           </Button>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-[#0d2137] border-white/10">
+      <DropdownMenuContent align="start" className="bg-popover border-glass-border">
         {sortOptions.map((option) => {
           const Icon = option.icon;
           return (
@@ -73,12 +73,12 @@ export function SortTypeDropdown() {
               key={option.id}
               onClick={() => handleSortChange(option)}
               className={`
-                text-white
-                hover:bg-white/10
-                focus:bg-white/10
+                text-foreground
+                hover:bg-secondary/50
+                focus:bg-secondary/50
                 ${
                   currentOption?.id === option.id
-                    ? "bg-emerald-500/20 text-emerald-300"
+                    ? "bg-primary/20 text-primary"
                     : ""
                 }
               `}

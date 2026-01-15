@@ -26,8 +26,8 @@ export function SafeModeToggle() {
             className={cn(
               "h-9 w-9",
               safeMode
-                ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
-                : "text-white/60 hover:text-white hover:bg-white/10",
+                ? "bg-primary/20 text-primary hover:bg-primary/30"
+                : "text-foreground/60 hover:text-foreground hover:bg-secondary/50",
             )}
           >
             {safeMode ? (

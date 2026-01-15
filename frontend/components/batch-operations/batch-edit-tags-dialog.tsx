@@ -113,21 +113,21 @@ export function BatchEditTagsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#0d2137] border-white/10 text-white max-w-lg">
+      <DialogContent className="bg-popover border-glass-border text-foreground max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
-            <Tag className="h-5 w-5 text-emerald-400" />
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <Tag className="h-5 w-5 text-primary" />
             批量编辑标签
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 选中的文件数量 */}
-          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-            <p className="text-sm text-white/80 flex items-center gap-2">
-              <Info className="h-4 w-4 text-blue-400" />
+          <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
               已选中{" "}
-              <span className="font-bold text-emerald-400">
+              <span className="font-bold text-primary">
                 {files.length}
               </span>{" "}
               个文件
@@ -148,14 +148,14 @@ export function BatchEditTagsDialog({
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-glass-border text-foreground hover:bg-secondary/50"
             >
               取消
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 <>

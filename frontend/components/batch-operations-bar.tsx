@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useActiveItems, useFileStore } from "@/lib/file-store";
+import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
 import { deleteFile, getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
@@ -22,12 +22,13 @@ import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
   const {
-    selectedKeys,
     clearSelection,
     selectAll,
     updateFileMetadata,
     activeType,
   } = fileStore;
+
+  const selectedKeys = useActiveSelectedKeys();
 
   const { toast } = useToast();
   const [showBatchTags, setShowBatchTags] = useState(false);
@@ -161,8 +162,8 @@ export function BatchOperationsBar() {
   return (
     <>
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4">
-        <div className="flex items-center gap-4 rounded-full border border-white/20 bg-linear-to-r from-emerald-500/90 to-teal-500/90 px-6 py-3 shadow-2xl backdrop-blur-xl">
-          <span className="text-sm font-medium text-white">
+        <div className="flex items-center gap-4 rounded-full border border-glass-border bg-linear-to-r from-primary/90 to-accent/90 px-6 py-3 shadow-2xl backdrop-blur-xl">
+          <span className="text-sm font-medium text-primary-foreground">
             {selectedKeys.length}{" "}
             {selectedKeys.length === 1 ? "file" : "files"} selected
           </span>
@@ -171,7 +172,7 @@ export function BatchOperationsBar() {
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={handleBatchDownload}
             >
               <Download className="mr-2 h-4 w-4" />
@@ -181,21 +182,21 @@ export function BatchOperationsBar() {
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={handleBatchDelete}
             >
               <Trash2 className="mr-2 h-4 w-4 text-red-500" />
               Delete
             </Button>
 
-            <div className="h-6 w-px bg-white/20" />
+            <div className="h-6 w-px bg-primary-foreground/20" />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-white hover:bg-white/20"
+                  className="text-primary-foreground hover:bg-primary-foreground/10"
                 >
                   <Toolbox className="h-4 w-4" />
                 </Button>
@@ -204,15 +205,15 @@ export function BatchOperationsBar() {
               <DropdownMenuContent
                 align="end"
                 side="top"
-                className="min-w-[180px] border-white/10 bg-[#0d2137]"
+                className="min-w-[180px] border-glass-border bg-popover"
               >
                 <DropdownMenuItem
                   onClick={isAllSelected ? clearSelection : selectAll}
-                  className="cursor-pointer text-white hover:bg-white/10"
+                  className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Check
                     className={`mr-2 h-4 w-4 ${
-                      isAllSelected ? "text-emerald-300" : "text-blue-400"
+                      isAllSelected ? "text-primary" : "text-blue-400"
                     }`}
                   />
                   {isAllSelected ? "取消全选" : "全选当前页"}
@@ -220,15 +221,15 @@ export function BatchOperationsBar() {
 
                 <DropdownMenuItem
                   onClick={() => setShowBatchTags(true)}
-                  className="cursor-pointer text-white hover:bg-white/10"
+                  className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
-                  <Tag className="mr-2 h-4 w-4 text-emerald-400" />
+                  <Tag className="mr-2 h-4 w-4 text-primary" />
                   批量编辑标签
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={() => setShowBatchRename(true)}
-                  className="cursor-pointer text-white hover:bg-white/10"
+                  className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <FilePen className="mr-2 h-4 w-4 text-blue-400" />
                   批量重命名
@@ -236,7 +237,7 @@ export function BatchOperationsBar() {
 
                 <DropdownMenuItem
                   onClick={handleBatchCopy}
-                  className="cursor-pointer text-white hover:bg-white/10"
+                  className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Copy className="mr-2 h-4 w-4 text-blue-400" />
                   批量复制链接
@@ -247,7 +248,7 @@ export function BatchOperationsBar() {
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={clearSelection}
             >
               <X className="h-4 w-4" />

@@ -133,6 +133,17 @@ export class R2AdapterV2 extends BaseAdapter {
       }
 
       headers.set("Content-Length", String(size));
+
+      // 获取元数据以获取原始文件名
+      const metaResult = await this.getMetadata(key);
+      if (metaResult) {
+        const { metadata } = metaResult;
+        headers.set(
+          "Content-Disposition",
+          "attachment; filename=\"" + metadata.fileName + "\"",
+        );
+      }
+
       return new Response(object.body, { status: 200, headers });
     } catch (error) {
       console.error(`[getSingleFile] Error:`, error);
