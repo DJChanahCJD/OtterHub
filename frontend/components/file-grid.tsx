@@ -80,7 +80,7 @@ export function FileGrid() {
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <div className="text-sm text-muted-foreground">{files.length} 个文件</div>
+        <div className="text-sm text-foreground/50">{files.length} 个文件</div>
         <div className="flex items-center gap-2">
           <SortTypeDropdown />
           <ViewModeToggle />

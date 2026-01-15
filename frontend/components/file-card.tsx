@@ -450,13 +450,13 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 ))}
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-foreground/50">
               {formatFileSize(file.metadata.fileSize || 0)}
             </p>
           </div>
 
           {/* Date */}
-          <div className="hidden md:block text-xs text-muted-foreground" title="上传时间">
+          <div className="hidden md:block text-xs text-foreground/50" title="上传时间">
             {formatTime(file.metadata.uploadedAt || 0)}
           </div>
 
@@ -477,7 +477,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               ) : (
                 <RotateCw className="h-4 w-4 mr-1" />
               )}
-              继续上传 ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/{file.metadata.chunkInfo!.total})
+              ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/{file.metadata.chunkInfo!.total})
             </Button>
           )}
 

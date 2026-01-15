@@ -6,7 +6,7 @@ import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
-import { buildTmpFileKey, formatFileSize, getFileType } from "@/lib/utils"
+import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
 import {
   FileItem,
@@ -184,17 +184,22 @@ export function FileUploadZone() {
         }}
         onDragLeave={() => setIsDragging(false)}
         onClick={() => fileInputRef.current?.click()}
-        className={`
-          border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
-          transition-all backdrop-blur-sm bg-glass-bg
-          ${isDragging
+        className={cn(
+          "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all backdrop-blur-sm bg-glass-bg",
+          isDragging
             ? "border-primary bg-primary/10"
-            : "border-glass-border hover:border-primary/50"}
-        `}
+            : "border-glass-border hover:border-primary/50"
+        )}
       >
-        <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          Drag & drop files here, or click to browse
+        <Upload className={cn(
+          "h-8 w-8 mx-auto mb-3 transition-colors",
+          isDragging ? "text-primary" : "text-foreground/50"
+        )} />
+        <p className={cn(
+          "text-sm transition-colors",
+          isDragging ? "text-primary font-medium" : "text-foreground/50"
+        )}>
+          {isDragging ? "Drop files to upload" : "Drag & drop files here, or click to browse"}
         </p>
 
         <input

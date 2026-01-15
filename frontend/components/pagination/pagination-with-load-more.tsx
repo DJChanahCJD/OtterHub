@@ -97,7 +97,7 @@ export function PaginationWithLoadMore({
 
       <>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">每页:</span>
+          <span className="text-sm text-foreground/50">每页</span>
           <Select
             value={itemsPerPage.toString()}
             onValueChange={(value) => onItemsPerPageChange(Number(value))}
@@ -115,7 +115,7 @@ export function PaginationWithLoadMore({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-foreground/50">
           <span>共</span>
           <span className="text-primary font-medium">{totalItems}</span>
           <span>个文件</span>
