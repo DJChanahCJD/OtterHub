@@ -70,8 +70,15 @@ export function getFileUrl(key: string): string {
   return `${API_URL}/file/${key}`;
 }
 
-export function deleteFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/delete/${key}`, {
+export function deleteFile(key: string, permanent: boolean = false): Promise<boolean> {
+  const query = permanent ? "?permanent=1" : "";
+  return request<boolean>(`${API_URL}/api/delete/${key}${query}`, {
+    method: "POST",
+  });
+}
+
+export function restoreFile(key: string): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/restore/${key}`, {  //  传 trash:<key>
     method: "POST",
   });
 }

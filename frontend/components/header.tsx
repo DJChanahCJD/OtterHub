@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X, Settings } from "lucide-react";
+import { Search, X, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,12 +18,16 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 export function Header() {
   const searchQuery = useFileStore((state) => state.searchQuery);
   const setSearchQuery = useFileStore((state) => state.setSearchQuery);
   const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const isTrashPage = pathname === "/trash";
 
   // 移动端头部导航栏
   if (isMobile) {
@@ -75,6 +79,19 @@ export function Header() {
 
               <div className="flex items-center gap-1">
                 <FileTypeDropdown />
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  // onClick={() => router.push("/trash")}
+                  className={`h-9 w-9 ${
+                    isTrashPage
+                      ? "text-red-500 bg-red-500/10"
+                      : "text-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
 
                 <Button
                   variant="ghost"
@@ -181,6 +198,20 @@ export function Header() {
                 </Button>
               )}
             </div>
+            {/* 回收站按钮 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              // onClick={() => router.push("/trash")}
+              className={`h-9 w-9 ${
+                isTrashPage
+                  ? "text-red-500 bg-red-500/10"
+                  : "text-foreground hover:bg-secondary/50"
+              }`}
+              title="Recycle Bin"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
             {/* 安全模式切换按钮 */}
             <SafeModeToggle />
             {/* 图片加载模式切换按钮 */}

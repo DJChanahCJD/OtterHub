@@ -100,6 +100,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
     [FileType.Audio]: emptyBucket(),
     [FileType.Video]: emptyBucket(),
     [FileType.Document]: emptyBucket(),
+    [FileType.Trash]: emptyBucket(),
   },
 
   selectedKeys: {
@@ -107,6 +108,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
     [FileType.Audio]: [],
     [FileType.Video]: [],
     [FileType.Document]: [],
+    [FileType.Trash]: [],
   },
 
   setActiveType: async (type) => {

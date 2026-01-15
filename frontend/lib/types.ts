@@ -37,7 +37,9 @@ export enum FileType {
   Audio = "audio",
   Video = "video",
   Document = "doc",
+  Trash = "trash",
 }
+export const trashPrefix = 'trash:';
 
 export type FileItem = {
   name: string; //  KV中的key

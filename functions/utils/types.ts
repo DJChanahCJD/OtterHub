@@ -12,7 +12,9 @@ export enum FileType {
   Audio = 'audio',
   Video = 'video',
   Document = 'doc',
+  Trash = 'trash',
 }
+export const trashPrefix = 'trash:'
 
 // 统一API响应类型
 export type ApiResponse<T = any> = {
