@@ -11,7 +11,8 @@ export function useInitFileStore() {
     setSortOrder,
     setSafeMode,
     setImageLoadMode,
-  } = useFileStore.getState(); // ⚠️ 注意：不是 hook 形式
+    setItemsPerPage,
+  } = useFileStore.getState(); // ⚠️ 注意：不是 hook 形式, 仅一次获取
 
   useEffect(() => {
     setViewMode(getFromStorage(STORAGE_KEYS.VIEW_MODE, ViewMode.Grid));
@@ -21,5 +22,6 @@ export function useInitFileStore() {
     setImageLoadMode(
       getFromStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, ImageLoadMode.DataSaver)
     );
+    setItemsPerPage(getFromStorage(STORAGE_KEYS.ITEMS_PER_PAGE, 20));
   }, []);
 }

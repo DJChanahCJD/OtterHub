@@ -55,11 +55,12 @@ export function FileGrid() {
 
   const viewMode = useFileStore((s) => s.viewMode);
   const fetchNextPage = useFileStore((s) => s.fetchNextPage);
+  const itemsPerPage = useFileStore((s) => s.itemsPerPage);
+  const setItemsPerPage = useFileStore((s) => s.setItemsPerPage);
   const files = useFilteredFiles();
   const bucket = useActiveBucket();
 
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const handlePageChange = (selectedItem: { selected: number }) => {
     setCurrentPage(selectedItem.selected);

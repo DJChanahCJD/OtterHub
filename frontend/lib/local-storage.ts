@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   SORT_ORDER: `${projectName}_sort_order`,
   SAFE_MODE: `${projectName}_safe_mode`,
   IMAGE_LOAD_MODE: `${projectName}_image_load_mode`,
+  ITEMS_PER_PAGE: `${projectName}_items_per_page`,
 } as const;
 
 /**

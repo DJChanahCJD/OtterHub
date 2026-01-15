@@ -51,6 +51,7 @@ interface FileStore {
   sortOrder: SortOrder;
   safeMode: boolean; // 安全浏览模式
   imageLoadMode: ImageLoadMode; // 图片加载模式
+  itemsPerPage: number; // 每页显示数量
 
   // 按前缀分桶
   buckets: Record<FileType, FileBucket>;
@@ -67,6 +68,7 @@ interface FileStore {
   setSortOrder: (order: SortOrder) => void;
   setSafeMode: (enabled: boolean) => void;
   setImageLoadMode: (mode: ImageLoadMode) => void;
+  setItemsPerPage: (count: number) => void;
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -91,6 +93,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortOrder: SortOrder.Desc,
   safeMode: true, // 默认开启安全浏览模式
   imageLoadMode: ImageLoadMode.DataSaver, // 默认为省流模式
+  itemsPerPage: 20, // 默认每页20条
 
   buckets: {
     [FileType.Image]: emptyBucket(),
@@ -194,6 +197,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setImageLoadMode: (mode) => {
     set({ imageLoadMode: mode });
     setToStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, mode);
+  },
+
+  setItemsPerPage: (count) => {
+    set({ itemsPerPage: count });
+    setToStorage(STORAGE_KEYS.ITEMS_PER_PAGE, count);
   },
 
   addFileLocal: (file, fileType) => {
