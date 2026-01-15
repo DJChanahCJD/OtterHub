@@ -3,30 +3,13 @@
 import { X, Plus, Tag } from "lucide-react";
 import { FileTag } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TAG_CONFIG } from "@/lib/tag-utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// 标签配置
-const TAG_CONFIG = {
-  [FileTag.NSFW]: {
-    label: "NSFW",
-    description: "敏感内容",
-    bgColor: "bg-amber-500/20",
-    textColor: "text-amber-300",
-    borderColor: "border-amber-500/30",
-  },
-  [FileTag.Private]: {
-    label: "Private",
-    description: "私有文件",
-    bgColor: "bg-purple-500/20",
-    textColor: "text-purple-300",
-    borderColor: "border-purple-500/30",
-  },
-};
 
 interface TagSelectorProps {
   tags: string[];

@@ -8,10 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatFileSize, formatTime } from "@/lib/utils";
-import { Clock, File, Heart, HeartOff, Code, Copy, Check } from "lucide-react";
+import { Clock, File, Code, Copy, Check, Tag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { FileTagBadge } from "@/components/file-tag-badge";
 
 interface FileDetailDialogProps {
   file: FileItem | null;
@@ -77,6 +78,20 @@ export function FileDetailDialog({
               </p>
             </div>
           </div>
+
+          {file.metadata.tags && file.metadata.tags.length > 0 && (
+            <div className="flex items-start gap-3">
+              <Tag className="h-5 w-5 text-emerald-400 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-muted-foreground mb-1">标签</p>
+                <div className="flex flex-wrap gap-2">
+                  {file.metadata.tags.map((tag) => (
+                    <FileTagBadge key={tag} tag={tag} showIcon />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-glass-border pt-4">

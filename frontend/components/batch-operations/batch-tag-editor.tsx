@@ -3,25 +3,7 @@
 import { Check, Minus, Tag } from "lucide-react";
 import { FileTag } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { BatchTagState, TagStateMap, getTagIntent } from "@/lib/tag-utils";
-
-// 标签配置
-const TAG_CONFIG = {
-  [FileTag.NSFW]: {
-    label: "NSFW",
-    description: "敏感内容",
-    bgColor: "bg-amber-500/20",
-    textColor: "text-amber-300",
-    borderColor: "border-amber-500/30",
-  },
-  [FileTag.Private]: {
-    label: "Private",
-    description: "私有文件",
-    bgColor: "bg-purple-500/20",
-    textColor: "text-purple-300",
-    borderColor: "border-purple-500/30",
-  },
-};
+import { BatchTagState, TagStateMap, getTagIntent, TAG_CONFIG } from "@/lib/tag-utils";
 
 interface BatchTagEditorProps {
   currentStates: TagStateMap;

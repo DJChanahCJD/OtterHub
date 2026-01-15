@@ -16,8 +16,6 @@ import {
   Heart,
   Eye,
   Edit,
-  ZoomIn,
-  ZoomOut,
   RotateCw,
   Info,
   AlertTriangle,
@@ -31,11 +29,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
-import { isNSFW, shouldBlur, shouldLoadImage } from "@/lib/file-preview";
+import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
 import { FileImagePreview } from "@/components/file-image-preview";
 import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
 import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
+import { FileTagBadge } from "@/components/file-tag-badge";
 import { getFileUrl, deleteFile, toggleLike, uploadChunk } from "@/lib/api";
 import { FileItem, FileTag, ImageLoadMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
 import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
@@ -441,9 +440,16 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
           {/* File Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {file.metadata.fileName}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-foreground truncate">
+                {file.metadata.fileName}
+              </p>
+              <div className="flex gap-1 shrink-0">
+                {file.metadata?.tags?.map((tag) => (
+                  <FileTagBadge key={tag} tag={tag} />
+                ))}
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
               {formatFileSize(file.metadata.fileSize || 0)}
             </p>
@@ -571,11 +577,11 @@ export function FileCard({ file, listView = false }: FileCardProps) {
               <p className="text-sm font-medium text-white truncate">
                 {file.metadata.fileName || file.name}
               </p>
-              {isNSFW(file.metadata?.tags) && (
-                <span className="px-1.5 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">
-                  NSFW
-                </span>
-              )}
+              <div className="flex gap-1 shrink-0">
+                {file.metadata?.tags?.map((tag) => (
+                  <FileTagBadge key={tag} tag={tag} />
+                ))}
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">

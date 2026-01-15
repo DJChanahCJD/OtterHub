@@ -1,5 +1,31 @@
 import { FileItem, FileTag } from "@/lib/types";
 
+// 标签展示配置
+export interface TagDisplayConfig {
+  label: string;
+  description: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+}
+
+export const TAG_CONFIG: Record<FileTag, TagDisplayConfig> = {
+  [FileTag.NSFW]: {
+    label: "NSFW",
+    description: "敏感内容",
+    bgColor: "bg-amber-500/20",
+    textColor: "text-amber-300",
+    borderColor: "border-amber-500/30",
+  },
+  [FileTag.Private]: {
+    label: "Private",
+    description: "私有文件",
+    bgColor: "bg-purple-500/20",
+    textColor: "text-purple-300",
+    borderColor: "border-purple-500/30",
+  },
+};
+
 export enum BatchTagState {
   None = "none",
   Partial = "partial",
