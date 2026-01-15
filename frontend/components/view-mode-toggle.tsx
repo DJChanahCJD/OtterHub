@@ -30,7 +30,8 @@ export function ViewModeToggle() {
           <LayoutTemplate className="h-4 w-4" />
         </Button>
       )}
-      {activeType === FileType.Audio && (
+      {/* TODO: 实现音频播放列表功能 */}
+      {/* {activeType === FileType.Audio && (
         <Button
           variant="ghost"
           size="sm"
@@ -42,7 +43,7 @@ export function ViewModeToggle() {
         >
           <Music className="h-4 w-4" />
         </Button>
-      )}
+      )} */}
       <Button
         variant="ghost"
         size="sm"
