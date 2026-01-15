@@ -161,35 +161,40 @@ export function BatchOperationsBar() {
   /** ===== UI ===== */
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4">
-        <div className="flex items-center gap-4 rounded-full border border-glass-border bg-linear-to-r from-primary/90 to-accent/90 px-6 py-3 shadow-2xl backdrop-blur-xl">
-          <span className="text-sm font-medium text-primary-foreground">
+      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 w-[calc(100%-2rem)] max-w-max">
+        <div className="flex items-center gap-2 md:gap-4 rounded-full border border-glass-border bg-linear-to-r from-primary/90 to-accent/90 px-4 md:px-6 py-2.5 md:py-3 shadow-2xl backdrop-blur-xl">
+          <span className="text-xs md:text-sm font-medium text-primary-foreground whitespace-nowrap">
             {selectedKeys.length}{" "}
-            {selectedKeys.length === 1 ? "file" : "files"} selected
+            <span className="hidden sm:inline">
+              {selectedKeys.length === 1 ? "file" : "files"}
+            </span>{" "}
+            selected
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button
               size="sm"
               variant="ghost"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
+              className="text-primary-foreground hover:bg-primary-foreground/10 px-2 md:px-3"
               onClick={handleBatchDownload}
+              title="Download"
             >
-              <Download className="mr-2 h-4 w-4" />
-              Download
+              <Download className="md:mr-2 h-4 w-4" />
+              <span className="hidden md:inline">Download</span>
             </Button>
 
             <Button
               size="sm"
               variant="ghost"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
+              className="text-primary-foreground hover:bg-primary-foreground/10 px-2 md:px-3"
               onClick={handleBatchDelete}
+              title="Delete"
             >
-              <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-              Delete
+              <Trash2 className="md:mr-2 h-4 w-4 text-red-500" />
+              <span className="hidden md:inline">Delete</span>
             </Button>
 
-            <div className="h-6 w-px bg-primary-foreground/20" />
+            <div className="h-6 w-px bg-primary-foreground/20 mx-1" />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

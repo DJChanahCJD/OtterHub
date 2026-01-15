@@ -32,8 +32,6 @@ export default function OtterHubPage() {
         <Header/>
 
         <div className="flex-1">
-          {/* <Sidebar isOpen={sidebarOpen} /> */}
-
           <main className="p-6 md:p-8">
             <FileUploadZone />
 
