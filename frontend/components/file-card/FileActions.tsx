@@ -2,11 +2,11 @@ import {
   MoreVertical,
   Download,
   Trash2,
-  Copy,
   Heart,
   Eye,
   Edit,
   Info,
+  Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,7 +89,7 @@ export function FileActions({
             onClick={onCopyLink}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Copy className={`h-4 w-4 mr-2 ${IconColor}`} />
+            <Link className={`h-4 w-4 mr-2 ${IconColor}`} />
             Copy Link
           </DropdownMenuItem>
 

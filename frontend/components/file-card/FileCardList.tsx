@@ -1,13 +1,13 @@
 import { Video, Music, Loader2, RotateCw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
-import { FileDetailDialog } from "@/components/FileDetailDialog";
-import { FileEditDialog } from "@/components/FileEditDialog";
+import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
 import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
+import { FileEditDialog } from "./FileEditDialog";
 
 interface FileCardListProps {
   file: FileItem;

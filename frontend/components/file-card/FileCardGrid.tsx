@@ -1,14 +1,14 @@
 import { Check, AlertTriangle, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
-import { FileDetailDialog } from "@/components/FileDetailDialog";
-import { FileEditDialog } from "@/components/FileEditDialog";
+import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";
 import { FileItem } from "@/lib/types";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";
+import { FileEditDialog } from "./FileEditDialog";
 
 interface FileCardGridProps {
   file: FileItem;

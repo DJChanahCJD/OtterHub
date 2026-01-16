@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileItem, FileTag } from "@/lib/types";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { editMetadata } from "@/lib/api";
+import { FileItem } from "@/lib/types";
+import { Label } from "@radix-ui/react-dropdown-menu";
+import { TagSelector } from "@/components/TagSelector";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TagSelector } from "@/components/TagSelector";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface EditMetadataDialogProps {
   file: FileItem | null;
@@ -62,8 +62,7 @@ export function FileEditDialog({
 
       await editMetadata(file.name, updatedMetadata);
 
-
-        toast.success("元数据更新成功");
+      toast.success("元数据更新成功");
 
       onOpenChange(false);
       onSuccess?.(updatedMetadata);
@@ -89,9 +88,7 @@ export function FileEditDialog({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 文件名 */}
           <div className="space-y-2">
-            <Label htmlFor="fileName" className="text-muted-foreground">
-              文件名
-            </Label>
+            <Label className="text-foreground/80">文件名</Label>
             <Input
               id="fileName"
               value={fileName}
@@ -104,7 +101,7 @@ export function FileEditDialog({
 
           {/* 标签 */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground">标签</Label>
+            <Label className="text-foreground/80">标签</Label>
             <TagSelector
               tags={tags}
               onChange={setTags}

@@ -30,14 +30,32 @@ export function FileTypeDropdown() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
+          className="
+            gap-2
+            text-foreground/80
+            hover:text-foreground
+            hover:bg-secondary/60
+            data-[state=open]:bg-secondary/60
+          "
         >
-          {currentType?.icon && <currentType.icon className="text-foreground/80 h-4 w-4" />}
+          {currentType?.icon && (
+            <currentType.icon className="text-foreground/80 h-4 w-4" />
+          )}
           {currentType?.label}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-popover border-glass-border">
+      <DropdownMenuContent
+        align="start"
+        className="
+          min-w-40
+          rounded-lg
+          border border-glass-border
+          bg-glass-bg
+          backdrop-blur-md
+          shadow-lg
+        "
+      >
         {fileTypes.map((type) => {
           const Icon = type.icon;
 
@@ -46,17 +64,26 @@ export function FileTypeDropdown() {
               key={type.id}
               onClick={() => setActiveType(type.id)}
               className={`
-                text-foreground
-                hover:bg-secondary/50
-                focus:bg-secondary/50
+                flex items-center gap-2
+                rounded-md
+                px-2 py-1.5
+                text-sm
+                transition-colors
+
                 ${
                   activeType === type.id
-                    ? "bg-primary/20 text-primary"
-                    : ""
+                    ? "bg-primary/15 text-primary"
+                    : "text-foreground/80"
                 }
+
+                hover:bg-secondary/60
+                hover:text-foreground
+
+                focus:bg-secondary/60
+                focus:text-foreground
               `}
             >
-              <Icon className="h-4 w-4 mr-2 text-foreground/50" />
+              <Icon className="h-4 w-4 mr-2 text-foreground/60" />
               {type.label}
             </DropdownMenuItem>
           );

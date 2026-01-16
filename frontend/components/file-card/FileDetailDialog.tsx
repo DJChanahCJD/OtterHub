@@ -49,7 +49,7 @@ export function FileDetailDialog({
           <div className="flex items-start gap-3">
             <File className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground mb-1">文件名</p>
+              <p className="text-sm text-foreground/60 mb-1">文件名</p>
               <p className="text-sm font-medium text-foreground break-all">
                 {file.metadata.fileName}
               </p>
@@ -59,7 +59,7 @@ export function FileDetailDialog({
           <div className="flex items-start gap-3">
             <File className="h-5 w-5 text-purple-400 mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground mb-1">文件大小</p>
+              <p className="text-sm text-foreground/60 mb-1">文件大小</p>
               <p className="text-sm font-medium text-foreground">
                 {formatFileSize(file.metadata.fileSize)}
               </p>
@@ -69,7 +69,7 @@ export function FileDetailDialog({
           <div className="flex items-start gap-3">
             <Clock className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground mb-1">上传时间</p>
+              <p className="text-sm text-foreground/60 mb-1">上传时间</p>
               <p className="text-sm font-medium text-foreground">
                 {formatTime(file.metadata.uploadedAt)}
               </p>
@@ -80,7 +80,7 @@ export function FileDetailDialog({
             <div className="flex items-start gap-3">
               <Tag className="h-5 w-5 text-emerald-400 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-muted-foreground mb-1">标签</p>
+                <p className="text-sm text-foreground/60 mb-1">标签</p>
                 <div className="flex flex-wrap gap-2">
                   {file.metadata.tags.map((tag) => (
                     <FileTagBadge key={tag} tag={tag} showIcon />
@@ -101,7 +101,7 @@ export function FileDetailDialog({
               variant="ghost"
               size="sm"
               onClick={handleCopyJson}
-              className="text-muted-foreground hover:text-foreground hover:bg-secondary/50 gap-2"
+              className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
             >
               {copied ? (
                 <Check className="h-4 w-4 text-primary" />
@@ -112,7 +112,7 @@ export function FileDetailDialog({
             </Button>
           </div>
           <div className="bg-secondary/30 rounded-lg p-4 overflow-x-auto overflow-y-auto max-h-80 border border-glass-border">
-            <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap break-all">
+            <pre className="text-xs text-foreground/80 font-mono whitespace-pre-wrap break-all">
               {jsonString}
             </pre>
           </div>
