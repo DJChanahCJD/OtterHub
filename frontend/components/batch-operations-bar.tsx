@@ -160,11 +160,7 @@ export function BatchOperationsBar() {
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 w-[calc(100%-2rem)] max-w-max">
         <div className="flex items-center gap-2 md:gap-4 rounded-full border border-glass-border bg-linear-to-r from-primary/90 to-accent/90 px-4 md:px-6 py-2.5 md:py-3 shadow-2xl backdrop-blur-xl">
           <span className="text-xs md:text-sm font-medium text-primary-foreground whitespace-nowrap">
-            {selectedKeys.length}{" "}
-            <span className="hidden sm:inline">
-              {selectedKeys.length === 1 ? "file" : "files"}
-            </span>{" "}
-            selected
+            {`${selectedKeys.length} selected`}
           </span>
 
           <div className="flex items-center gap-1 md:gap-2">

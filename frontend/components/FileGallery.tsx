@@ -14,7 +14,7 @@ import { ChevronDown } from "lucide-react";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
 import { VirtualMasonryGrid } from "./masonry/virtual-masonry-grid";
 
-function FileListRenderer({
+function FileViewRenderer({
   viewMode,
   files,
 }: {
@@ -50,7 +50,7 @@ function FileListRenderer({
   );
 }
 
-export function FileGrid() {
+export function FileGallery() {
   useInitFileStore();
 
   const viewMode = useFileStore((s) => s.viewMode);
@@ -87,7 +87,7 @@ export function FileGrid() {
         </div>
       </div>
 
-      <FileListRenderer viewMode={viewMode} files={currentFiles} />
+      <FileViewRenderer viewMode={viewMode} files={currentFiles} />
 
       {viewMode !== ViewMode.Masonry && (
         <PaginationWithLoadMore

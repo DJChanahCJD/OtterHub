@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, Loader2, RefreshCcw, X } from "lucide-react";
+import { Trash, Loader2, RefreshCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -98,16 +98,16 @@ export function TrashSheet() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-foreground hover:bg-secondary/50 hover:text-red-500 transition-colors"
-          title="Recycle Bin"
+          className="h-9 w-9 text-foreground/60 hover:bg-secondary/50 transition-colors"
+          title="回收站"
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:w-[540px] flex flex-col p-0 bg-background/95 backdrop-blur-xl border-l border-border">
         <SheetHeader className="px-6 py-4 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-red-500" />
+            <Trash className="h-5 w-5 text-red-500" />
             回收站
           </SheetTitle>
           <SheetDescription className="text-sm text-foreground/80">
@@ -118,7 +118,7 @@ export function TrashSheet() {
         <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
           {isEmpty && !trashBucket.loading ? (
             <div className="h-full flex flex-col items-center justify-center text-foreground/80 gap-2 min-h-[300px]">
-              <Trash2 className="h-12 w-12 opacity-20" />
+              <Trash className="h-12 w-12 opacity-20" />
               <p>Trash is empty</p>
             </div>
           ) : (
@@ -173,7 +173,7 @@ export function TrashSheet() {
                         disabled={isBatchProcessing}
                         className="gap-1"
                     >
-                        {isBatchProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        {isBatchProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />}
                         Delete
                     </Button>
                 </div>

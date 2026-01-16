@@ -6,6 +6,7 @@ import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
 import { FileImagePreview } from "@/components/file-image-preview";
 import { SMART_NO_IMAGE_THRESHOLD } from "../file-card";
+import { NsfwSign } from "../file-card/NsfwSign";
 
 interface MasonryImageCardProps {
   file: FileItem;
@@ -37,11 +38,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
       />
 
       {/* NSFW 提示 */}
-      {blur && (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 backdrop-blur-sm">
-          <span className="text-sm font-medium text-amber-500">NSFW Content</span>
-        </div>
-      )}
+      {blur && <NsfwSign />}
 
       {/* 底部文件名悬浮 */}
       <div className="absolute bottom-0 left-0 right-0 p-2 bg-linear-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">

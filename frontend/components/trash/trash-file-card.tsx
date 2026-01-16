@@ -96,18 +96,6 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
       )}
       onClick={handleSelect}
     >
-      {/* Checkbox */}
-      <div 
-        className={cn(
-          "shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors",
-          isSelected
-            ? "bg-primary border-primary text-primary-foreground"
-            : "border-muted-foreground/30 group-hover:border-primary/50"
-        )}
-      >
-        {isSelected && <Check className="h-3 w-3" />}
-      </div>
-
       {/* Preview */}
       <div className="shrink-0 w-12 h-12 rounded-lg bg-secondary/30 overflow-hidden relative flex items-center justify-center">
          <FileContent

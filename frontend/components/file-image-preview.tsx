@@ -63,7 +63,7 @@ export function FileImagePreview({
       decoding="async"
       className={cn(
         "w-full h-full object-cover transition-all duration-300",
-        shouldBlur && "blur-2xl scale-110",
+        shouldBlur && "blur-xl",
         !shouldBlur && canPreview && "cursor-zoom-in"
       )}
     />

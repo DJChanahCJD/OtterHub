@@ -1,48 +1,52 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { FileUploadZone } from "@/components/upload/file-upload-zone"
-import { FileGrid } from "@/components/file-grid"
-import { BatchOperationsBar } from "@/components/batch-operations-bar"
-import { EmptyState } from "@/components/empty-state"
-import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store"
+import { useEffect } from "react";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { FileUploadZone } from "@/components/upload/file-upload-zone";
+import { FileGallery } from "@/components/FileGallery";
+import { BatchOperationsBar } from "@/components/batch-operations-bar";
+import { EmptyState } from "@/components/empty-state";
+import {
+  useActiveItems,
+  useActiveSelectedKeys,
+  useFileStore,
+} from "@/lib/file-store";
+import { ViewMode } from "@/lib/types";
 
 export default function OtterHubPage() {
-  const activeItems = useActiveItems()
-  const selectedKeys = useActiveSelectedKeys()
-  const fetchNextPage = useFileStore((state) => state.fetchNextPage)
+  const activeItems = useActiveItems();
+  const selectedKeys = useActiveSelectedKeys();
 
-  // 从后端获取文件列表
+  const { fetchNextPage, viewMode } = useFileStore();
+
+  const isListOrGrid = [ViewMode.Grid, ViewMode.List].includes(viewMode);
+
+  const showBatchBar = selectedKeys.length > 0 && isListOrGrid;
+
+  const isEmpty = activeItems.length === 0;
+
   useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        await fetchNextPage()
-      } catch (error) {
-        console.error("Error fetching files:", error)
-      }
-    }
-    fetchFiles()
-  }, [])
+    fetchNextPage().catch((error) => {
+      console.error("[OtterHubPage] fetch files failed:", error);
+    });
+  }, [fetchNextPage]);
 
   return (
     <div className="relative min-h-screen bg-linear-to-br from-gradient-from via-gradient-via to-gradient-to">
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <Header/>
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <Header />
 
-        <div className="flex-1">
-          <main className="p-6 md:p-8">
-            <FileUploadZone />
+        <main className="flex-1 p-6 md:p-8">
+          <FileUploadZone />
 
-            {activeItems.length === 0 ? <EmptyState /> : <FileGrid />}
-          </main>
-        </div>
+          {isEmpty ? <EmptyState /> : <FileGallery />}
+        </main>
 
-        {selectedKeys.length > 0 && <BatchOperationsBar />}
+        {showBatchBar && <BatchOperationsBar />}
 
         <Footer />
       </div>
     </div>
-  )
+  );
 }
