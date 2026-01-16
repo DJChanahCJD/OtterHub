@@ -69,7 +69,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
     setIsDeleting(true);
     try {
       await deleteFile(file.name).then(() => {
-        deleteFilesLocalByType([file.name], fileType);
+        deleteFilesLocalByType([file.name], FileType.Trash);
       });
       toast.success("删除成功");
     } catch (error) {

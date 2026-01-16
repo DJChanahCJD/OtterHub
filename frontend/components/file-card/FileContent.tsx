@@ -5,9 +5,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
-import { FileImagePreview } from "@/components/FileImagePreview";
 import { getFileUrl } from "@/lib/api";
 import { FileTag, ImageLoadMode, FileType } from "@/lib/types";
+import { FileImagePreview } from "../FileImagePreview";
 
 export const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
 export const ICON_DISPLAY_SIZE = "h-18 w-18";
