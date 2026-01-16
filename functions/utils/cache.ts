@@ -45,7 +45,7 @@ export async function putToCache(
 
   const maxAge = CACHE_CONFIG[type].maxAge;
 
-  const cachedResp = new Response(response.body, response);
+  const cachedResp = response.clone();
   cachedResp.headers.set(
     "Cache-Control",
     `public, max-age=${maxAge}`
