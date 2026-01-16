@@ -1,0 +1,151 @@
+import { Check, Video, Music, File, Loader2, RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileTagBadge } from "@/components/file-tag-badge";
+import { FileDetailDialog } from "@/components/file-detail-dialog";
+import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
+import { FileActions } from "./FileActions";
+import { FileItem, FileType } from "@/lib/types";
+import { getFileUrl } from "@/lib/api";
+import { cn, formatFileSize, formatTime } from "@/lib/utils";
+import { useFileCardActions } from "./hooks";
+
+interface FileCardListProps {
+  file: FileItem;
+  actions: ReturnType<typeof useFileCardActions>;
+}
+
+export function FileCardList({ file, actions }: FileCardListProps) {
+  const {
+    isSelected,
+    fileType,
+    blur,
+    isIncompleteUpload,
+    showDetail,
+    showEdit,
+    isResuming,
+    setShowDetail,
+    setShowEdit,
+    handleSelect,
+    handleDelete,
+    handleCopyLink,
+    handleDownload,
+    handleView,
+    handleEdit,
+    handleEditSuccess,
+    handleToggleLike,
+    handleResumeUpload,
+  } = actions;
+
+  return (
+    <>
+      <div
+        className={cn(
+          "group flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl border transition-all cursor-pointer",
+          isSelected
+            ? "bg-primary/20 border-primary/50"
+            : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/30"
+        )}
+        onClick={handleSelect}
+
+      >
+        {/* File Icon/Preview */}
+        <div className="w-12 h-12 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden">
+          {fileType === FileType.Image ? (
+            <img
+              src={getFileUrl(file.name)}
+              alt={file.name}
+              loading="lazy"
+              decoding="async"
+              className={cn(
+                "w-full h-full object-cover rounded transition-all duration-300",
+                blur && "blur-xs"
+              )}
+            />
+          ) : fileType === FileType.Video ? (
+            file.metadata.thumbUrl ? (
+              <img
+                src={file.metadata.thumbUrl}
+                alt={file.name}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover rounded"
+              />
+            ) : (
+              <Video className="h-6 w-6 text-purple-400" />
+            )
+          ) : fileType === FileType.Audio ? (
+            <Music className="h-6 w-6 text-emerald-400" />
+          ) : (
+            <File className="h-6 w-6 text-emerald-400" />
+          )}
+        </div>
+
+        {/* File Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-foreground truncate">
+              {file.metadata.fileName}
+            </p>
+            <div className="flex gap-1 shrink-0">
+              {file.metadata?.tags?.map((tag) => (
+                <FileTagBadge key={tag} tag={tag} />
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-foreground/50">
+            {formatFileSize(file.metadata.fileSize || 0)}
+          </p>
+        </div>
+
+        {/* Date */}
+        <div className="hidden md:block text-xs text-foreground/50" title="上传时间">
+          {formatTime(file.metadata.uploadedAt || 0)}
+        </div>
+
+        {/* 继续上传按钮 */}
+        {isIncompleteUpload && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResumeUpload();
+            }}
+            disabled={isResuming}
+            className="text-amber-300 border-amber-500/30 hover:bg-amber-500/10 shrink-0"
+          >
+            {isResuming ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <RotateCw className="h-4 w-4 mr-1" />
+            )}
+            ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/{file.metadata.chunkInfo!.total})
+          </Button>
+        )}
+
+        {/* Actions */}
+        <FileActions
+          onDownload={handleDownload}
+          onDelete={handleDelete}
+          onView={handleView}
+          onEdit={handleEdit}
+          onToggleLike={handleToggleLike}
+          onCopyLink={handleCopyLink}
+          onShowDetail={() => setShowDetail(true)}
+          isLiked={file.metadata?.liked || false}
+        />
+      </div>
+      <FileDetailDialog
+        file={file}
+        open={showDetail}
+        onOpenChange={setShowDetail}
+      />
+      <EditMetadataDialog
+        file={file}
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        onSuccess={handleEditSuccess}
+      />
+    </>
+  );
+}
