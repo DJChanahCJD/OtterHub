@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
   useFileStore,
@@ -13,6 +14,8 @@ import { ViewMode } from "@/lib/types";
 import { ChevronDown } from "lucide-react";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
 import { MasonryGrid } from "./masonry/MasonryGrid";
+import { PhotoProvider } from "react-photo-view";
+import { PhotoToolbar } from "./FileImagePreview";
 
 function FileViewRenderer({
   viewMode,
@@ -78,7 +81,10 @@ export function FileGallery() {
       : files.slice(offset, offset + itemsPerPage);
 
   return (
-    <>
+    <PhotoProvider
+      maskOpacity={0.85}
+      toolbarRender={(props) => <PhotoToolbar {...props} />}
+    >
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-foreground/50">{files.length} 个文件</div>
         <div className="flex items-center gap-2">
@@ -112,6 +118,6 @@ export function FileGallery() {
           </button>
         </div>
       )}
-    </>
+    </PhotoProvider>
   );
 }

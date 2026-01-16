@@ -29,7 +29,7 @@ export function Header() {
   // 移动端头部导航栏
   if (isMobile) {
     return (
-      <header className="relative border-b border-glass-border backdrop-blur-xl bg-glass-bg sticky top-0 z-40 h-[57px] flex items-center">
+      <header className="relative border-b border-glass-border backdrop-blur-xl bg-glass-bg top-0 z-40 h-14.25 flex items-center">
         <div className="px-4 w-full">
           {showMobileSearch ? (
             <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
