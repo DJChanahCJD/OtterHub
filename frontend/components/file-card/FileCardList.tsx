@@ -2,7 +2,7 @@ import { Video, Music, Loader2, RotateCw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/FileDetailDialog";
-import { EditMetadataDialog } from "@/components/EditMetadataDialog";
+import { FileEditDialog } from "@/components/FileEditDialog";
 import { FileActions } from "./FileActions";
 import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
@@ -140,7 +140,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         open={showDetail}
         onOpenChange={setShowDetail}
       />
-      <EditMetadataDialog
+      <FileEditDialog
         file={file}
         open={showEdit}
         onOpenChange={setShowEdit}

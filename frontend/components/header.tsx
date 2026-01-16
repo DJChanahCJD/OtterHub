@@ -45,13 +45,13 @@ export function Header() {
                 <X className="h-5 w-5" />
               </Button>
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/80" />
                 <Input
                   autoFocus
                   placeholder="搜索文件..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-9 h-9 w-full bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                  className="pl-9 pr-9 h-9 w-full bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/80 focus-visible:ring-primary"
                 />
                 {searchQuery && (
                   <Button
@@ -81,7 +81,7 @@ export function Header() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowMobileSearch(true)}
-                  className="h-9 w-9 text-foreground hover:bg-secondary/50"
+                  className="h-9 w-9 text-foreground"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
@@ -94,7 +94,7 @@ export function Header() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 text-foreground hover:bg-secondary/50"
+                      className="h-9 w-9 text-foreground"
                     >
                       <Settings className="h-5 w-5" />
                     </Button>
@@ -179,7 +179,7 @@ export function Header() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-3 w-3" />
                 </Button>

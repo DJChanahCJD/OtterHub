@@ -98,7 +98,7 @@ export function TrashSheet() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-foreground/60 hover:bg-secondary/50 transition-colors"
+          className="h-9 w-9 text-foreground/80 transition-colors"
           title="回收站"
         >
           <Trash className="h-5 w-5" />

@@ -32,7 +32,7 @@ export function FileTypeDropdown() {
           size="sm"
           className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
         >
-          {currentType?.icon && <currentType.icon className="text-foreground/50 h-4 w-4" />}
+          {currentType?.icon && <currentType.icon className="text-foreground/80 h-4 w-4" />}
           {currentType?.label}
           <ChevronDown className="h-4 w-4" />
         </Button>

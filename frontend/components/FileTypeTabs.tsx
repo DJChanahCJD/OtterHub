@@ -38,7 +38,7 @@ export function FileTypeTabs() {
               ${
                 activeType === type.id
                   ? "bg-primary/20 text-primary border border-primary/50"
-                  : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
+                  : "text-foreground/80 hover:text-foreground hover:bg-secondary/50"
               }
             `}
           >

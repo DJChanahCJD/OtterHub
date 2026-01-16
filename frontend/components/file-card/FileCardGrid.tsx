@@ -2,7 +2,7 @@ import { Check, AlertTriangle, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/FileDetailDialog";
-import { EditMetadataDialog } from "@/components/EditMetadataDialog";
+import { FileEditDialog } from "@/components/FileEditDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";
 import { FileItem } from "@/lib/types";
@@ -141,7 +141,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         open={showDetail}
         onOpenChange={setShowDetail}
       />
-      <EditMetadataDialog
+      <FileEditDialog
         file={file}
         open={showEdit}
         onOpenChange={setShowEdit}

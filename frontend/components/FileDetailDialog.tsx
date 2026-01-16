@@ -101,7 +101,7 @@ export function FileDetailDialog({
               variant="ghost"
               size="sm"
               onClick={handleCopyJson}
-              className="text-foreground/80 hover:text-foreground hover:bg-secondary/50 gap-2"
+              className="text-muted-foreground hover:text-foreground hover:bg-secondary/50 gap-2"
             >
               {copied ? (
                 <Check className="h-4 w-4 text-primary" />
@@ -112,7 +112,7 @@ export function FileDetailDialog({
             </Button>
           </div>
           <div className="bg-secondary/30 rounded-lg p-4 overflow-x-auto overflow-y-auto max-h-80 border border-glass-border">
-            <pre className="text-xs text-foreground/80 font-mono whitespace-pre-wrap break-all">
+            <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap break-all">
               {jsonString}
             </pre>
           </div>

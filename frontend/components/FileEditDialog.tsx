@@ -24,7 +24,7 @@ interface EditMetadataDialogProps {
   onSuccess?: (metadata: { fileName: string; tags: string[] }) => void;
 }
 
-export function EditMetadataDialog({
+export function FileEditDialog({
   file,
   open,
   onOpenChange,

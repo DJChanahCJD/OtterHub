@@ -74,8 +74,8 @@ export function SortTypeDropdown() {
               onClick={() => handleSortChange(option)}
               className={`
                 text-foreground
-                hover:bg-secondary/50
-                focus:bg-secondary/50
+                hover:text-foreground/80
+                focus:text-foreground/80
                 ${
                   currentOption?.id === option.id
                     ? "bg-primary/20 text-primary"
@@ -83,7 +83,7 @@ export function SortTypeDropdown() {
                 }
               `}
             >
-              <Icon className="h-4 w-4 mr-2" />
+              <Icon className="h-4 w-4 mr-2 text-foreground/80" />
               {option.label}
             </DropdownMenuItem>
           );
