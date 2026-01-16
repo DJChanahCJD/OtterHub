@@ -62,6 +62,7 @@ interface FileStore {
   // actions
   setActiveType: (type: FileType) => Promise<void>;
   fetchNextPage: () => Promise<void>;
+  fetchBucket: (type: FileType) => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
   setSearchQuery: (query: string) => void;
   setSortType: (type: SortType) => void;
@@ -73,9 +74,9 @@ interface FileStore {
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
   updateFileMetadata: (name: string, metadata: FileMetadata) => void;
-  toggleSelection: (name: string) => void;
+  toggleSelection: (name: string, type?: FileType) => void;
   selectAll: () => void;
-  clearSelection: () => void;
+  clearSelection: (type?: FileType) => void;
 }
 
 const emptyBucket = (): FileBucket => ({
@@ -132,43 +133,58 @@ export const useFileStore = create<FileStore>((set, get) => ({
   },
 
   fetchNextPage: async () => {
-    const { activeType, buckets } = get();
-    const bucket = buckets[activeType];
+    const { activeType } = get();
+    await get().fetchBucket(activeType);
+  },
+
+  fetchBucket: async (type) => {
+    const { buckets } = get();
+    const bucket = buckets[type];
 
     if (bucket.loading || !bucket.hasMore) return;
 
     set((state) => ({
       buckets: {
         ...state.buckets,
-        [activeType]: { ...bucket, loading: true },
+        [type]: { ...bucket, loading: true },
       },
     }));
 
-    const params: ListFilesRequest = {
-      fileType: activeType,
-    };
+    try {
+      const params: any = {
+        fileType: type,
+      };
 
-    if (bucket.cursor) {
-      params.cursor = bucket.cursor;
-    }
+      if (bucket.cursor) {
+        params.cursor = bucket.cursor;
+      }
 
-    const data = await getFileList(params);
+      const data = await getFileList(params);
 
-    set((state) => {
-      const prev = state.buckets[activeType];
-      const newBuckets = {
-        ...state.buckets,
-        [activeType]: {
-          items: mergeByName(prev.items, data.keys),
-          cursor: data.cursor,
-          hasMore: !data.list_complete,
-          loading: false,
+      set((state) => {
+        const prev = state.buckets[type];
+        const newBuckets = {
+          ...state.buckets,
+          [type]: {
+            items: mergeByName(prev.items, data.keys),
+            cursor: data.cursor,
+            hasMore: !data.list_complete,
+            loading: false,
+          },
+        };
+        return {
+          buckets: newBuckets,
+        };
+      });
+    } catch (error) {
+      console.error(`Failed to fetch bucket ${type}:`, error);
+      set((state) => ({
+        buckets: {
+          ...state.buckets,
+          [type]: { ...bucket, loading: false },
         },
-      };
-      return {
-        buckets: newBuckets,
-      };
-    });
+      }));
+    }
   },
 
   setViewMode: (mode) => {
@@ -263,10 +279,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return { buckets: newBuckets };
     }),
 
-  toggleSelection: (name) =>
+  toggleSelection: (name, type) =>
     set((state) => {
-      const currentType = state.activeType;
-      const current = state.selectedKeys[currentType];
+      const currentType = type ?? state.activeType;
+      const current = state.selectedKeys[currentType] || [];
       const isSelected = current.includes(name);
       return {
         selectedKeys: {
@@ -289,11 +305,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
       };
     }),
 
-  clearSelection: () =>
+  clearSelection: (type) =>
     set((state) => ({
       selectedKeys: {
         ...state.selectedKeys,
-        [state.activeType]: [],
+        [type ?? state.activeType]: [],
       },
     })),
 }));

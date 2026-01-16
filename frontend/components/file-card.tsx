@@ -174,6 +174,8 @@ export function FileContent({
   fileSize,
   loadImageMode,
   thumbUrl,
+  className,
+  imgSrc,
 }: {
   fileType: FileType;
   fileKey: string;
@@ -182,6 +184,8 @@ export function FileContent({
   fileSize?: number;
   loadImageMode: ImageLoadMode;
   thumbUrl?: string;
+  className?: string;
+  imgSrc?: string;
 }) {
   const blur = shouldBlur({ safeMode, tags });
   const load = shouldLoadImage({
@@ -194,7 +198,7 @@ export function FileContent({
   if (fileType === FileType.Image) {
     return (
       <FileImagePreview
-        src={getFileUrl(fileKey)}
+        src={imgSrc || getFileUrl(fileKey)}
         alt={fileKey}
         shouldLoad={load}
         shouldBlur={blur}
@@ -217,14 +221,14 @@ export function FileContent({
         />
       );
     }
-    return <Video className={`${ICON_DISPLAY_SIZE} text-purple-300`} />;
+    return <Video className={`text-purple-300 ${className}`} />;
   }
 
   if (fileType === FileType.Audio) {
-    return <Music className={`${ICON_DISPLAY_SIZE} text-emerald-300`} />;
+    return <Music className={`text-emerald-300 ${className}`} />;
   }
 
-  return <FileText className={`${ICON_DISPLAY_SIZE} text-amber-300`} />;
+  return <FileText className={`text-amber-300 ${className}`} />;
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
@@ -562,6 +566,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 fileSize={file.metadata.fileSize}
                 loadImageMode={imageLoadMode}
                 thumbUrl={file.metadata.thumbUrl}
+                className={ICON_DISPLAY_SIZE}
               />
               {blur && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

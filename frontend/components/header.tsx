@@ -18,7 +18,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { TrashSheet } from "./trash-sheet";
 
 export function Header() {
@@ -26,9 +25,6 @@ export function Header() {
   const setSearchQuery = useFileStore((state) => state.setSearchQuery);
   const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-  const isTrashPage = pathname === "/trash";
 
   // 移动端头部导航栏
   if (isMobile) {
@@ -81,18 +77,8 @@ export function Header() {
               <div className="flex items-center gap-1">
                 <FileTypeDropdown />
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => router.push("/trash")}
-                  className={`h-9 w-9 ${
-                    isTrashPage
-                      ? "text-red-500 bg-red-500/10"
-                      : "text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
+                {/* 回收站按钮 */}
+                <TrashSheet />
 
                 <Button
                   variant="ghost"
