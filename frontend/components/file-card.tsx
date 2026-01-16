@@ -35,7 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
 import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
 import { FileTagBadge } from "@/components/file-tag-badge";
-import { getFileUrl, deleteFile, toggleLike, uploadChunk } from "@/lib/api";
+import { getFileUrl, deleteFile, toggleLike, uploadChunk, moveToTrash } from "@/lib/api";
 import { FileItem, FileTag, ImageLoadMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
 import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
 
@@ -170,6 +170,7 @@ export function FileContent({
   fileType,
   fileKey,
   safeMode,
+  canPreview,
   tags,
   fileSize,
   loadImageMode,
@@ -180,6 +181,7 @@ export function FileContent({
   fileType: FileType;
   fileKey: string;
   safeMode: boolean;
+  canPreview: boolean;
   tags?: FileTag[] | string[];
   fileSize?: number;
   loadImageMode: ImageLoadMode;
@@ -202,7 +204,7 @@ export function FileContent({
         alt={fileKey}
         shouldLoad={load}
         shouldBlur={blur}
-        canPreview={!blur}
+        canPreview={canPreview}
         iconSizeClass={ICON_DISPLAY_SIZE}
       />
     );
@@ -232,13 +234,18 @@ export function FileContent({
 }
 
 export function FileCard({ file, listView = false }: FileCardProps) {
-  const {toggleSelection, deleteFilesLocal, updateFileMetadata, safeMode, imageLoadMode} = useFileStore();
+  const {
+    toggleSelection, 
+    updateFileMetadata, 
+    safeMode, 
+    imageLoadMode,
+    moveToTrashLocal
+  } = useFileStore();
   const selectedKeys = useActiveSelectedKeys();
 
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
-  const resumeInputRef = useState<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelected = selectedKeys.includes(file.name);
@@ -260,8 +267,8 @@ export function FileCard({ file, listView = false }: FileCardProps) {
 
   const handleDelete = () => {
     if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
-    deleteFile(file.name).then(() => {
-      deleteFilesLocal([file.name]);
+    moveToTrash(file.name).then(() => {
+      moveToTrashLocal(file);
       toast({
         title: "文件已移至回收站",
       });
@@ -562,6 +569,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
                 fileType={fileType}
                 fileKey={file.name}
                 safeMode={safeMode}
+                canPreview={!blur}
                 tags={file.metadata?.tags}
                 fileSize={file.metadata.fileSize}
                 loadImageMode={imageLoadMode}

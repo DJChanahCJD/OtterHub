@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
-import { deleteFile, getFileUrl } from "@/lib/api";
+import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ export function BatchOperationsBar() {
     selectAll,
     updateFileMetadata,
     activeType,
+    moveToTrashLocal,
   } = fileStore;
 
   const selectedKeys = useActiveSelectedKeys();
@@ -113,13 +114,13 @@ export function BatchOperationsBar() {
     }
   };
 
-  /** ===== 批量删除（修复 async forEach 问题）===== */
+  /** ===== 批量删除 ===== */
   const handleBatchDelete = async () => {
     if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return;
 
     const results = await Promise.all(
       selectedKeys.map(async (key) => {
-        const success = await deleteFile(key);
+        const success = await moveToTrash(key);
         return { key, success };
       }),
     );
@@ -128,7 +129,7 @@ export function BatchOperationsBar() {
 
     results
       .filter((r) => r.success)
-      .forEach((r) => fileStore.deleteFilesLocal([r.key]));
+      .forEach((r) => moveToTrashLocal(itemMap.get(r.key)!));
 
     if (failed.length > 0) {
       toast({
@@ -213,7 +214,7 @@ export function BatchOperationsBar() {
                 className="min-w-[180px] border-glass-border bg-popover"
               >
                 <DropdownMenuItem
-                  onClick={isAllSelected ? clearSelection : selectAll}
+                  onClick={() => isAllSelected ? clearSelection() : selectAll()}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Check
@@ -254,7 +255,7 @@ export function BatchOperationsBar() {
               size="sm"
               variant="ghost"
               className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={clearSelection}
+              onClick={() => clearSelection()}
             >
               <X className="h-4 w-4" />
             </Button>

@@ -13,12 +13,19 @@ import {
 } from "@/components/ui/sheet";
 import { useFileStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
-import { TrashFileCard } from "@/components/trash-file-card";
-import { deleteFile, restoreFile } from "@/lib/api";
+import { TrashFileCard } from "@/components/trash/trash-file-card";
 import { useToast } from "@/hooks/use-toast";
+import { deleteFile, restoreFile } from "@/lib/api";
 
 export function TrashSheet() {
-  const { buckets, fetchBucket, selectedKeys, deleteFilesLocal, clearSelection, toggleSelection } = useFileStore();
+  const { 
+    buckets, 
+    fetchBucket, 
+    selectedKeys, 
+    clearSelection, 
+    restoreFromTrashLocal,
+    deleteFilesLocalByType,
+  } = useFileStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const { toast } = useToast();
@@ -50,8 +57,12 @@ export function TrashSheet() {
     
     setIsBatchProcessing(true);
     try {
-        await Promise.all(selectedTrashKeys.map(key => restoreFile(key)));
-        deleteFilesLocal(selectedTrashKeys);
+        const selectedItems = trashBucket.items.filter(item => selectedTrashKeys.includes(item.name));
+        await Promise.all(selectedItems.map(item => {
+          return restoreFile(item.name).then(() => {
+            restoreFromTrashLocal(item);
+          });
+        }));
         clearSelection(FileType.Trash);
         
         toast({ title: `已还原 ${selectedTrashKeys.length} 个文件` });
@@ -67,8 +78,12 @@ export function TrashSheet() {
 
     setIsBatchProcessing(true);
     try {
-        await Promise.all(selectedTrashKeys.map(key => deleteFile(key, true)));
-        deleteFilesLocal(selectedTrashKeys);
+        const selectedItems = trashBucket.items.filter(item => selectedTrashKeys.includes(item.name));
+        await Promise.all(selectedItems.map(item => {
+          return deleteFile(item.name).then(() => {
+            deleteFilesLocalByType([item.name], FileType.Trash);
+          });
+        }));
         clearSelection(FileType.Trash);
         toast({ title: `已永久删除 ${selectedTrashKeys.length} 个文件` });
     } catch (error) {
@@ -94,10 +109,10 @@ export function TrashSheet() {
         <SheetHeader className="px-6 py-4 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <Trash2 className="h-5 w-5 text-red-500" />
-            Recycle Bin
+            回收站
           </SheetTitle>
           <SheetDescription className="text-sm text-foreground/80">
-            Items in the trash will be permanently deleted after 30 days.
+            回收站中的文件将在 30 天后永久删除。
           </SheetDescription>
         </SheetHeader>
 

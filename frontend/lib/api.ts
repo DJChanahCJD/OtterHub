@@ -74,16 +74,16 @@ export function getTrashFileUrl(key: string): string {
   return `${API_URL}/api/trash/${key}`;
 }
 
-export function deleteFile(key: string, permanent: boolean = false): Promise<boolean> {
-  if (permanent) {
-    return request<boolean>(`${API_URL}/api/delete/${key}`, {
-      method: "POST",
-    });
-  } else {
-    return request<boolean>(`${API_URL}/api/trash/moveToTrash/${key}`, {
-      method: "POST",
-    });
-  }
+export function deleteFile(key: string): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/delete/${key}`, {
+    method: "POST",
+  });
+}
+
+export function moveToTrash(key: string): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/trash/moveToTrash/${key}`, {
+    method: "POST",
+  });
 }
 
 export function restoreFile(key: string): Promise<boolean> {

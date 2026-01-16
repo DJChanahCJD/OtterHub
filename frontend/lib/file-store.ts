@@ -9,10 +9,12 @@ import {
   SortType,
   SortOrder,
   ImageLoadMode,
+  trashPrefix,
 } from "./types";
-import { deleteFile, getFileList } from "./api";
-import { STORAGE_KEYS, getFromStorage, setToStorage } from "./local-storage";
+import { getFileList } from "./api";
+import { STORAGE_KEYS, setToStorage } from "./local-storage";
 import { useMemo } from "react";
+import { getFileTypeFromKey } from "./utils";
 
 type FileBucket = {
   items: FileItem[];
@@ -73,6 +75,9 @@ interface FileStore {
 
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
+  deleteFilesLocalByType: (names: string[], type: FileType) => void;
+  moveToTrashLocal: (file: FileItem) => Promise<void>;
+  restoreFromTrashLocal: (file: FileItem) => Promise<void>;
   updateFileMetadata: (name: string, metadata: FileMetadata) => void;
   toggleSelection: (name: string, type?: FileType) => void;
   selectAll: () => void;
@@ -151,7 +156,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }));
 
     try {
-      const params: any = {
+      const params: ListFilesRequest = {
         fileType: type,
       };
 
@@ -166,7 +171,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
         const newBuckets = {
           ...state.buckets,
           [type]: {
-            items: mergeByName(prev.items, data.keys),
+            items: bucket.cursor !== undefined ? mergeByName(prev.items, data.keys) : data.keys,
             cursor: data.cursor,
             hasMore: !data.list_complete,
             loading: false,
@@ -237,6 +242,36 @@ export const useFileStore = create<FileStore>((set, get) => ({
     });
   },
 
+  moveToTrashLocal: async (file: FileItem) => {
+    try {
+      const fileType = getFileTypeFromKey(file.name);
+      get().deleteFilesLocalByType([file.name], fileType);
+      
+      file.name = trashPrefix + file.name;
+      get().addFileLocal(file, FileType.Trash);
+    } catch (error) {
+      console.error("Failed to move file to trash:", error);
+      throw error;
+    }
+  },
+
+  restoreFromTrashLocal: async (file: FileItem) => {
+    try {
+      const originalKey = file.name.startsWith(trashPrefix)
+        ? file.name.slice(trashPrefix.length)
+        : file.name;
+      const originalType = getFileTypeFromKey(originalKey);
+
+      get().deleteFilesLocalByType([file.name], FileType.Trash);
+
+      file.name = originalKey;
+      get().addFileLocal(file, originalType);
+    } catch (error) {
+      console.error("Failed to restore file from trash:", error);
+      throw error;
+    }
+  },
+
   deleteFilesLocal: (names: string[]) =>
     set((state) => {
       // 从所有桶中删除文件
@@ -251,8 +286,41 @@ export const useFileStore = create<FileStore>((set, get) => ({
         {} as Record<FileType, FileBucket>
       );
 
+      // 从所有 selection 中移除对应 key
+      const newSelectedKeys = Object.entries(state.selectedKeys).reduce(
+        (acc, [type, keys]) => {
+          acc[type as FileType] = keys.filter((key) => !names.includes(key));
+          return acc;
+        },
+        {} as Record<FileType, string[]>
+      );
+
       return {
         buckets: newBuckets,
+        selectedKeys: newSelectedKeys,
+      };
+    }),
+
+  deleteFilesLocalByType: (names: string[], type: FileType) =>
+    set((state) => {
+      // 从指定类型的桶中删除文件
+      const newBuckets = {
+        ...state.buckets,
+        [type]: {
+          ...state.buckets[type],
+          items: state.buckets[type].items.filter((item) => !names.includes(item.name)),
+        },
+      };
+
+      // 从对应类型的 selection 中移除 key
+      const newSelectedKeys = {
+        ...state.selectedKeys,
+        [type]: (state.selectedKeys[type] || []).filter((key) => !names.includes(key)),
+      };
+
+      return {
+        buckets: newBuckets,
+        selectedKeys: newSelectedKeys,
       };
     }),
 

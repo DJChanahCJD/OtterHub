@@ -18,7 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { TrashSheet } from "./trash-sheet";
+import { TrashSheet } from "./trash/trash-sheet";
 
 export function Header() {
   const searchQuery = useFileStore((state) => state.searchQuery);

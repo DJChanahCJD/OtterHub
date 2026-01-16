@@ -1,24 +1,27 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { RefreshCcw, Trash2, Loader2, AlertTriangle, Check } from "lucide-react";
+import { RefreshCcw, Trash2, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileStore } from "@/lib/file-store";
 import { FileItem, FileType, trashPrefix } from "@/lib/types";
-import { deleteFile, restoreFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { getFileTypeFromKey, formatFileSize, formatTime, cn } from "@/lib/utils";
+import { getFileTypeFromKey, cn } from "@/lib/utils";
 import { FileContent } from "@/components/file-card";
-import { FileTagBadge } from "@/components/file-tag-badge";
-import { shouldBlur } from "@/lib/file-preview";
-import { getTrashFileUrl } from "@/lib/api";
+import { deleteFile, getTrashFileUrl, restoreFile } from "@/lib/api";
 
 interface TrashFileCardProps {
   file: FileItem;
 }
 
 export function TrashFileCard({ file }: TrashFileCardProps) {
-  const { deleteFilesLocal, safeMode, imageLoadMode, toggleSelection, selectedKeys } = useFileStore();
+  const { 
+    imageLoadMode, 
+    toggleSelection, 
+    selectedKeys,
+    restoreFromTrashLocal,
+    deleteFilesLocalByType,
+  } = useFileStore();
   const { toast } = useToast();
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -31,13 +34,27 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
   }, [file.name]);
   const isSelected = selectedKeys[FileType.Trash]?.includes(file.name);
 
+  const remainingText = useMemo(() => {
+    const exp = file.expiration;
+    if (!exp) return "N/A";
+    const ms = exp * 1000 - Date.now();
+    if (ms <= 0) return "Expired";
+    
+    const dayMs = 24 * 60 * 60 * 1000;
+    const hourMs = 60 * 60 * 1000;
+    const days = Math.floor(ms / dayMs);
+    const hours = Math.floor((ms % dayMs) / hourMs);
+    return `剩余 ${days}天${hours}小时`;
+  }, [file.expiration]);
+
   const handleRestore = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
     setIsRestoring(true);
     try {
-      await restoreFile(file.name);
-      deleteFilesLocal([file.name]);
+      await restoreFile(file.name).then(() => {
+        restoreFromTrashLocal(file);
+      });
       toast({ title: "文件已还原" });
     } catch (error) {
       toast({ 
@@ -56,8 +73,9 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
 
     setIsDeleting(true);
     try {
-      await deleteFile(file.name, true);
-      deleteFilesLocal([file.name]);
+      await deleteFile(file.name).then(() => {
+        deleteFilesLocalByType([file.name], fileType);
+      });
       toast({ title: "文件已永久删除" });
     } catch (error) {
       toast({ 
@@ -105,6 +123,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
             fileType={fileType}
             fileKey={file.name}
             safeMode={false}
+            canPreview={false}
             fileSize={file.metadata.fileSize}
             loadImageMode={imageLoadMode}
             thumbUrl={file.metadata.thumbUrl}
@@ -120,9 +139,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <p className={`text-xs ${TextColor}`}>
-            {formatTime(file.metadata.uploadedAt || 0)}
-          </p>
+          <p className={`text-xs ${TextColor}`}>{remainingText}</p>
         </div>
       </div>
 
