@@ -34,7 +34,7 @@ export type FileItem = {
 export type FileMetadata = {
   fileName: string;
   fileSize: number;
-  uploadedAt: number;   // 时间戳
+  uploadedAt: number;   // 时间戳 TODO: 可用于删除时间（还剩多久过期....）
   liked: boolean;      // 是否被收藏
   tags?: FileTag[] | string[];
   chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
