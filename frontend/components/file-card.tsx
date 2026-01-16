@@ -66,6 +66,7 @@ function FileActions({
   onShowDetail: () => void;
   isLiked: boolean;
 }) {
+  const IconColor = "text-foreground/80";
   return (
     <div className="flex items-center gap-1">
       {/* 收藏按钮 */}
@@ -108,7 +109,7 @@ function FileActions({
             onClick={onView}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className={`h-4 w-4 mr-2 ${IconColor}`} />
             View
           </DropdownMenuItem>
 
@@ -117,7 +118,7 @@ function FileActions({
             onClick={onCopyLink}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className={`h-4 w-4 mr-2 ${IconColor}`} />
             Copy Link
           </DropdownMenuItem>
 
@@ -126,7 +127,7 @@ function FileActions({
             onClick={onEdit}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className={`h-4 w-4 mr-2 ${IconColor}`} />
             Edit
           </DropdownMenuItem>
 
@@ -135,7 +136,7 @@ function FileActions({
             onClick={onDownload}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className={`h-4 w-4 mr-2 ${IconColor}`} />
             Download
           </DropdownMenuItem>
 
@@ -144,7 +145,7 @@ function FileActions({
             onClick={onShowDetail}
             className="text-foreground hover:bg-secondary/50"
           >
-            <Info className="h-4 w-4 mr-2" />
+            <Info className={`h-4 w-4 mr-2 ${IconColor}`} />
             Details
           </DropdownMenuItem>
 
@@ -153,7 +154,7 @@ function FileActions({
             onClick={onDelete}
             className="text-red-400 hover:bg-red-500/10"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className={`h-4 w-4 mr-2 ${IconColor}`} />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -257,6 +258,9 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
     deleteFile(file.name).then(() => {
       deleteFilesLocal([file.name]);
+      toast({
+        title: "文件已移至回收站",
+      });
     });
   };
 

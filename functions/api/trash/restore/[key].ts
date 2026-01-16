@@ -1,10 +1,11 @@
 
-import { fail, ok } from "../../utils/common";
-import { CF, trashPrefix } from "../../utils/types";
+import { fail, ok } from "../../../utils/common";
+import { CF, trashPrefix } from "../../../utils/types";
 
 export async function onRequestPost({ env, params }: any) {
   try {
     const trashKey = params.key; // Original key, e.g., 'trash:img:xxx'
+    console.log('Restore file:', trashKey);
     const kv = env[CF.KV_NAME];
 
     // 1. Check if file exists in trash

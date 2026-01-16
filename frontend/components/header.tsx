@@ -19,6 +19,7 @@ import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { TrashSheet } from "./trash-sheet";
 
 export function Header() {
   const searchQuery = useFileStore((state) => state.searchQuery);
@@ -199,19 +200,7 @@ export function Header() {
               )}
             </div>
             {/* 回收站按钮 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              // onClick={() => router.push("/trash")}
-              className={`h-9 w-9 ${
-                isTrashPage
-                  ? "text-red-500 bg-red-500/10"
-                  : "text-foreground hover:bg-secondary/50"
-              }`}
-              title="Recycle Bin"
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
+            <TrashSheet />
             {/* 安全模式切换按钮 */}
             <SafeModeToggle />
             {/* 图片加载模式切换按钮 */}
