@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { FileUploadZone } from "@/components/upload/FileUploadZone";
 import { FileGallery } from "@/components/FileGallery";
 import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
@@ -13,6 +11,8 @@ import {
   useFileStore,
 } from "@/lib/file-store";
 import { ViewMode } from "@/lib/types";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 export default function OtterHubPage() {
   const activeItems = useActiveItems();
