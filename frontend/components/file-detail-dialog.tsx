@@ -11,8 +11,8 @@ import { formatFileSize, formatTime } from "@/lib/utils";
 import { Clock, File, Code, Copy, Check, Tag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { FileTagBadge } from "@/components/file-tag-badge";
+import { toast } from "sonner";
 
 interface FileDetailDialogProps {
   file: FileItem | null;
@@ -26,7 +26,6 @@ export function FileDetailDialog({
   onOpenChange,
 }: FileDetailDialogProps) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   if (!file) return null;
 
@@ -35,9 +34,7 @@ export function FileDetailDialog({
   const handleCopyJson = () => {
     navigator.clipboard.writeText(jsonString);
     setCopied(true);
-    toast({
-      title: "JSON 已复制到剪贴板",
-    });
+    toast.success("JSON 已复制到剪贴板");
     setTimeout(() => setCopied(false), 2000);
   };
 

@@ -14,8 +14,8 @@ import {
 import { useFileStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
 import { TrashFileCard } from "@/components/trash/trash-file-card";
-import { useToast } from "@/hooks/use-toast";
 import { deleteFile, restoreFile } from "@/lib/api";
+import { toast } from "sonner";
 
 export function TrashSheet() {
   const { 
@@ -28,7 +28,6 @@ export function TrashSheet() {
   } = useFileStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const { toast } = useToast();
   
   const trashBucket = buckets[FileType.Trash];
   const isEmpty = trashBucket.items.length === 0;
@@ -65,9 +64,9 @@ export function TrashSheet() {
         }));
         clearSelection(FileType.Trash);
         
-        toast({ title: `已还原 ${selectedTrashKeys.length} 个文件` });
+        toast.success(`已还原 ${selectedTrashKeys.length} 个文件`);
     } catch (error) {
-        toast({ title: "批量还原失败", variant: "destructive" });
+        toast.error("批量还原失败");
     } finally {
         setIsBatchProcessing(false);
     }
@@ -85,9 +84,9 @@ export function TrashSheet() {
           });
         }));
         clearSelection(FileType.Trash);
-        toast({ title: `已永久删除 ${selectedTrashKeys.length} 个文件` });
+        toast.success(`已永久删除 ${selectedTrashKeys.length} 个文件`);
     } catch (error) {
-        toast({ title: "批量删除失败", variant: "destructive" });
+        toast.error("批量删除失败");
     } finally {
         setIsBatchProcessing(false);
     }

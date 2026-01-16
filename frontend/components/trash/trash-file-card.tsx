@@ -5,10 +5,10 @@ import { RefreshCcw, Trash2, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileStore } from "@/lib/file-store";
 import { FileItem, FileType, trashPrefix } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
 import { getFileTypeFromKey, cn } from "@/lib/utils";
 import { FileContent } from "@/components/file-card";
 import { deleteFile, getTrashFileUrl, restoreFile } from "@/lib/api";
+import { toast } from "sonner";
 
 interface TrashFileCardProps {
   file: FileItem;
@@ -22,7 +22,6 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
     restoreFromTrashLocal,
     deleteFilesLocalByType,
   } = useFileStore();
-  const { toast } = useToast();
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -55,13 +54,9 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
       await restoreFile(file.name).then(() => {
         restoreFromTrashLocal(file);
       });
-      toast({ title: "文件已还原" });
+      toast.success("恢复成功");
     } catch (error) {
-      toast({ 
-        title: "还原失败", 
-        description: (error as Error).message,
-        variant: "destructive" 
-      });
+      toast.error("恢复失败")
     } finally {
       setIsRestoring(false);
     }
@@ -76,13 +71,9 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
       await deleteFile(file.name).then(() => {
         deleteFilesLocalByType([file.name], fileType);
       });
-      toast({ title: "文件已永久删除" });
+      toast.success("删除成功");
     } catch (error) {
-      toast({ 
-        title: "删除失败", 
-        description: (error as Error).message,
-        variant: "destructive" 
-      });
+      toast.error("删除失败");
     } finally {
       setIsDeleting(false);
     }

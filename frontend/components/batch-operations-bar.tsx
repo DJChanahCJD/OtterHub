@@ -15,9 +15,9 @@ import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
 import { BatchEditTagsDialog } from "./batch-operations/batch-edit-tags-dialog";
 import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
+import { toast } from "sonner";
 
 export function BatchOperationsBar() {
   const fileStore = useFileStore();
@@ -31,7 +31,6 @@ export function BatchOperationsBar() {
 
   const selectedKeys = useActiveSelectedKeys();
 
-  const { toast } = useToast();
   const [showBatchTags, setShowBatchTags] = useState(false);
   const [showBatchRename, setShowBatchRename] = useState(false);
 
@@ -105,8 +104,7 @@ export function BatchOperationsBar() {
     }
 
     if (oversizedFiles.length > 0) {
-      toast({
-        title: "部分文件未自动下载",
+      toast.error("部分文件未自动下载", {
         description: `以下 ${oversizedFiles.length} 个文件过大，请在新页面使用浏览器原生控件下载：\n${oversizedFiles.join(
           "、",
         )}`,
@@ -132,8 +130,7 @@ export function BatchOperationsBar() {
       .forEach((r) => moveToTrashLocal(itemMap.get(r.key)!));
 
     if (failed.length > 0) {
-      toast({
-        title: "部分文件删除失败",
+      toast.error("部分文件删除失败", {
         description: failed.map((f) => f.key).join("、"),
       });
     }
@@ -154,9 +151,7 @@ export function BatchOperationsBar() {
     const text = urls.join("\n");
     await navigator.clipboard.writeText(text);
 
-    toast({
-      title: `已复制 ${urls.length} 个文件链接`,
-    });
+    toast.success(`已复制 ${urls.length} 个文件链接`);
   };
 
   /** ===== UI ===== */

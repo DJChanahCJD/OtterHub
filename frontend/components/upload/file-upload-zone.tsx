@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from "react"
 import { Upload } from "lucide-react"
 
 import { Progress } from "@/components/ui/progress"
-import { useToast } from "@/hooks/use-toast"
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils"
 import { useFileStore } from "@/lib/file-store"
@@ -22,13 +21,13 @@ import {
   getMissingChunkIndices,
   runBatches,
 } from "./upload-utils"
+import { toast } from "sonner"
 
 export function FileUploadZone() {
   const addFileLocal = useFileStore((s) => s.addFileLocal)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
 
   const processFiles = useCallback(async (files: FileList) => {
     const fileArray = Array.from(files)
@@ -79,10 +78,7 @@ export function FileUploadZone() {
     /** 分片上传 */
     const uploadChunkedFile = async (file: File) => {
       if (file.size >= MAX_FILE_SIZE) {
-        toast({
-          title: `文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`,
-          variant: "destructive",
-        })
+        toast.warning(`文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`)
         return
       }
 
@@ -155,17 +151,12 @@ export function FileUploadZone() {
     }
 
     if (successCount > 0) {
-      toast({
-        title: "上传成功",
-        description: `成功上传 ${successCount} 个文件`,
-      })
+      toast.success(`成功上传 ${successCount} 个文件`)
     }
 
     if (failed.length) {
-      toast({
-        title: "部分文件失败",
+      toast.error(`${failed.length}个文件上传失败`, {
         description: failed.join(", "),
-        variant: "destructive",
       })
     }
   }, [addFileLocal, toast])

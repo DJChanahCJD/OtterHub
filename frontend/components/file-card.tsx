@@ -31,13 +31,13 @@ import {
 import { useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
 import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
 import { FileImagePreview } from "@/components/file-image-preview";
-import { useToast } from "@/hooks/use-toast";
 import { FileDetailDialog } from "@/components/file-detail-dialog";
 import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
 import { FileTagBadge } from "@/components/file-tag-badge";
 import { getFileUrl, deleteFile, toggleLike, uploadChunk, moveToTrash } from "@/lib/api";
 import { FileItem, FileTag, ImageLoadMode, MAX_CONCURRENTS, MAX_CHUNK_SIZE, FileType } from "@/lib/types";
 import { getFileTypeFromKey, downloadFile, cn, formatFileSize, formatTime } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface FileCardProps {
   file: FileItem;
@@ -258,7 +258,6 @@ export function FileCard({ file, listView = false }: FileCardProps) {
   // 只计算一次文件类型，提高性能
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
 
-  const { toast } = useToast();
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -269,18 +268,14 @@ export function FileCard({ file, listView = false }: FileCardProps) {
     if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
     moveToTrash(file.name).then(() => {
       moveToTrashLocal(file);
-      toast({
-        title: "文件已移至回收站",
-      });
+      toast.success("已移入回收站")
     });
   };
 
   const handleCopyLink = () => {
     const url = getFileUrl(file.name);
     navigator.clipboard.writeText(url);
-    toast({
-      title: "文件链接复制成功~",
-    });
+    toast.success("文件链接复制成功~")
   };
   
   const handleDownload = () => {
@@ -332,11 +327,7 @@ export function FileCard({ file, listView = false }: FileCardProps) {
       selectedFile.name !== file.metadata.fileName ||
       selectedFile.size !== file.metadata.fileSize
     ) {
-      toast({
-        title: "文件不匹配",
-        description: "请选择相同的文件以继续上传",
-        variant: "destructive",
-      });
+      toast.error("文件不匹配")
       return;
     }
 
@@ -373,17 +364,10 @@ export function FileCard({ file, listView = false }: FileCardProps) {
       await new Promise((resolve) => setTimeout(resolve, 500)); // 等待后端更新
       window.location.reload(); // 刷新页面获取最新状态
 
-      toast({
-        title: "继续上传成功",
-        description: `已成功上传 ${chunkIndicesToUpload.length} 个缺失分片`,
-      });
+      toast.success(`上传成功`)
     } catch (error) {
       console.error("继续上传失败:", error);
-      toast({
-        title: "继续上传失败",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
+      toast.error("继续上传失败")
     } finally {
       setIsResuming(false);
     }

@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, Tag, Info } from "lucide-react";
 import { BatchTagEditor } from "./batch-tag-editor";
 import { applyTagStates, calcOriginalTagStates, hasAnyTagChange, nextTagState, TagStateMap } from "@/lib/tag-utils";
@@ -29,7 +29,6 @@ export function BatchEditTagsDialog({
   onOpenChange,
   onSuccess,
 }: BatchAddTagsDialogProps) {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 计算原始状态（只算一次，作为基准）
@@ -58,9 +57,7 @@ export function BatchEditTagsDialog({
 
     // 如果没有任何变化，直接退出
     if (!hasAnyTagChange(currentStates, originalStates)) {
-      toast({
-        title: "没有标签变更",
-      });
+      toast.info("没有标签变更");
       onOpenChange(false);
       return;
     }
@@ -87,18 +84,14 @@ export function BatchEditTagsDialog({
         }),
       );
 
-      toast({
-        title: `成功更新 ${files.length} 个文件的标签`,
-      });
+      toast(`成功更新 ${files.length} 个文件的标签`);
 
       onOpenChange(false);
       onSuccess?.(updatedFiles);
     } catch (error) {
       console.error("Error updating tags:", error);
-      toast({
-        title: "更新标签失败",
+      toast.error("更新标签失败", {
         description: error instanceof Error ? error.message : "未知错误",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

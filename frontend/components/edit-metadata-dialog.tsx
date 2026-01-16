@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TagSelector } from "@/components/tag-selector";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditMetadataDialogProps {
   file: FileItem | null;
@@ -30,7 +30,6 @@ export function EditMetadataDialog({
   onOpenChange,
   onSuccess,
 }: EditMetadataDialogProps) {
-  const { toast } = useToast();
   const [fileName, setFileName] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,10 +48,7 @@ export function EditMetadataDialog({
     if (!file) return;
 
     if (!fileName.trim()) {
-      toast({
-        title: "文件名不能为空",
-        variant: "destructive",
-      });
+      toast.warning("文件名不能为空");
       return;
     }
 
@@ -66,18 +62,15 @@ export function EditMetadataDialog({
 
       await editMetadata(file.name, updatedMetadata);
 
-      toast({
-        title: "元数据更新成功",
-      });
+
+        toast.success("元数据更新成功");
 
       onOpenChange(false);
       onSuccess?.(updatedMetadata);
     } catch (error) {
       console.error("Error updating metadata:", error);
-      toast({
-        title: "更新失败",
+      toast.error("更新失败", {
         description: error instanceof Error ? error.message : "未知错误",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

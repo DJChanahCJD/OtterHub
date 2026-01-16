@@ -11,7 +11,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2, FilePen, Info, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -22,6 +21,7 @@ import {
   hasRenameChange,
   previewRename,
 } from "@/lib/rename-utils";
+import { toast } from "sonner";
 
 interface BatchRenameDialogProps {
   files: FileItem[];
@@ -58,7 +58,6 @@ export function BatchRenameDialog({
   onOpenChange,
   onSuccess,
 }: BatchRenameDialogProps) {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [mode, setMode] = useState<BatchRenameMode>("none");
@@ -80,9 +79,7 @@ export function BatchRenameDialog({
 
     // 如果没有任何变化，直接退出
     if (!hasRenameChange(files, payload)) {
-      toast({
-        title: "文件名未发生变化",
-      });
+      toast.info("文件名未发生变化");
       onOpenChange(false);
       return;
     }
@@ -102,21 +99,17 @@ export function BatchRenameDialog({
             name: file.name,
             fileName: newFileName,
           });
-        }),
+        })
       );
 
-      toast({
-        title: `成功重命名 ${files.length} 个文件`,
-      });
+      toast.success(`成功重命名 ${files.length} 个文件`);
 
       onOpenChange(false);
       onSuccess?.(updatedFiles);
     } catch (error) {
       console.error("Error renaming files:", error);
-      toast({
-        title: "重命名失败",
+      toast.error(`重命名 ${files.length} 个文件失败`, {
         description: error instanceof Error ? error.message : "未知错误",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -145,7 +138,9 @@ export function BatchRenameDialog({
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Info className="h-4 w-4 text-primary" />
               已选中{" "}
-              <span className="font-bold text-primary">{files.length}</span>{" "}
+              <span className="font-bold text-primary">
+                {files.length}
+              </span>{" "}
               个文件
             </p>
           </div>
@@ -192,14 +187,21 @@ export function BatchRenameDialog({
           {/* 输入框 */}
           {mode !== "none" && (
             <div className="space-y-2">
-              <Label htmlFor="rename-value" className="text-muted-foreground text-sm">
+              <Label
+                htmlFor="rename-value"
+                className="text-muted-foreground text-sm"
+              >
                 {MODE_LABELS[mode].label}内容
               </Label>
               <Input
                 id="rename-value"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                placeholder={mode === "basename" ? "输入新文件名（不含扩展名）" : "输入要添加的内容"}
+                placeholder={
+                  mode === "basename"
+                    ? "输入新文件名（不含扩展名）"
+                    : "输入要添加的内容"
+                }
                 disabled={isSubmitting}
                 className="bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
                 autoFocus
@@ -210,14 +212,19 @@ export function BatchRenameDialog({
           {/* 预览 */}
           {mode !== "none" && value && previews.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">预览（前5个）</Label>
+              <Label className="text-muted-foreground text-sm">
+                预览（前5个）
+              </Label>
               <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border space-y-2">
                 {previews.map((preview, index) => (
                   <div
                     key={index}
                     className="flex items-center gap-2 text-sm font-mono"
                   >
-                    <span className="text-muted-foreground truncate flex-1" title={preview.original}>
+                    <span
+                      className="text-muted-foreground truncate flex-1"
+                      title={preview.original}
+                    >
                       {preview.original}
                     </span>
                     <ArrowRight className="h-3.5 w-3.5 text-primary flex-shrink-0" />
