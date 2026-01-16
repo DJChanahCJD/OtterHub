@@ -1,4 +1,5 @@
 
+import { deleteCache, deleteFileCache } from "../../../utils/cache";
 import { fail, ok } from "../../../utils/common";
 import { DBAdapterFactory } from "../../../utils/db-adapter";
 import { CF, trashPrefix } from "../../../utils/types";
@@ -33,11 +34,9 @@ export async function onRequestPost({ env, params, request }: any) {
     await kv.delete(key);
     
     // 删除缓存
-    const cache = caches.default;
     const url = new URL(request.url);
-    const fileUrl = `${url.origin}/file/${key}`;
-    await cache.delete(fileUrl); // 清理文件访问缓存
-    await cache.delete(request.url); // 清理API缓存
+    await deleteCache(request);
+    await deleteFileCache(url.origin, key);
 
     return ok(key, 'File moved to trash');
   } catch (error: any) {
