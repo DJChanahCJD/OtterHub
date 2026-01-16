@@ -34,7 +34,7 @@ interface Props {
 
 const ITEMS_PER_PAGE_OPTIONS = [20, 50, 100, 200, 1000];
 
-export function PaginationWithLoadMore({
+export function Pagination({
   totalItems,
   itemsPerPage,
   hasMore,

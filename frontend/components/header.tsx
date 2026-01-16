@@ -10,15 +10,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { FileTypeTabs } from "@/components/file-type-tabs";
-import { FileTypeDropdown } from "@/components/file-type-dropdown";
-import { SafeModeToggle } from "@/components/safe-mode-toggle";
-import { ImageLoadModeToggle } from "@/components/browse-mode-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { FileTypeTabs } from "@/components/FileTypeTabs";
+import { FileTypeDropdown } from "@/components/FileTypeDropdown";
+import { SafeModeToggle } from "@/components/SafeModeToggle";
+import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { TrashSheet } from "./trash/trash-sheet";
+import { TrashSheet } from "./trash/TrashSheet";
 
 export function Header() {
   const searchQuery = useFileStore((state) => state.searchQuery);
@@ -77,9 +77,6 @@ export function Header() {
               <div className="flex items-center gap-1">
                 <FileTypeDropdown />
 
-                {/* 回收站按钮 */}
-                <TrashSheet />
-
                 <Button
                   variant="ghost"
                   size="icon"
@@ -88,6 +85,9 @@ export function Header() {
                 >
                   <Search className="h-5 w-5" />
                 </Button>
+
+                {/* 回收站按钮 */}
+                <TrashSheet />
 
                 <Sheet>
                   <SheetTrigger asChild>

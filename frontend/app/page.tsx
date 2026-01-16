@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { FileUploadZone } from "@/components/upload/file-upload-zone";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { FileUploadZone } from "@/components/upload/FileUploadZone";
 import { FileGallery } from "@/components/FileGallery";
-import { BatchOperationsBar } from "@/components/batch-operations-bar";
-import { EmptyState } from "@/components/empty-state";
+import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
+import { EmptyState } from "@/components/EmptyState";
 import {
   useActiveItems,
   useActiveSelectedKeys,

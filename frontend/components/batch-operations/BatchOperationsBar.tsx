@@ -15,8 +15,8 @@ import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
-import { BatchEditTagsDialog } from "./batch-operations/batch-edit-tags-dialog";
-import { BatchRenameDialog } from "./batch-operations/batch-rename-dialog";
+import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
+import { BatchRenameDialog } from "./BatchRenameDialog";
 import { toast } from "sonner";
 
 export function BatchOperationsBar() {

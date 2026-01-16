@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TagSelector } from "@/components/tag-selector";
+import { TagSelector } from "@/components/TagSelector";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

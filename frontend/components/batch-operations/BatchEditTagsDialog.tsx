@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Tag, Info } from "lucide-react";
-import { BatchTagEditor } from "./batch-tag-editor";
+import { BatchTagEditor } from "./BatchTagEditor";
 import { applyTagStates, calcOriginalTagStates, hasAnyTagChange, nextTagState, TagStateMap } from "@/lib/tag-utils";
 
 interface BatchAddTagsDialogProps {

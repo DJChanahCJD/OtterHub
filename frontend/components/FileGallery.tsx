@@ -6,13 +6,13 @@ import {
   useActiveBucket,
 } from "@/lib/file-store";
 import { FileCard } from "@/components/file-card";
-import { ViewModeToggle } from "@/components/view-mode-toggle";
-import { SortTypeDropdown } from "@/components/sort-type-dropdown";
-import { PaginationWithLoadMore } from "@/components/pagination/pagination-with-load-more";
+import { ViewModeToggle } from "@/components/ViewModeToggle";
+import { SortTypeDropdown } from "@/components/SortTypeDropdown";
+import { Pagination } from "@/components/Pagination";
 import { ViewMode } from "@/lib/types";
 import { ChevronDown } from "lucide-react";
 import { useInitFileStore } from "@/hooks/use-init-file-store";
-import { VirtualMasonryGrid } from "./masonry/virtual-masonry-grid";
+import { MasonryGrid } from "./masonry/MasonryGrid";
 
 function FileViewRenderer({
   viewMode,
@@ -35,7 +35,7 @@ function FileViewRenderer({
   if (viewMode === ViewMode.Masonry) {
     return (
       <div className="w-full min-w-0">
-        <VirtualMasonryGrid files={files} />
+        <MasonryGrid files={files} />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function FileGallery() {
       <FileViewRenderer viewMode={viewMode} files={currentFiles} />
 
       {viewMode !== ViewMode.Masonry && (
-        <PaginationWithLoadMore
+        <Pagination
           totalItems={files.length}
           itemsPerPage={itemsPerPage}
           hasMore={bucket.hasMore}

@@ -11,7 +11,7 @@ import { formatFileSize, formatTime } from "@/lib/utils";
 import { Clock, File, Code, Copy, Check, Tag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileTagBadge } from "@/components/file-tag-badge";
+import { FileTagBadge } from "@/components/FileTagBadge";
 import { toast } from "sonner";
 
 interface FileDetailDialogProps {

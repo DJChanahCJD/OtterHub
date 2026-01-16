@@ -4,7 +4,7 @@ import { useFileStore } from "@/lib/file-store";
 import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
-import { FileImagePreview } from "@/components/file-image-preview";
+import { FileImagePreview } from "@/components/FileImagePreview";
 import { SMART_NO_IMAGE_THRESHOLD } from "../file-card";
 import { NsfwSign } from "../file-card/NsfwSign";
 

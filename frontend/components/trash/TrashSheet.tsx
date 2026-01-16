@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { useFileStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
-import { TrashFileCard } from "@/components/trash/trash-file-card";
+import { TrashFileCard } from "@/components/trash/TrashFileCard";
 import { deleteFile, restoreFile } from "@/lib/api";
 import { toast } from "sonner";
 

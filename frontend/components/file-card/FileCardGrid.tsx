@@ -1,8 +1,8 @@
 import { Check, AlertTriangle, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileTagBadge } from "@/components/file-tag-badge";
-import { FileDetailDialog } from "@/components/file-detail-dialog";
-import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
+import { FileTagBadge } from "@/components/FileTagBadge";
+import { FileDetailDialog } from "@/components/FileDetailDialog";
+import { EditMetadataDialog } from "@/components/EditMetadataDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";
 import { FileItem } from "@/lib/types";

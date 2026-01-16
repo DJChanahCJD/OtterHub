@@ -1,8 +1,8 @@
-import { Check, Video, Music, File, Loader2, RotateCw } from "lucide-react";
+import { Video, Music, Loader2, RotateCw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileTagBadge } from "@/components/file-tag-badge";
-import { FileDetailDialog } from "@/components/file-detail-dialog";
-import { EditMetadataDialog } from "@/components/edit-metadata-dialog";
+import { FileTagBadge } from "@/components/FileTagBadge";
+import { FileDetailDialog } from "@/components/FileDetailDialog";
+import { EditMetadataDialog } from "@/components/EditMetadataDialog";
 import { FileActions } from "./FileActions";
 import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
@@ -76,7 +76,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
           ) : fileType === FileType.Audio ? (
             <Music className="h-6 w-6 text-emerald-400" />
           ) : (
-            <File className="h-6 w-6 text-emerald-400" />
+            <FileText className="h-6 w-6 text-amber-400" />
           )}
         </div>
 

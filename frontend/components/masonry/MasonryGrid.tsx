@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { Masonry } from "masonic";
-import { MasonryImageCard } from "@/components/masonry/masonry-image-card";
+import { MasonryImageCard } from "@/components/masonry/MasonryImageCard";
 import { FileItem } from "@/lib/types";
 
 interface VirtualMasonryGridProps {
@@ -21,7 +21,7 @@ const RESPONSIVE_COLUMN_WIDTHS = {
   desktop: 300,   // > 1024px
 } as const;
 
-export function VirtualMasonryGrid({
+export function MasonryGrid({
   files,
   columnGutter = DEFAULT_COLUMN_GUTTER,
   overscanBy = DEFAULT_OVERSCAN,
