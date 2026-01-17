@@ -14,6 +14,8 @@ import {
 import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { check } from "@/lib/api";
 
 export default function OtterHubPage() {
   const activeItems = useActiveItems();
@@ -27,8 +29,13 @@ export default function OtterHubPage() {
   const showBatchBar = selectedKeys.length > 0 && isListOrGrid;
 
   const isEmpty = activeItems.length === 0;
-
+  
   useEffect(() => {
+    // 进入页面时检查登录状态
+    check().catch((error) => {
+      console.error("[OtterHubPage] Auth check failed:", error);
+    });
+
     fetchNextPage().catch((error) => {
       console.error("[OtterHubPage] fetch files failed:", error);
     });
@@ -46,6 +53,8 @@ export default function OtterHubPage() {
         </main>
 
         {showBatchBar && <BatchOperationsBar />}
+
+        <FloatingActionButton />
 
         <Footer />
       </div>

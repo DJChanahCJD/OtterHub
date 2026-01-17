@@ -13,6 +13,13 @@ export const API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   (typeof window !== "undefined" ? window.location.origin : "");
 
+// 检查是否已登录
+export function check(): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/check`, {
+    method: "GET",
+  });
+}
+
 export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
