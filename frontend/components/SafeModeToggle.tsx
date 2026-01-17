@@ -8,12 +8,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useFileStore } from "@/lib/file-store"
+import { useFileUIStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
 
 export function SafeModeToggle() {
-  const safeMode = useFileStore((state) => state.safeMode)
-  const setSafeMode = useFileStore((state) => state.setSafeMode)
+  const { safeMode, setSafeMode } = useFileUIStore()
 
   return (
     <TooltipProvider>

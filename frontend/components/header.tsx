@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, X, Settings, Sheet } from "lucide-react";
-import { useFileStore } from "@/lib/file-store";
+import { useFileQueryStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { TrashSheet } from "./trash/TrashSheet";
@@ -15,8 +15,7 @@ import { Input } from "./ui/input";
 import { SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 
 export function Header() {
-  const searchQuery = useFileStore((state) => state.searchQuery);
-  const setSearchQuery = useFileStore((state) => state.setSearchQuery);
+  const { searchQuery, setSearchQuery } = useFileQueryStore();
   const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 

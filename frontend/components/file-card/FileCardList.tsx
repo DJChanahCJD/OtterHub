@@ -36,20 +36,20 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     handleResumeUpload,
   } = actions;
 
+  const tags = file.metadata?.tags ?? [];
   return (
     <>
       <div
         className={cn(
-          "group flex items-center gap-4 p-4 rounded-lg backdrop-blur-xl border transition-all cursor-pointer",
+          "group flex items-center gap-3 px-3 py-2 rounded-md backdrop-blur-xl border transition-all cursor-pointer",
           isSelected
             ? "bg-primary/20 border-primary/50"
-            : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/30"
+            : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/30",
         )}
         onClick={handleSelect}
-
       >
         {/* File Icon/Preview */}
-        <div className="w-12 h-12 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden">
+        <div className="w-9 h-9 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden">
           {fileType === FileType.Image ? (
             <img
               src={getFileUrl(file.name)}
@@ -58,7 +58,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
               decoding="async"
               className={cn(
                 "w-full h-full object-cover rounded transition-all duration-300",
-                blur && "blur-xs"
+                blur && "blur-xs",
               )}
             />
           ) : fileType === FileType.Video ? (
@@ -82,23 +82,26 @@ export function FileCardList({ file, actions }: FileCardListProps) {
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground truncate">
-              {file.metadata.fileName}
-            </p>
-            <div className="flex gap-1 shrink-0">
-              {file.metadata?.tags?.map((tag) => (
-                <FileTagBadge key={tag} tag={tag} />
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-foreground/50">
-            {formatFileSize(file.metadata.fileSize || 0)}
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate">
+            {file.metadata.fileName}
           </p>
+          <span className="text-xs text-foreground/40 shrink-0">
+            {formatFileSize(file.metadata.fileSize || 0)}
+          </span>
+          <div className="flex gap-1 shrink-0">
+            {tags.map((tag) => (
+              <FileTagBadge key={tag} tag={tag} />
+            ))}
+          </div>
+          </div>
         </div>
 
         {/* Date */}
-        <div className="hidden md:block text-xs text-foreground/50" title="上传时间">
+        <div
+          className="hidden md:block text-xs text-foreground/50"
+          title="上传时间"
+        >
           {formatTime(file.metadata.uploadedAt || 0)}
         </div>
 
@@ -119,7 +122,8 @@ export function FileCardList({ file, actions }: FileCardListProps) {
             ) : (
               <RotateCw className="h-4 w-4 mr-1" />
             )}
-            ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/{file.metadata.chunkInfo!.total})
+            ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/
+            {file.metadata.chunkInfo!.total})
           </Button>
         )}
 
@@ -135,6 +139,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
           isLiked={file.metadata?.liked || false}
         />
       </div>
+
       <FileDetailDialog
         file={file}
         open={showDetail}

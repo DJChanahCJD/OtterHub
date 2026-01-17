@@ -20,7 +20,7 @@ import {
   BatchRenamePayload,
   hasRenameChange,
   previewRename,
-} from "@/lib/rename-utils";
+} from "@/lib/utils";
 import { toast } from "sonner";
 
 interface BatchRenameDialogProps {

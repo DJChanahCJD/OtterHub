@@ -3,7 +3,7 @@
 import { X, Plus, Tag } from "lucide-react";
 import { FileTag } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { TAG_CONFIG } from "@/lib/tag-utils";
+import { TAG_CONFIG } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,

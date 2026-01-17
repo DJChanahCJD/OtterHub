@@ -1,19 +1,23 @@
 import { useState, useMemo, useRef } from "react";
-import { useFileStore, useActiveSelectedKeys } from "@/lib/file-store";
+import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/lib/file-store";
 import { getFileTypeFromKey, downloadFile } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
 import { FileItem, MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
 import { toast } from "sonner";
-import { shouldBlur } from "@/lib/file-preview";
+import { shouldBlur } from "@/lib/utils";
 
 export function useFileCardActions(file: FileItem) {
   const {
-    toggleSelection,
     updateFileMetadata,
+    moveToTrashLocal,
+  } = useFileDataStore();
+  
+  const {
+    toggleSelection,
     safeMode,
     imageLoadMode,
-    moveToTrashLocal,
-  } = useFileStore();
+  } = useFileUIStore();
+
   const selectedKeys = useActiveSelectedKeys();
 
   const [showDetail, setShowDetail] = useState(false);
@@ -30,7 +34,7 @@ export function useFileCardActions(file: FileItem) {
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleSelection(file.name);
+    toggleSelection(file.name, fileType);
   };
 
   const handleDelete = () => {

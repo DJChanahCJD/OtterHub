@@ -2,16 +2,14 @@
 
 import { Grid3x3, LayoutTemplate, List, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useFileStore } from "@/lib/file-store"
+import { useFileDataStore } from "@/lib/file-store"
+import { useFileUIStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
 import { FileType, ViewMode } from "@/lib/types"
-import { openExternalLink } from "@/lib/utils"
-import { FREE_MUSIC_URL } from "@/lib/music-api"
 
 export function ViewModeToggle() {
-  const viewMode = useFileStore((state) => state.viewMode)
-  const setViewMode = useFileStore((state) => state.setViewMode)
-  const activeType = useFileStore((state) => state.activeType)
+  const { viewMode, setViewMode } = useFileUIStore()
+  const activeType = useFileDataStore((state) => state.activeType)
 
   return (
     <div className="flex items-center gap-1 p-1 rounded-lg bg-glass-bg border border-glass-border">

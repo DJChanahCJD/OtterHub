@@ -4,7 +4,7 @@ import {
   FileText,
   AlertTriangle,
 } from "lucide-react";
-import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
+import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
 import { FileTag, ImageLoadMode, FileType } from "@/lib/types";
 import { FileImagePreview } from "../FileImagePreview";

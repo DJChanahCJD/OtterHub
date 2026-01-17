@@ -6,7 +6,8 @@ import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils"
-import { useFileStore } from "@/lib/file-store"
+import { useFileDataStore } from "@/lib/file-store"
+
 import {
   FileItem,
   FileTag,
@@ -24,7 +25,7 @@ import {
 import { toast } from "sonner"
 
 export function FileUploadZone() {
-  const addFileLocal = useFileStore((s) => s.addFileLocal)
+  const addFileLocal = useFileDataStore((s) => s.addFileLocal)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)

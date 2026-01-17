@@ -11,7 +11,8 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { useFileStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
 import { TrashFileCard } from "@/components/trash/TrashFileCard";
 import { deleteFile, restoreFile } from "@/lib/api";
@@ -21,11 +22,13 @@ export function TrashSheet() {
   const { 
     buckets, 
     fetchBucket, 
-    selectedKeys, 
-    clearSelection, 
     restoreFromTrashLocal,
     deleteFilesLocalByType,
-  } = useFileStore();
+  } = useFileDataStore();
+  const {
+    selectedKeys,
+    clearSelection,
+  } = useFileUIStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   

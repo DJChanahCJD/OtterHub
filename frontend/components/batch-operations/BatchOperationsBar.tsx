@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useActiveItems, useActiveSelectedKeys, useFileStore } from "@/lib/file-store";
+import { useFileDataStore, useActiveItems } from "@/lib/file-store";
+import { useFileUIStore, useActiveSelectedKeys } from "@/lib/file-store";
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
@@ -20,14 +21,16 @@ import { BatchRenameDialog } from "./BatchRenameDialog";
 import { toast } from "sonner";
 
 export function BatchOperationsBar() {
-  const fileStore = useFileStore();
+  const {
+    activeType,
+    updateFileMetadata,
+    moveToTrashLocal,
+  } = useFileDataStore();
+  
   const {
     clearSelection,
     selectAll,
-    updateFileMetadata,
-    activeType,
-    moveToTrashLocal,
-  } = fileStore;
+  } = useFileUIStore();
 
   const selectedKeys = useActiveSelectedKeys();
 
@@ -134,8 +137,8 @@ export function BatchOperationsBar() {
         description: failed.map((f) => f.key).join("、"),
       });
     }
-
-    clearSelection();
+  
+    clearSelection(activeType);
   };
 
   /** ===== 批量复制 ===== */
@@ -205,7 +208,7 @@ export function BatchOperationsBar() {
                 className="min-w-[180px] border-glass-border bg-popover"
               >
                 <DropdownMenuItem
-                  onClick={() => isAllSelected ? clearSelection() : selectAll()}
+                  onClick={() => isAllSelected ? clearSelection(activeType) : selectAll(items.map(i => i.name), activeType)}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Check
@@ -246,7 +249,7 @@ export function BatchOperationsBar() {
               size="sm"
               variant="ghost"
               className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={() => clearSelection()}
+              onClick={() => clearSelection(activeType)}
             >
               <X className="h-4 w-4" />
             </Button>

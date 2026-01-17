@@ -7,8 +7,9 @@ import { BatchOperationsBar } from "@/components/batch-operations/BatchOperation
 import { EmptyState } from "@/components/EmptyState";
 import {
   useActiveItems,
+  useFileDataStore,
+  useFileUIStore,
   useActiveSelectedKeys,
-  useFileStore,
 } from "@/lib/file-store";
 import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
@@ -18,7 +19,8 @@ export default function OtterHubPage() {
   const activeItems = useActiveItems();
   const selectedKeys = useActiveSelectedKeys();
 
-  const { fetchNextPage, viewMode } = useFileStore();
+  const { fetchNextPage } = useFileDataStore();
+  const { viewMode } = useFileUIStore();
 
   const isListOrGrid = [ViewMode.Grid, ViewMode.List].includes(viewMode);
 

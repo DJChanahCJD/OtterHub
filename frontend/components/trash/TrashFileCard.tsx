@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { RefreshCcw, Trash2, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFileStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/lib/file-store";
 import { FileItem, FileType, trashPrefix } from "@/lib/types";
 import { getFileTypeFromKey, cn } from "@/lib/utils";
 import { FileContent } from "@/components/file-card";
@@ -16,12 +17,15 @@ interface TrashFileCardProps {
 
 export function TrashFileCard({ file }: TrashFileCardProps) {
   const { 
+    restoreFromTrashLocal,
+    deleteFilesLocalByType,
+  } = useFileDataStore();
+
+  const { 
     imageLoadMode, 
     toggleSelection, 
     selectedKeys,
-    restoreFromTrashLocal,
-    deleteFilesLocalByType,
-  } = useFileStore();
+  } = useFileUIStore();
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

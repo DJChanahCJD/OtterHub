@@ -2,7 +2,7 @@
 
 import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFileStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
 import { STORAGE_KEYS, getFromStorage } from "@/lib/local-storage";
 import { useEffect } from "react";
@@ -15,8 +15,8 @@ const fileTypes = [
 ];
 
 export function FileTypeTabs() {
-  const activeType = useFileStore((s) => s.activeType);
-  const setActiveType = useFileStore((s) => s.setActiveType);
+  const activeType = useFileDataStore((s) => s.activeType);
+  const setActiveType = useFileDataStore((s) => s.setActiveType);
 
   useEffect(() => {
     setActiveType(getFromStorage(STORAGE_KEYS.ACTIVE_TYPE, FileType.Image));

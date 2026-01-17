@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFileStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/lib/file-store";
 import { ImageLoadMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,7 @@ const MODES = {
 };
 
 export function ImageLoadModeToggle() {
-  const { imageLoadMode, setImageLoadMode } = useFileStore();
+  const { imageLoadMode, setImageLoadMode } = useFileUIStore();
   const Icon = MODES[imageLoadMode].icon;
 
   return (

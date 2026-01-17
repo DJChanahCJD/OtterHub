@@ -1,9 +1,9 @@
 "use client";
 
-import { useFileStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/lib/file-store";
 import { FileItem, FileType } from "@/lib/types";
 import { getFileUrl } from "@/lib/api";
-import { shouldBlur, shouldLoadImage } from "@/lib/file-preview";
+import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { PhotoView } from "react-photo-view";
 import { cn } from "@/lib/utils";
 import { SMART_NO_IMAGE_THRESHOLD } from "../file-card";
@@ -14,8 +14,7 @@ interface MasonryImageCardProps {
 }
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
-  const safeMode = useFileStore((state) => state.safeMode);
-  const loadImageMode = useFileStore((state) => state.imageLoadMode);
+  const { safeMode, imageLoadMode: loadImageMode } = useFileUIStore();
 
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const load = shouldLoadImage({

@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFileStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/lib/file-store";
 import { FileType } from "@/lib/types";
 
 const fileTypes = [
@@ -19,8 +19,8 @@ const fileTypes = [
 ];
 
 export function FileTypeDropdown() {
-  const activeType = useFileStore((s) => s.activeType);
-  const setActiveType = useFileStore((s) => s.setActiveType);
+  const activeType = useFileDataStore((s) => s.activeType);
+  const setActiveType = useFileDataStore((s) => s.setActiveType);
 
   const currentType = fileTypes.find((type) => type.id === activeType);
 

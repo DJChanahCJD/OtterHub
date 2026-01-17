@@ -3,7 +3,7 @@
 import { Check, Minus, Tag } from "lucide-react";
 import { FileTag } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { BatchTagState, TagStateMap, getTagIntent, TAG_CONFIG } from "@/lib/tag-utils";
+import { BatchTagState, TagStateMap, getTagIntent, TAG_CONFIG } from "@/lib/utils";
 
 interface BatchTagEditorProps {
   currentStates: TagStateMap;
