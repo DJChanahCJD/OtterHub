@@ -99,6 +99,7 @@ export function FileGallery() {
         <Pagination
           totalItems={files.length}
           itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
           hasMore={bucket.hasMore}
           loading={bucket.loading}
           onPageChange={handlePageChange}

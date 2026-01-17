@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   totalItems: number;
   itemsPerPage: number;
+  currentPage: number;
   hasMore: boolean;
   loading: boolean;
   error?: boolean;
@@ -37,6 +38,7 @@ const ITEMS_PER_PAGE_OPTIONS = [20, 50, 100, 200, 1000];
 export function Pagination({
   totalItems,
   itemsPerPage,
+  currentPage,
   hasMore,
   loading,
   error,
@@ -73,7 +75,7 @@ export function Pagination({
         breakLinkClassName="min-w-[36px] h-9 flex items-center justify-center text-muted-foreground"
         activeClassName="bg-primary/20 text-primary font-medium"
         disabledClassName="opacity-50 cursor-not-allowed"
-        forcePage={undefined}
+        forcePage={currentPage}
       />
 
       {hasMore && (
