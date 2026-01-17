@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X, Settings, Sheet } from "lucide-react";
+import { Search, X, Settings } from "lucide-react";
 import { useFileQueryStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import { ImageLoadModeToggle } from "./ImageLoadModeToggle";
 import { SafeModeToggle } from "./SafeModeToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "./ui/input";
-import { SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 
 export function Header() {
   const { searchQuery, setSearchQuery } = useFileQueryStore();
@@ -51,7 +51,7 @@ export function Header() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-foreground/60"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -103,21 +103,21 @@ export function Header() {
                       <div className="flex items-center justify-between group">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-foreground">安全模式</span>
-                          <span className="text-xs text-muted-foreground">遮罩敏感内容 (NSFW)</span>
+                          <span className="text-xs text-foreground/60">遮罩敏感内容 (NSFW)</span>
                         </div>
                         <SafeModeToggle />
                       </div>
                       <div className="flex items-center justify-between group">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-foreground">图片加载</span>
-                          <span className="text-xs text-muted-foreground">根据文件大小自动省流</span>
+                          <span className="text-xs text-foreground/60">根据文件大小自动省流</span>
                         </div>
                         <ImageLoadModeToggle />
                       </div>
                       <div className="flex items-center justify-between group">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-foreground">主题切换</span>
-                          <span className="text-xs text-muted-foreground">切换深色或浅色模式</span>
+                          <span className="text-xs text-foreground/60">切换深色或浅色模式</span>
                         </div>
                         <ThemeToggle />
                       </div>
@@ -160,19 +160,19 @@ export function Header() {
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
             <div className="hidden sm:block relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/60" />
               <Input
-                placeholder="Search files..."
+                placeholder="搜索文件..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 w-64 bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                className="pl-10 pr-10 w-64 bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-foreground"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 text-foreground/60 hover:text-foreground"
                 >
                   <X className="h-3 w-3" />
                 </Button>
