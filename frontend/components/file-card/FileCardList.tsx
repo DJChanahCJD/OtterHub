@@ -41,15 +41,16 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     <>
       <div
         className={cn(
-          "group flex items-center gap-3 px-3 py-2 rounded-md backdrop-blur-xl border transition-all cursor-pointer",
+          "group flex items-center gap-3 px-3 py-2.5 rounded-md backdrop-blur-xl border transition-all cursor-pointer",
           isSelected
             ? "bg-primary/20 border-primary/50"
-            : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/30",
+            : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/20",
         )}
         onClick={handleSelect}
       >
+
         {/* File Icon/Preview */}
-        <div className="w-9 h-9 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden">
+        <div className="w-9 h-9 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden border border-glass-border">
           {fileType === FileType.Image ? (
             <img
               src={getFileUrl(file.name)}
@@ -71,38 +72,35 @@ export function FileCardList({ file, actions }: FileCardListProps) {
                 className="w-full h-full object-cover rounded"
               />
             ) : (
-              <Video className="h-6 w-6 text-purple-400" />
+              <Video className="h-5 w-5 text-purple-400" />
             )
           ) : fileType === FileType.Audio ? (
-            <Music className="h-6 w-6 text-emerald-400" />
+            <Music className="h-5 w-5 text-emerald-400" />
           ) : (
-            <FileText className="h-6 w-6 text-amber-400" />
+            <FileText className="h-5 w-5 text-amber-400" />
           )}
         </div>
 
         {/* File Info */}
-        <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium truncate">
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          <p className="text-sm font-medium truncate leading-tight">
             {file.metadata.fileName}
           </p>
-          <span className="text-xs text-foreground/40 shrink-0">
-            {formatFileSize(file.metadata.fileSize || 0)}
-          </span>
-          <div className="flex gap-1 shrink-0">
-            {tags.map((tag) => (
-              <FileTagBadge key={tag} tag={tag} />
-            ))}
+          <div className="flex items-center gap-2 text-[11px] text-foreground/50 leading-none">
+            <span className="shrink-0">{formatFileSize(file.metadata.fileSize || 0)}</span>
+            <span className="text-foreground/20">•</span>
+            <span className="shrink-0 truncate">{formatTime(file.metadata.uploadedAt || 0)}</span>
+            {tags.length > 0 && (
+              <>
+                <span className="text-foreground/20">•</span>
+                <div className="flex gap-1 overflow-hidden">
+                  {tags.map((tag) => (
+                    <FileTagBadge key={tag} tag={tag} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-          </div>
-        </div>
-
-        {/* Date */}
-        <div
-          className="hidden md:block text-xs text-foreground/50"
-          title="上传时间"
-        >
-          {formatTime(file.metadata.uploadedAt || 0)}
         </div>
 
         {/* 继续上传按钮 */}
@@ -115,15 +113,18 @@ export function FileCardList({ file, actions }: FileCardListProps) {
               handleResumeUpload();
             }}
             disabled={isResuming}
-            className="text-amber-300 border-amber-500/30 hover:bg-amber-500/10 shrink-0"
+            title="继续上传"
+            className="h-8 text-amber-300 border-amber-500/80 hover:bg-amber-500/50 shrink-0 px-2"
           >
             {isResuming ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <RotateCw className="h-4 w-4 mr-1" />
+              <RotateCw className="h-3.5 w-3.5" />
             )}
-            ({file.metadata.chunkInfo!.uploadedIndices?.length || 0}/
-            {file.metadata.chunkInfo!.total})
+            <span className="ml-1.5 text-xs hidden sm:inline">
+              {file.metadata.chunkInfo!.uploadedIndices?.length || 0}/
+              {file.metadata.chunkInfo!.total}
+            </span>
           </Button>
         )}
 
