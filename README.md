@@ -357,24 +357,31 @@ OtterHub/
 
 ### High Priority
 
-- [ ] 右下角悬浮按钮（FAB），多操作统一入口（上传 / 批量 / 快捷操作）
+- [ ] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面）
+  - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
+- [ ] 临时分享文件（无论是否 Private 都可以访问）
+  - [] KV实现, 一次性 / 有效期 URL （允许用户选择）
+  - [] key: link:<uuid>
+  - [] value: file_key
 - [ ] 文件类型定制
-  - [ ] 音频：音频播放列表
-  - [ ] 视频：在线播放支持
+  - [ ] 音频：音频播放列表（歌曲 / 播客场景）
+    - 前端维护一个 playlist（基于当前筛选结果）
+    - <audio> + Media Session API（锁屏控制）
+  - [ ] 视频：在线播放支持 `video.js`
   - [ ] 文档：预览支持
-    - [ ] 电子书（PDF、EPUB 等）
+    - [ ] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
     - [ ] 漫画（图片 → 连续阅读 / PDF）
-- [ ] 对接外部 API 工具
-  - [ ] GD's Studio API（音频）
-  - [ ] wallheaven
-  - [ ] 在线图片编辑（压缩 / 裁剪 / 格式转换）
-  - [ ] 音视频格式转换（Save As）
 
 ---
 
 ### Low Priority
 
 - [ ] API Token 支持
+- [ ] 对接外部 API 工具
+  - [ ] GD's Studio API（音频）
+  - [ ] wallheaven / Pixabay / Unsplash
+  - [ ] ~~在线图片编辑（压缩`browser-image-compression` / 裁剪`cropperjs` / 缩放+格式转换`Pica`）~~
+  - [ ] ~~音视频格式转换（Save As 功能 `ffmpeg.wasm`）~~
 - [ ] Demo 站点上传限制可配置（环境变量）
 - [ ] KV vs D1 数据库评估
   - D1：单库 500MB，分库可达 5GB
