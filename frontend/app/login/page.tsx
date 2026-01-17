@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Footer } from "@/components/footer";
+import { APP_CATEGORY, APP_NAME } from "@/lib/ui-text";
 
 const loginSchema = z.object({
   password: z.string().min(1, "请输入密码"),
@@ -56,8 +57,8 @@ export default function LoginPage() {
           <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-primary to-accent flex items-center justify-center text-5xl shadow-2xl shadow-primary/30 mb-6 animate-bounce">
             🦦
           </div>
-          <h1 className="text-4xl font-black text-foreground tracking-tighter">OtterHub</h1>
-          <p className="text-foreground/50 text-sm font-medium mt-2 tracking-widest uppercase">Private Cloud</p>
+          <h1 className="text-4xl font-black text-foreground tracking-tighter">{APP_NAME}</h1>
+          <p className="text-foreground/50 text-sm font-medium mt-2 tracking-widest uppercase">{APP_CATEGORY}</p>
         </div>
 
         <Form {...form}>

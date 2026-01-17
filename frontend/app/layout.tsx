@@ -4,11 +4,12 @@ import "./globals.css"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import "react-photo-view/dist/react-photo-view.css"
+import { APP_DESC_CN, APP_DESC_EN, APP_NAME } from "@/lib/ui-text";
 
 
 export const metadata: Metadata = {
-  title: "OtterHub - A Serverless Personal Cloud Drive",
-  description: "A resource management platform for images, audio, videos, and documents",
+  title: `${APP_NAME} - ${APP_DESC_EN}`,
+  description: APP_DESC_CN,
   icons: {
     icon: [
       {

@@ -1,0 +1,5 @@
+export const APP_NAME = "OtterHub"
+export const APP_TAGLINE = "Stash your files like an otter"
+export const APP_CATEGORY = "Private Cloud"
+export const APP_DESC_EN = "A Serverless Personal Cloud Drive"
+export const APP_DESC_CN = "基于 Cloudflare KV + Telegram Bot API 的免费私人云盘"
