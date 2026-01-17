@@ -94,7 +94,7 @@ export function FileEditDialog({
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="输入文件名"
-              className="bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+              className="bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary"
               disabled={isSubmitting}
             />
           </div>

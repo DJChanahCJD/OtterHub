@@ -142,7 +142,7 @@ export function TrashSheet() {
                     variant="ghost" 
                     size="sm" 
                     onClick={handleLoadMore}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-foreground/60 hover:text-foreground"
                    >
                      Load More
                    </Button>

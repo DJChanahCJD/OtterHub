@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useActiveBucket, useFilteredFiles, useFileDataStore } from "@/lib/file-store";
+import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/lib/file-store";
 import { useFileUIStore } from "@/lib/file-store";
 import { FileCard } from "@/components/file-card";
 import { ViewModeToggle } from "@/components/ViewModeToggle";
@@ -14,6 +14,7 @@ import { useInitFileStore } from "@/hooks/use-init-file-store";
 import { MasonryGrid } from "./masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
 import { PhotoToolbar } from "./FileImagePreview";
+import { useEffect } from "react";
 
 function FileViewRenderer({
   viewMode,
@@ -56,10 +57,16 @@ export function FileGallery() {
 
   const { viewMode, itemsPerPage, setItemsPerPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
+  const { searchQuery, filterLiked, filterTags, filterDateRange } = useFileQueryStore();
   const files = useFilteredFiles();
   const bucket = useActiveBucket();
 
   const [currentPage, setCurrentPage] = useState(0);
+
+  // 当筛选条件变化时，重置页码到第一页
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery, filterLiked, filterTags, filterDateRange]);
 
   const handlePageChange = (selectedItem: { selected: number }) => {
     setCurrentPage(selectedItem.selected);

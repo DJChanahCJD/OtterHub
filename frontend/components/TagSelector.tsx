@@ -102,13 +102,13 @@ export function TagSelector({
                         <Tag
                           className={cn(
                             "h-4 w-4",
-                            config?.textColor || "text-muted-foreground",
+                            config?.textColor || "text-foreground/60",
                           )}
                         />
                         <span
                           className={cn(
                             "text-foreground",
-                            config?.textColor || "text-muted-foreground",
+                            config?.textColor || "text-foreground/60",
                           )}
                         >
                           {config?.label || tag}
@@ -118,7 +118,7 @@ export function TagSelector({
                         className={cn(
                           "text-xs px-2 py-0.5 rounded",
                           config?.bgColor || "bg-secondary/30",
-                          config?.textColor || "text-muted-foreground",
+                          config?.textColor || "text-foreground/60",
                         )}
                       >
                         {config?.description || ""}

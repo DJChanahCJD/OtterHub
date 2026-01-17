@@ -117,7 +117,7 @@ export function BatchEditTagsDialog({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 选中的文件数量 */}
           <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <p className="text-sm text-foreground/60 flex items-center gap-2">
               <Info className="h-4 w-4 text-primary" />
               已选中{" "}
               <span className="font-bold text-primary">

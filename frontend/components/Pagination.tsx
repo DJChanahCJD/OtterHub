@@ -72,7 +72,7 @@ export function Pagination({
         nextClassName="flex items-center justify-center"
         nextLinkClassName="min-w-[36px] h-9 flex items-center justify-center rounded-md text-sm text-foreground/80 hover:bg-secondary/50 transition-colors px-3"
         breakClassName="flex items-center justify-center"
-        breakLinkClassName="min-w-[36px] h-9 flex items-center justify-center text-muted-foreground"
+        breakLinkClassName="min-w-[36px] h-9 flex items-center justify-center text-foreground/60"
         activeClassName="bg-primary/20 text-primary font-medium"
         disabledClassName="opacity-50 cursor-not-allowed"
         forcePage={currentPage}
