@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { useAvailableTags, useFileQueryStore } from "@/lib/file-store";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { FileTag } from "@/lib/types";
 
 /**
  * 筛选下拉菜单组件
@@ -29,7 +31,8 @@ export function FilterDropdown() {
     resetFilters
   } = useFileQueryStore();
   
-  const availableTags = useAvailableTags();
+  const availableTags = Object.values(FileTag);
+  const isMobile = useIsMobile();
 
   const activeFiltersCount = [
     filterLiked,
@@ -50,10 +53,33 @@ export function FilterDropdown() {
   };
 
   const handleDateSelect = (range: DateRange | undefined) => {
+    const start = range?.from ? new Date(range.from).setHours(0, 0, 0, 0) : undefined;
+    const end = range?.to ? new Date(range.to).setHours(23, 59, 59, 999) : undefined;
+
     setFilterDateRange({
-      start: range?.from?.getTime(),
-      end: range?.to?.getTime(),
+      start,
+      end,
     });
+  };
+
+  const setQuickDate = (type: "7d" | "30d" | "month") => {
+    const now = new Date();
+    const end = new Date(now).setHours(23, 59, 59, 999);
+    let start: number;
+
+    switch (type) {
+      case "7d":
+        start = new Date(now.setDate(now.getDate() - 6)).setHours(0, 0, 0, 0);
+        break;
+      case "30d":
+        start = new Date(now.setDate(now.getDate() - 29)).setHours(0, 0, 0, 0);
+        break;
+      case "month":
+        start = new Date(now.getFullYear(), now.getMonth(), 1).setHours(0, 0, 0, 0);
+        break;
+    }
+
+    setFilterDateRange({ start, end });
   };
 
   const formatDate = (date: Date) => {
@@ -219,42 +245,59 @@ export function FilterDropdown() {
               <CalendarIcon className="h-3 w-3" />
               <span>上传时间</span>
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-9 text-xs border-glass-border hover:border-primary/50 transition-all",
-                    !selectedRange && "text-foreground/60"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {selectedRange?.from ? (
-                    selectedRange.to ? (
-                      <>
-                        {formatDate(selectedRange.from)} -{" "}
-                        {formatDate(selectedRange.to)}
-                      </>
-                    ) : (
-                      formatDate(selectedRange.from)
-                    )
-                  ) : (
-                    <span>选择日期范围...</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" side="left">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={selectedRange?.from}
-                  selected={selectedRange}
-                  onSelect={handleDateSelect}
-                  numberOfMonths={1}
-                />
-              </PopoverContent>
-            </Popover>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[11px] bg-transparent border-glass-border hover:border-primary/50"
+                onClick={() => setQuickDate("7d")}
+              >
+                最近 7 天
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[11px] bg-transparent border-glass-border hover:border-primary/50"
+                onClick={() => setQuickDate("30d")}
+              >
+                最近 30 天
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[11px] bg-transparent border-glass-border hover:border-primary/50"
+                onClick={() => setQuickDate("month")}
+              >
+                本月
+              </Button>
+              
+              {!isMobile && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "h-8 text-[11px] bg-transparent border-glass-border hover:border-primary/50",
+                      )}
+                    >
+                      自定义范围
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" side="left">
+                    <Calendar
+                      autoFocus
+                      mode="range"
+                      defaultMonth={selectedRange?.from}
+                      selected={selectedRange}
+                      onSelect={handleDateSelect}
+                      numberOfMonths={1}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           </div>
         </div>
       </PopoverContent>
