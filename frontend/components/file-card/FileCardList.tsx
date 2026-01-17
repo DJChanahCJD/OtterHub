@@ -1,10 +1,10 @@
-import { Video, Music, Loader2, RotateCw, FileText } from "lucide-react";
+import { Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
-import { FileItem, FileType } from "@/lib/types";
-import { getFileUrl } from "@/lib/api";
+import { FileContent } from "./FileContent";
+import { FileItem } from "@/lib/types";
 import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
@@ -23,6 +23,8 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     showDetail,
     showEdit,
     isResuming,
+    safeMode,
+    imageLoadMode,
     setShowDetail,
     setShowEdit,
     handleSelect,
@@ -51,34 +53,17 @@ export function FileCardList({ file, actions }: FileCardListProps) {
 
         {/* File Icon/Preview */}
         <div className="w-9 h-9 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden border border-glass-border">
-          {fileType === FileType.Image ? (
-            <img
-              src={getFileUrl(file.name)}
-              alt={file.name}
-              loading="lazy"
-              decoding="async"
-              className={cn(
-                "w-full h-full object-cover rounded transition-all duration-300",
-                blur && "blur-xs",
-              )}
-            />
-          ) : fileType === FileType.Video ? (
-            file.metadata.thumbUrl ? (
-              <img
-                src={file.metadata.thumbUrl}
-                alt={file.name}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover rounded"
-              />
-            ) : (
-              <Video className="h-5 w-5 text-purple-400" />
-            )
-          ) : fileType === FileType.Audio ? (
-            <Music className="h-5 w-5 text-emerald-400" />
-          ) : (
-            <FileText className="h-5 w-5 text-amber-400" />
-          )}
+          <FileContent
+            fileType={fileType}
+            fileKey={file.name}
+            safeMode={safeMode}
+            canPreview={!blur}
+            tags={file.metadata?.tags}
+            fileSize={file.metadata.fileSize}
+            loadImageMode={imageLoadMode}
+            thumbUrl={file.metadata.thumbUrl}
+            className="h-5 w-5"
+          />
         </div>
 
         {/* File Info */}
