@@ -3,17 +3,16 @@
 import { useState } from "react";
 import { login } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Key, Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Footer } from "@/components/footer";
-import { APP_CATEGORY, APP_NAME } from "@/lib/ui-text";
+import { APP_NAME, APP_TAGLINE } from "@/lib/ui-text";
 
 const loginSchema = z.object({
   password: z.string().min(1, "请输入密码"),
@@ -58,7 +57,7 @@ export default function LoginPage() {
             🦦
           </div>
           <h1 className="text-4xl font-black text-foreground tracking-tighter">{APP_NAME}</h1>
-          <p className="text-foreground/50 text-sm font-medium mt-2 tracking-widest uppercase">{APP_CATEGORY}</p>
+          <p className="text-foreground/50 text-sm font-medium mt-2 tracking-widest uppercase">{APP_TAGLINE}</p>
         </div>
 
         <Form {...form}>

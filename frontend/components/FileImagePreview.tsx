@@ -11,7 +11,7 @@ interface FileImagePreviewProps {
   shouldLoad: boolean;
   shouldBlur: boolean;
   canPreview: boolean;
-  iconSizeClass?: string;
+  iconClassName?: string;
   className?: string;
 }
 
@@ -52,7 +52,7 @@ export function FileImagePreview({
   shouldLoad,
   shouldBlur,
   canPreview,
-  iconSizeClass = "h-16 w-16",
+  iconClassName = "h-16 w-16 text-blue-300",
   className,
 }: FileImagePreviewProps) {
   const img = shouldLoad ? (
@@ -69,7 +69,7 @@ export function FileImagePreview({
     />
   ) : (
     <div className="flex items-center justify-center w-full h-full">
-      <Image className={cn(iconSizeClass, "text-muted-foreground")} />
+      <Image className={cn(iconClassName)} />
     </div>
   );
 

@@ -2,7 +2,6 @@ import {
   Music,
   Video,
   FileText,
-  AlertTriangle,
 } from "lucide-react";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
@@ -53,7 +52,6 @@ export function FileContent({
         shouldLoad={load}
         shouldBlur={blur}
         canPreview={canPreview}
-        iconSizeClass={ICON_DISPLAY_SIZE}
       />
     );
   }
