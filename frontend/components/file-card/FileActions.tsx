@@ -44,14 +44,14 @@ export function FileActions({
       <Button
         variant="ghost"
         size="icon"
-        className="text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+        className="h-10 w-10 text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
         onClick={(e) => {
           e.stopPropagation();
           onToggleLike();
         }}
       >
         <Heart
-          className={`h-4 w-4 transition-colors ${
+          className={`h-4.5 w-4.5 transition-colors ${
             isLiked
               ? "text-pink-400 fill-pink-400"
               : "text-foreground/80 hover:text-pink-300"
@@ -65,10 +65,10 @@ export function FileActions({
           <Button
             variant="ghost"
             size="icon"
-            className="text-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            className="h-10 w-10 text-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="h-4.5 w-4.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

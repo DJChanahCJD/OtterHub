@@ -34,20 +34,20 @@ export function Header() {
                   placeholder="搜索文件..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-10 w-full pl-9 pr-9 bg-secondary/20 border-glass-border rounded-xl focus-visible:ring-primary/50 placeholder:text-foreground/80"
+                  className="h-11 w-full pl-10 pr-10 bg-secondary/30 border-glass-border rounded-2xl focus-visible:ring-primary/40 placeholder:text-foreground/50 text-base"
                 />
                 {searchQuery && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-foreground/40 hover:text-foreground"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 text-foreground/40 hover:text-foreground"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
                 )}
               </div>
-              <Button variant="ghost" onClick={() => { setShowMobileSearch(false); setSearchQuery(""); }} className="text-sm font-medium">取消</Button>
+              <Button variant="ghost" onClick={() => { setShowMobileSearch(false); setSearchQuery(""); }} className="text-base font-semibold text-primary">取消</Button>
             </div>
           ) : (
             <div className="flex w-full items-center justify-between animate-in fade-in duration-300">
