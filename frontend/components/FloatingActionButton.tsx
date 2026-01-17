@@ -1,32 +1,32 @@
 "use client";
 
-import { LogOut, MoreVertical, Settings, Github, MoreHorizontal, Menu } from "lucide-react";
+import { LogOut, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/lib/api";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 /**
  * 悬浮操作按钮组件 (FAB)
  * 提供登出、项目链接及管理入口等快捷操作
  */
 export function FloatingActionButton() {
+  const router = useRouter();
+
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success("已成功退出登录");
-      // 刷新页面以触发浏览器清除 Basic Auth 凭据
-      window.location.reload();
+      router.push("/login");
     } catch (error) {
-      console.error("[FAB] Logout failed:", error);
-      toast.error("退出登录失败");
+      console.error("Logout failed:", error);
+      // Force redirect anyway
+      router.push("/login");
     }
   };
 
@@ -37,7 +37,7 @@ export function FloatingActionButton() {
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
-            className="rounded-full h-12 w-12 shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-110 active:scale-95 border-none"
+            className="rounded-full h-12 w-12 shadow-2xl bg-primary/80 hover:bg-primary/90 text-primary-foreground transition-all hover:scale-110 active:scale-95 border-none"
           >
             <Menu className="h-6 w-6" />
           </Button>

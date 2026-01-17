@@ -1,6 +1,5 @@
 // functions/file/[key].ts
 import { DBAdapterFactory } from "../utils/db-adapter";
-import { checkAuthOrFail } from "../utils/auth";
 import { fail } from "../utils/common";
 import {
   getFromCache,
@@ -13,9 +12,6 @@ export async function onRequestGet({ env, params, request }: any) {
 
   const meta = await db.getPublicMetadata?.(key);
   if (!meta) return fail("File not found", 404);
-
-  const authError = checkAuthOrFail(meta.metadata.tags, request, env);
-  if (authError) return authError;
 
   // Range 请求：明确不缓存
   if (request.headers.has("Range")) {

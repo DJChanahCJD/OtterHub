@@ -1,7 +1,13 @@
-import { fail } from "../utils/common";
+import { ok } from "../utils/common";
 
-export async function onRequest(context: any) {
-  return fail("Logged out.", 401, {
-    "WWW-Authenticate": 'Basic realm="OtterHub Admin", charset="UTF-8"',  // 清除之前存储的 Basic Auth 凭据
+export async function onRequest() {
+  return ok(true, "Logout successful", 200, {
+    "Set-Cookie": [
+      "auth=",
+      "Path=/",
+      "HttpOnly",
+      "SameSite=Lax",
+      "Max-Age=0"
+    ].join("; "),
   });
 }

@@ -13,10 +13,21 @@ export const API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   (typeof window !== "undefined" ? window.location.origin : "");
 
-// 检查是否已登录
-export function check(): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/check`, {
-    method: "GET",
+  // 登录
+export function login(password: string): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password }),
+  });
+}
+
+// 登出
+export function logout(): Promise<boolean> {
+  return request<boolean>(`${API_URL}/api/logout`, {
+    method: "POST",
   });
 }
 
@@ -115,11 +126,5 @@ export function editMetadata(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(updates),
-  });
-}
-
-export function logout(): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/logout`, {
-    method: "POST",
   });
 }

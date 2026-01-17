@@ -3,7 +3,6 @@ import { fail, isDev } from "../../utils/common";
 import { CF, trashPrefix, FileType } from "../../utils/types";
 import { getFileIdFromKey, getContentTypeByExt } from "../../utils/file";
 import { getTgFile } from "../../utils/db-adapter/tg-tools";
-import { checkAuthOrFail } from "../../utils/auth";
 
 export async function onRequestGet({ env, params, request }: any) {
   try {
@@ -20,13 +19,7 @@ export async function onRequestGet({ env, params, request }: any) {
        return fail('File not found in trash', 404);
     }
 
-    // 2. 鉴权
-    const authError = checkAuthOrFail(
-        metadata.tags,
-        request,
-        env
-    );
-    if (authError) return authError;
+    // 2. 鉴权 (Global Middleware handles this)
 
     // 3. 根据环境获取文件内容
     const isDevEnv = isDev(env);

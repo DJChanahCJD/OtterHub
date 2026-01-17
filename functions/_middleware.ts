@@ -1,10 +1,20 @@
+import { verifyJWT } from "./utils/auth";
+
+const PUBLIC_PATHS = [
+  /^\/login/,
+  /^\/api\/login/,
+  /^\/api\/logout/,
+];
+
 export async function onRequest(context: any) {
-  const { request, next } = context;
+  const { request, env, next } = context;
+  const url = new URL(request.url);
+  const path = url.pathname;
 
   const origin = request.headers.get("Origin");
   const allowOrigin = origin ?? "*";
 
-  // 预检请求
+  // 1. CORS Pre-flight
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -18,12 +28,39 @@ export async function onRequest(context: any) {
     });
   }
 
+  // Helper to add CORS to any response
+  const withCORS = (res: Response) => {
+    const newRes = new Response(res.body, res);
+    newRes.headers.set("Access-Control-Allow-Origin", allowOrigin);
+    newRes.headers.set("Access-Control-Allow-Credentials", "true");
+    return newRes;
+  };
+
+  // 2. Authentication
+  const isPublic = PUBLIC_PATHS.some(p => p.test(path));
+  
+  if (!isPublic) {
+    const cookie = request.headers.get("Cookie");
+    const authCookie = cookie?.match(/auth=([^;]+)/)?.[1];
+    
+    let authenticated = false;
+    if (authCookie) {
+      try {
+        await verifyJWT(authCookie, env.JWT_SECRET || env.PASSWORD);
+        authenticated = true;
+      } catch (e) {
+        // Token invalid or expired
+      }
+    }
+
+    if (!authenticated) {
+      return withCORS(new Response(JSON.stringify({ error: "Unauthorized" }), { 
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      }));
+    }
+  }
+
   const response = await next();
-
-  // 克隆响应并添加 CORS 头
-  const newResponse = new Response(response.body, response);
-  newResponse.headers.set("Access-Control-Allow-Origin", allowOrigin);
-  newResponse.headers.set("Access-Control-Allow-Credentials", "true");
-
-  return newResponse;
+  return withCORS(response);
 }

@@ -1,67 +1,15 @@
-import { fail } from "./common";
-import { FileTag } from "./types";
+import { SignJWT, jwtVerify } from "jose";
 
-export const BASIC_REALM = "OtterHub";
+const encoder = new TextEncoder();
 
-/**
- * 是否需要认证（private 文件）
- */
-export function isPrivate(tags?: readonly string[]): boolean {
-  return Array.isArray(tags) && tags.includes(FileTag.Private);
+export async function signJWT(secret: string) {
+  return new SignJWT({ sub: "admin" })  
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d") //  过期时间设置为7天
+    .sign(encoder.encode(secret));
 }
 
-/**
- * 解析 Basic Auth
- */
-export function parseBasicAuth(
-  header: string | null
-): { user: string; pass: string } | null {
-  if (!header?.startsWith("Basic ")) return null;
-
-  try {
-    const decoded = atob(header.slice(6));
-    const idx = decoded.indexOf(":");
-    if (idx < 0) return null;
-
-    return {
-      user: decoded.slice(0, idx),
-      pass: decoded.slice(idx + 1),
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * private 文件认证检查
- * @returns 未通过时返回 Response，通过返回 null
- */
-export function checkAuthOrFail(
-  tags: readonly string[] | undefined,
-  request: Request,
-  env: any
-): Response | null {
-  // 公开文件
-  if (!isPrivate(tags)) return null;
-
-  // 未配置 BASIC，直接放行（本地/个人部署友好）
-  if (!env.BASIC_USER || !env.BASIC_PASS) {
-    return null;
-  }
-
-  const cred = parseBasicAuth(request.headers.get("Authorization"));
-
-  if (
-    !cred ||
-    cred.user !== env.BASIC_USER ||
-    cred.pass !== env.BASIC_PASS
-  ) {
-    return fail("Unauthorized", 401, {
-      "WWW-Authenticate": `Basic realm="${BASIC_REALM}", charset="UTF-8"`,
-      "Cache-Control": "no-store",
-    });
-  }
-
-  console.log(`[Auth] Private file accessed by ${cred.user}`);
-  return null;
+export async function verifyJWT(token: string, secret: string) {
+  return jwtVerify(token, encoder.encode(secret));
 }

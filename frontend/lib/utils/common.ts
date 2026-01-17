@@ -11,7 +11,21 @@ export async function request<T>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> {
-  const response = await fetch(input, init);
+  // 确保跨域请求携带 Cookie
+  const requestInit: RequestInit = {
+    ...init,
+    credentials: init?.credentials || "include",
+  };
+
+  const response = await fetch(input, requestInit);
+
+  // 处理未授权情况
+  if (response.status === 401) {
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized");
+  }
 
   // HTTP 层错误
   if (!response.ok) {

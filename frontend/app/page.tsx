@@ -15,9 +15,10 @@ import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { check } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export default function OtterHubPage() {
+  const router = useRouter()
   const activeItems = useActiveItems();
   const selectedKeys = useActiveSelectedKeys();
 
@@ -31,11 +32,6 @@ export default function OtterHubPage() {
   const isEmpty = activeItems.length === 0;
   
   useEffect(() => {
-    // 进入页面时检查登录状态
-    check().catch((error) => {
-      console.error("[OtterHubPage] Auth check failed:", error);
-    });
-
     fetchNextPage().catch((error) => {
       console.error("[OtterHubPage] fetch files failed:", error);
     });

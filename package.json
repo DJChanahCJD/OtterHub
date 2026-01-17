@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start:backend": "npx wrangler pages dev ./ --kv \"oh_file_url\" --r2 \"oh_file_r2\" --ip 0.0.0.0 --port 8080 --persist-to ./data",
+    "start:backend": "npx wrangler pages dev ./ --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding PASSWORD=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data",
     "build:frontend": "cd frontend && npm install && npm run build",
     "start": "npm run build:frontend && npm run start:backend",
     "test": "mocha",
@@ -11,5 +11,8 @@
     "mocha": "^10.6.0",
     "wait-on": "^7.2.0",
     "wrangler": "^4.24.0"
+  },
+  "dependencies": {
+    "jose": "^6.1.3"
   }
 }
