@@ -140,7 +140,7 @@ export function FloatingActionButton() {
         {/* 遮罩层：开启时点击背景关闭 */}
         {isOpen && (
           <div 
-            className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-[-1] animate-in fade-in duration-300"
+            className="fixed inset-0 bg-background/20 backdrop-blur-md z-[-1] animate-in fade-in duration-300"
             onClick={() => setIsOpen(false)}
           />
         )}
@@ -211,7 +211,7 @@ export function FloatingActionButton() {
               isOpen 
                 ? "bg-foreground text-background rotate-90 scale-90" 
                 : "bg-primary text-primary-foreground hover:scale-110",
-              isDragging && "scale-105 shadow-2xl ring-2 ring-primary/20"
+              isDragging && "scale-110 shadow-[0_30px_60px_rgba(0,0,0,0.4)] ring-4 ring-primary/30"
             )}
           >
             {isOpen ? (
