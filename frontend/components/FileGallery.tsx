@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import {
-  useFileStore,
-  useFilteredFiles,
-  useActiveBucket,
-} from "@/lib/file-store";
+import { useActiveBucket, useFilteredFiles, useFileDataStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/lib/file-store";
 import { FileCard } from "@/components/file-card";
 import { ViewModeToggle } from "@/components/ViewModeToggle";
 import { SortTypeDropdown } from "@/components/SortTypeDropdown";
+import { FilterDropdown } from "@/components/FilterDropdown";
 import { Pagination } from "@/components/Pagination";
 import { ViewMode } from "@/lib/types";
 import { ChevronDown } from "lucide-react";
@@ -56,10 +54,8 @@ function FileViewRenderer({
 export function FileGallery() {
   useInitFileStore();
 
-  const viewMode = useFileStore((s) => s.viewMode);
-  const fetchNextPage = useFileStore((s) => s.fetchNextPage);
-  const itemsPerPage = useFileStore((s) => s.itemsPerPage);
-  const setItemsPerPage = useFileStore((s) => s.setItemsPerPage);
+  const { viewMode, itemsPerPage, setItemsPerPage } = useFileUIStore();
+  const { fetchNextPage } = useFileDataStore();
   const files = useFilteredFiles();
   const bucket = useActiveBucket();
 
@@ -88,6 +84,7 @@ export function FileGallery() {
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-foreground/50">{files.length} 个文件</div>
         <div className="flex items-center gap-2">
+          <FilterDropdown />
           <SortTypeDropdown />
           <ViewModeToggle />
         </div>
