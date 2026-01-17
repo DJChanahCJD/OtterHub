@@ -1,24 +1,18 @@
 "use client";
 
-import { Search, X, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { FileTypeTabs } from "@/components/FileTypeTabs";
-import { FileTypeDropdown } from "@/components/FileTypeDropdown";
-import { SafeModeToggle } from "@/components/SafeModeToggle";
-import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Search, X, Settings, Sheet } from "lucide-react";
 import { useFileStore } from "@/lib/file-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { TrashSheet } from "./trash/TrashSheet";
+import { Button } from "./ui/button";
+import { FileTypeDropdown } from "./FileTypeDropdown";
+import { FileTypeTabs } from "./FileTypeTabs";
+import { ImageLoadModeToggle } from "./ImageLoadModeToggle";
+import { SafeModeToggle } from "./SafeModeToggle";
+import { ThemeToggle } from "./ThemeToggle";
+import { Input } from "./ui/input";
+import { SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 
 export function Header() {
   const searchQuery = useFileStore((state) => state.searchQuery);

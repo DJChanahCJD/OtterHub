@@ -11,8 +11,8 @@ import {
   useFileStore,
 } from "@/lib/file-store";
 import { ViewMode } from "@/lib/types";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
 
 export default function OtterHubPage() {
   const activeItems = useActiveItems();

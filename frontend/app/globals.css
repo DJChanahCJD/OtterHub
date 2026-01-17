@@ -126,6 +126,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+      scrollbar-gutter: auto;
+      scrollbar-width: thin;
+  }
+  
   body {
     @apply bg-background text-foreground;
   }
