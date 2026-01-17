@@ -20,8 +20,10 @@ import {
   BatchRenamePayload,
   hasRenameChange,
   previewRename,
+  renameFileName,
 } from "@/lib/utils";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface BatchRenameDialogProps {
   files: FileItem[];
@@ -124,132 +126,138 @@ export function BatchRenameDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-popover border-glass-border text-foreground max-w-lg">
-        <DialogHeader>
+      <DialogContent className="bg-popover border-glass-border text-foreground max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-2 shrink-0">
           <DialogTitle className="text-foreground flex items-center gap-2">
             <FilePen className="h-5 w-5 text-primary" />
             批量重命名
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 选中的文件数量 */}
-          <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Info className="h-4 w-4 text-primary" />
-              已选中{" "}
-              <span className="font-bold text-primary">
-                {files.length}
-              </span>{" "}
-              个文件
-            </p>
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-2 space-y-6 scrollbar-thin scrollbar-thumb-glass-border">
+            {/* 选中的文件数量 */}
+            <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border">
+              <p className="text-sm text-foreground/60 flex items-center gap-2">
+                <Info className="h-4 w-4 text-primary" />
+                已选中{" "}
+                <span className="font-bold text-primary">
+                  {files.length}
+                </span>{" "}
+                个文件
+              </p>
+            </div>
 
-          {/* 模式选择 */}
-          <div className="space-y-3">
-            <Label className="text-muted-foreground text-sm">重命名模式</Label>
-            <RadioGroup
-              value={mode}
-              onValueChange={(v) => setMode(v as BatchRenameMode)}
-              disabled={isSubmitting}
-            >
-              {(Object.keys(MODE_LABELS) as BatchRenameMode[])
-                .filter((m) => m !== "none")
-                .map((m) => {
-                  const config = MODE_LABELS[m];
-                  return (
-                    <div
-                      key={m}
-                      className="flex items-start gap-3 p-3 rounded-lg border border-glass-border hover:bg-secondary/50 cursor-pointer transition-colors"
-                      onClick={() => setMode(m)}
-                    >
-                      <RadioGroupItem value={m} id={m} className="mt-0.5" />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor={m}
-                          className="cursor-pointer font-medium text-foreground"
-                        >
-                          {config.label}
-                        </Label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {config.description}
-                        </p>
-                        <p className="text-xs text-primary mt-1 font-mono">
-                          {config.example}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-            </RadioGroup>
-          </div>
-
-          {/* 输入框 */}
-          {mode !== "none" && (
-            <div className="space-y-2">
-              <Label
-                htmlFor="rename-value"
-                className="text-muted-foreground text-sm"
-              >
-                {MODE_LABELS[mode].label}内容
-              </Label>
-              <Input
-                id="rename-value"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder={
-                  mode === "basename"
-                    ? "输入新文件名（不含扩展名）"
-                    : "输入要添加的内容"
-                }
+            {/* 模式选择 */}
+            <div className="space-y-3">
+              <Label className="text-foreground/60 text-sm">重命名模式</Label>
+              <RadioGroup
+                value={mode}
+                onValueChange={(v) => setMode(v as BatchRenameMode)}
                 disabled={isSubmitting}
-                className="bg-secondary/30 border-glass-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
-                autoFocus
-              />
+                className="gap-3"
+              >
+                {(Object.keys(MODE_LABELS) as BatchRenameMode[])
+                  .filter((m) => m !== "none")
+                  .map((m) => {
+                    const config = MODE_LABELS[m];
+                    const isSelected = mode === m;
+                    return (
+                      <Label
+                        key={m}
+                        htmlFor={m}
+                        className={cn(
+                          "flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer",
+                          isSelected 
+                            ? "border-primary bg-primary/5 shadow-xs" 
+                            : "border-glass-border hover:bg-secondary/50"
+                        )}
+                      >
+                        <RadioGroupItem value={m} id={m} className="mt-1 shrink-0" />
+                        <div className="flex-1 space-y-1">
+                          <div className="font-medium text-foreground">
+                            {config.label}
+                          </div>
+                          <p className="text-xs text-foreground/60 leading-relaxed">
+                            {config.description}
+                          </p>
+                            <code className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">
+                              {config.example}
+                            </code>
+                        </div>
+                      </Label>
+                    );
+                  })}
+              </RadioGroup>
             </div>
-          )}
 
-          {/* 预览 */}
-          {mode !== "none" && value && previews.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-sm">
-                预览（前5个）
-              </Label>
-              <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border space-y-2">
-                {previews.map((preview, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 text-sm font-mono"
-                  >
-                    <span
-                      className="text-muted-foreground truncate flex-1"
-                      title={preview.original}
-                    >
-                      {preview.original}
-                    </span>
-                    <ArrowRight className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                    <span
-                      className={
-                        preview.original !== preview.renamed
-                          ? "text-primary truncate flex-1"
-                          : "text-muted-foreground truncate flex-1"
-                      }
-                      title={preview.renamed}
-                    >
-                      {preview.renamed}
-                    </span>
-                  </div>
-                ))}
-                {files.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center pt-1">
-                    ...还有 {files.length - 5} 个文件
-                  </p>
-                )}
+            {/* 输入框 */}
+            {mode !== "none" && (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="rename-value"
+                  className="text-foreground/60 text-sm"
+                >
+                  {MODE_LABELS[mode].label}内容
+                </Label>
+                <Input
+                  id="rename-value"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder={
+                    mode === "basename"
+                      ? "输入新文件名（不含扩展名）"
+                      : "输入要添加的内容"
+                  }
+                  disabled={isSubmitting}
+                  className="bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary"
+                  autoFocus
+                />
               </div>
-            </div>
-          )}
+            )}
 
-          <DialogFooter className="gap-2">
+            {/* 预览 */}
+            {mode !== "none" && value && previews.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-foreground/60 text-sm">
+                  预览（前5个）
+                </Label>
+                <div className="p-3 rounded-lg bg-secondary/30 border border-glass-border space-y-2">
+                  {previews.map((preview, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-sm font-mono"
+                    >
+                      <span
+                        className="text-foreground/60 truncate flex-1"
+                        title={preview.original}
+                      >
+                        {preview.original}
+                      </span>
+                      <ArrowRight className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <span
+                        className={
+                          preview.original !== preview.renamed
+                            ? "text-primary truncate flex-1"
+                            : "text-foreground/60 truncate flex-1"
+                        }
+                        title={preview.renamed}
+                      >
+                        {preview.renamed}
+                      </span>
+                    </div>
+                  ))}
+                  {files.length > 5 && (
+                    <p className="text-xs text-foreground/60 text-center pt-1">
+                      ...还有 {files.length - 5} 个文件
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="shrink-0 sticky bottom-0 bg-popover border-t border-glass-border p-6 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -280,26 +288,3 @@ export function BatchRenameDialog({
   );
 }
 
-// Import renameFileName for use in component
-function renameFileName(original: string, payload: BatchRenamePayload): string {
-  if (payload.mode === "none" || !payload.value) {
-    return original;
-  }
-
-  const dot = original.lastIndexOf(".");
-  const hasExt = dot > 0;
-
-  const name = hasExt ? original.slice(0, dot) : original;
-  const ext = hasExt ? original.slice(dot) : "";
-
-  switch (payload.mode) {
-    case "prefix":
-      return payload.value + original;
-    case "suffix":
-      return name + payload.value + ext;
-    case "basename":
-      return payload.value + ext;
-    default:
-      return original;
-  }
-}
