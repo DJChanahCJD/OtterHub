@@ -1,4 +1,4 @@
-import { ImageLoadMode, FileTag, FileType } from "./types";
+import { ImageLoadMode, FileTag, FileType } from "../types";
 
 // 判断是否为 NSFW 内容
 export function isNSFW(tags?: (FileTag | string)[]): boolean {
