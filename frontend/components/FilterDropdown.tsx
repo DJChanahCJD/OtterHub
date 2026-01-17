@@ -94,57 +94,112 @@ export function FilterDropdown() {
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-4 bg-popover border-glass-border shadow-xl text-foreground">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-medium leading-none">筛选器</h4>
-            {activeFiltersCount > 0 && (
+      <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-popover border-glass-border shadow-xl text-foreground">
+        {/* 已应用筛选区域 - 仅在有筛选时显示 */}
+        {activeFiltersCount > 0 && (
+          <div className="bg-secondary/30 p-4 border-b border-glass-border">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium text-foreground/70 uppercase tracking-wider">已应用筛选</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-8 px-2 text-xs text-foreground/50 hover:text-foreground"
+                className="h-6 px-2 text-[10px] text-foreground/50 hover:text-destructive hover:bg-destructive/10"
               >
                 <X className="h-3 w-3 mr-1" />
-                清空
+                清空全部
               </Button>
-            )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {/* 收藏状态 */}
+              {filterLiked && (
+                <Badge 
+                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
+                  onClick={() => setFilterLiked(false)}
+                >
+                  <Heart className="h-3 w-3 fill-current" />
+                  <span>已收藏</span>
+                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
+                </Badge>
+              )}
+              
+              {/* 标签 */}
+              {filterTags.map(tag => (
+                <Badge 
+                  key={tag}
+                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
+                  onClick={() => toggleTag(tag)}
+                >
+                  <Tag className="h-3 w-3" />
+                  <span>{tag}</span>
+                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
+                </Badge>
+              ))}
+
+              {/* 日期范围 */}
+              {(filterDateRange.start || filterDateRange.end) && (
+                <Badge 
+                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
+                  onClick={() => setFilterDateRange({})}
+                >
+                  <CalendarIcon className="h-3 w-3" />
+                  <span className="text-[10px]">
+                    {selectedRange?.from ? (
+                      selectedRange.to ? (
+                        <>{formatDate(selectedRange.from)} - {formatDate(selectedRange.to)}</>
+                      ) : formatDate(selectedRange.from)
+                    ) : "日期"}
+                  </span>
+                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="p-4 space-y-5">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-foreground/70 uppercase tracking-wider">
+              {activeFiltersCount > 0 ? "修改筛选" : "添加筛选"}
+            </h4>
           </div>
 
           {/* 收藏 */}
-          <div className="space-y-2">
-            <div className="text-xs text-foreground/50 flex items-center gap-1">
+          <div className="space-y-2.5">
+            <div className="text-[11px] text-foreground/50 flex items-center gap-1.5 px-0.5">
               <Heart className="h-3 w-3" />
-              <span>收藏</span>
+              <span>状态</span>
             </div>
             <Button
               variant={filterLiked ? "default" : "outline"}
               size="sm"
               onClick={() => setFilterLiked(!filterLiked)}
               className={cn(
-                "w-full justify-start gap-2 h-8",
-                filterLiked && "bg-primary/20 text-primary hover:bg-primary/30 border-primary/50"
+                "w-full justify-start gap-2 h-9 text-xs transition-all",
+                filterLiked 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "bg-transparent border-glass-border hover:border-primary/50"
               )}
             >
               <Heart className={cn("h-3.5 w-3.5", filterLiked && "fill-current")} />
-              <span>只看收藏</span>
+              <span>只看收藏内容</span>
             </Button>
           </div>
 
           {/* 标签 */}
           {availableTags.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-xs text-foreground/50 flex items-center gap-1">
+            <div className="space-y-2.5">
+              <div className="text-[11px] text-foreground/50 flex items-center gap-1.5 px-0.5">
                 <Tag className="h-3 w-3" />
-                <span>标签</span>
+                <span>热门标签</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-glass-border">
                 {availableTags.map((tag) => (
                   <Badge
                     key={tag}
                     variant={filterTags.includes(tag) ? "default" : "outline"}
                     className={cn(
-                      "cursor-pointer px-2 py-0.5 text-[10px] transition-colors",
+                      "cursor-pointer px-2.5 py-1 text-[10px] transition-all",
                       filterTags.includes(tag) 
                         ? "bg-primary text-primary-foreground border-primary" 
                         : "bg-transparent text-foreground/60 border-glass-border hover:border-primary/50 hover:text-foreground"
@@ -159,10 +214,10 @@ export function FilterDropdown() {
           )}
 
           {/* 日期范围 */}
-          <div className="space-y-2">
-            <div className="text-xs text-foreground/50 flex items-center gap-1">
+          <div className="space-y-2.5">
+            <div className="text-[11px] text-foreground/50 flex items-center gap-1.5 px-0.5">
               <CalendarIcon className="h-3 w-3" />
-              <span>日期范围</span>
+              <span>上传时间</span>
             </div>
             <Popover>
               <PopoverTrigger asChild>
@@ -170,8 +225,8 @@ export function FilterDropdown() {
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-8 text-xs",
-                    !selectedRange && "text-muted-foreground"
+                    "w-full justify-start text-left font-normal h-9 text-xs border-glass-border hover:border-primary/50 transition-all",
+                    !selectedRange && "text-foreground/60"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-3.5 w-3.5" />
@@ -185,11 +240,11 @@ export function FilterDropdown() {
                       formatDate(selectedRange.from)
                     )
                   ) : (
-                    <span>选择日期范围</span>
+                    <span>选择日期范围...</span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" side="left">
                 <Calendar
                   initialFocus
                   mode="range"
