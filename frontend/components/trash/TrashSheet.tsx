@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash, Loader2, RefreshCcw, X } from "lucide-react";
+import { Trash2, Loader2, RefreshCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,7 +18,12 @@ import { TrashFileCard } from "@/components/trash/TrashFileCard";
 import { deleteFile, restoreFile } from "@/lib/api";
 import { toast } from "sonner";
 
-export function TrashSheet() {
+interface TrashSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
   const { 
     buckets, 
     fetchBucket, 
@@ -29,7 +34,6 @@ export function TrashSheet() {
     selectedKeys,
     clearSelection,
   } = useFileUIStore();
-  const [isOpen, setIsOpen] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   
   const trashBucket = buckets[FileType.Trash];
@@ -38,17 +42,17 @@ export function TrashSheet() {
   const hasSelection = selectedTrashKeys.length > 0;
 
   useEffect(() => {
-    if (isOpen && trashBucket.items.length === 0 && trashBucket.hasMore) {
+    if (open && trashBucket.items.length === 0 && trashBucket.hasMore) {
       fetchBucket(FileType.Trash);
     }
-  }, [isOpen, fetchBucket, trashBucket.items.length, trashBucket.hasMore]);
+  }, [open, fetchBucket, trashBucket.items.length, trashBucket.hasMore]);
 
   // 当 Sheet 关闭时清除选中
   useEffect(() => {
-    if (!isOpen) {
+    if (!open) {
         clearSelection(FileType.Trash);
     }
-  }, [isOpen, clearSelection]);
+  }, [open, clearSelection]);
 
   const handleLoadMore = () => {
     fetchBucket(FileType.Trash);
@@ -96,21 +100,11 @@ export function TrashSheet() {
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-foreground/80 transition-colors"
-          title="回收站"
-        >
-          <Trash className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:w-[540px] flex flex-col p-0 bg-background/95 backdrop-blur-xl border-l border-border">
         <SheetHeader className="px-6 py-4 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <Trash className="h-5 w-5 text-red-500" />
+            <Trash2 className="h-5 w-5 text-red-500" />
             回收站
           </SheetTitle>
           <SheetDescription className="text-sm text-foreground/80">
@@ -121,7 +115,7 @@ export function TrashSheet() {
         <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
           {isEmpty && !trashBucket.loading ? (
             <div className="h-full flex flex-col items-center justify-center text-foreground/80 gap-2 min-h-[300px]">
-              <Trash className="h-12 w-12 opacity-20" />
+              <Trash2 className="h-12 w-12 opacity-20" />
               <p>Trash is empty</p>
             </div>
           ) : (
@@ -176,7 +170,7 @@ export function TrashSheet() {
                         disabled={isBatchProcessing}
                         className="gap-1"
                     >
-                        {isBatchProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />}
+                        {isBatchProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         Delete
                     </Button>
                 </div>
