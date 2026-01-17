@@ -14,15 +14,15 @@ export const TAG_CONFIG: Record<FileTag, TagDisplayConfig> = {
     label: "NSFW",
     description: "敏感内容",
     bgColor: "bg-amber-500/20",
-    textColor: "text-amber-800",
-    borderColor: "border-amber-500/30",
+    textColor: "text-amber-300 dark:text-amber-400",
+    borderColor: "border-amber-500/50",
   },
   [FileTag.Private]: {
     label: "Private",
     description: "私有文件",
     bgColor: "bg-purple-500/20",
-    textColor: "text-purple-800",
-    borderColor: "border-purple-500/30",
+    textColor: "text-purple-300 dark:text-purple-400",
+    borderColor: "border-purple-500/50",
   },
 };
 

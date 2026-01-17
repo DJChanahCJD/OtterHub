@@ -93,7 +93,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
   return (
     <div 
       className={cn(
-        "group relative flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer",
+        "group relative flex items-center gap-2 p-2 rounded-md border transition-all cursor-pointer",
         isSelected 
           ? "bg-primary/10 border-primary/50" 
           : "bg-background/50 border-border/50 hover:bg-secondary/30 hover:border-border"
@@ -101,7 +101,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
       onClick={handleSelect}
     >
       {/* Preview */}
-      <div className="shrink-0 w-12 h-12 rounded-lg bg-secondary/30 overflow-hidden relative flex items-center justify-center">
+      <div className="shrink-0 w-9 h-9 rounded-lg bg-secondary/30 overflow-hidden relative flex items-center justify-center">
          <FileContent
             fileType={fileType}
             fileKey={file.name}

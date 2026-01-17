@@ -125,7 +125,7 @@ export function TrashSheet() {
               <p>Trash is empty</p>
             </div>
           ) : (
-            <div className="space-y-3 pb-20">
+            <div className="space-y-2">
               {trashBucket.items.map((file) => (
                 <TrashFileCard key={file.name} file={file} />
               ))}
