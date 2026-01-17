@@ -15,10 +15,8 @@ import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { useRouter } from "next/navigation";
 
 export default function OtterHubPage() {
-  const router = useRouter()
   const activeItems = useActiveItems();
   const selectedKeys = useActiveSelectedKeys();
 

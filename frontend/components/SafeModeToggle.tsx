@@ -37,7 +37,7 @@ export function SafeModeToggle() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{safeMode ? "安全模式已开启 - NSFW内容已遮罩" : "安全模式已关闭 - 显示所有内容"}</p>
+          <p>{safeMode ? "安全模式开启 · NSFW内容遮罩" : "安全模式关闭 · 显示全部内容"}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

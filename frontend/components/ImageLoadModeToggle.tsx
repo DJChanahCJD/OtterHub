@@ -50,8 +50,8 @@ export function ImageLoadModeToggle() {
             )}
           >
             <div className="flex items-center gap-2">
-              <ModeIcon className="h-3.5 w-3.5" />
-              <span className="text-sm font-medium">{label}</span>
+              <ModeIcon className="h-3.5 w-3.5 text-foreground/80" />
+              <span className="text-sm font-medium text-foreground/80">{label}</span>
             </div>
             <span className="text-[10px] opacity-40 italic">{desc}</span>
           </DropdownMenuItem>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { useAvailableTags, useFileQueryStore } from "@/lib/file-store";
+import { useFileQueryStore } from "@/lib/file-store";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
