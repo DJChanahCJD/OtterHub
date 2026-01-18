@@ -4,6 +4,8 @@ const PUBLIC_PATHS = [
   /^\/login/,
   /^\/api\/login/,
   /^\/api\/logout/,
+  /^\/_next\//,
+  /\.(ico|png|svg|jpg|jpeg|css|js|webmanifest|json|woff|woff2|ttf|eot)$/,
 ];
 
 export async function onRequest(context: any) {
