@@ -131,8 +131,7 @@ Fork 本项目，然后在 Cloudflare Dashboard 创建 Pages 项目：
 在 Pages 项目的设置中添加以下环境变量：
 
 ```env
-BASIC_USER=your_username        # 用户名
-BASIC_PASS=your_password        # 密码
+PASSWORD=your_password          # 密码
 TG_CHAT_ID=your_tg_chat_id      # Telegram Chat ID
 TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 ```
