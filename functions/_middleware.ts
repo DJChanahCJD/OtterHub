@@ -1,6 +1,7 @@
 import { verifyJWT } from "./utils/auth";
 
 const PUBLIC_PATHS = [
+  /^\/$/,
   /^\/login/,
   /^\/api\/login/,
   /^\/api\/logout/,
