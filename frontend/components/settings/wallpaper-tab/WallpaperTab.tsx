@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Image as ImageIcon, RefreshCw, Download, Loader2, Key, Sliders, Info } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Download,
+  Loader2,
+  Key,
+  Settings2,
+  Trash2,
+  Dices,
+  Hash,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFromStorage, setToStorage } from "@/lib/local-storage";
@@ -9,54 +20,115 @@ import { toast } from "sonner";
 import { UnifiedWallpaper } from "./types";
 import { WALLPAPER_SOURCES, getSourceById } from "./sources";
 import { getWallpapers, uploadByUrl } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { ApiKeyDialog } from "./ApiKeyDialog";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 export function WallpaperTab() {
-  const [activeSourceId, setActiveSourceId] = useState<string>(WALLPAPER_SOURCES[0].id);
+  const [activeSourceId, setActiveSourceId] = useState<string>(
+    WALLPAPER_SOURCES[0].id,
+  );
   const [configs, setConfigs] = useState<Record<string, any>>({});
-  
-  const [wallpapers, setWallpapers] = useState<UnifiedWallpaper[]>([]);
+
+  const [allWallpapers, setAllWallpapers] = useState<UnifiedWallpaper[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+  const [minPage, setMinPage] = useState(1);
+  const [maxPage, setMaxPage] = useState(20);
+  const pageSize = 20;
 
   const activeSource = getSourceById(activeSourceId);
 
   // 初始化加载所有配置
   useEffect(() => {
     const newConfigs: Record<string, any> = {};
-    WALLPAPER_SOURCES.forEach(source => {
-      const saved = getFromStorage(source.storageKey, null);
+    WALLPAPER_SOURCES.forEach((source) => {
+      const saved = getFromStorage(source.storedConfig, null);
       newConfigs[source.id] = saved || source.defaultConfig;
     });
     setConfigs(newConfigs);
   }, []);
 
+  // 当切换数据源时，重置本地页码（但不清空数据）
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSourceId]);
+
   // 配置变更处理
   const handleConfigChange = (sourceId: string, newConfig: any) => {
-    setConfigs(prev => ({ ...prev, [sourceId]: newConfig }));
+    setConfigs((prev) => ({ ...prev, [sourceId]: newConfig }));
     const source = getSourceById(sourceId);
     if (source) {
-      setToStorage(source.storageKey, newConfig);
+      setToStorage(source.storedConfig, newConfig);
     }
+  };
+
+  const handleApiKeySave = (newKey: string) => {
+    if (!activeSource) return;
+    const currentConfig = configs[activeSourceId];
+    const newConfig = activeSource.setApiKey(currentConfig, newKey);
+    handleConfigChange(activeSourceId, newConfig);
+    toast.success(`${activeSource.name} API Key 已更新`);
   };
 
   const fetchWallpapers = async () => {
     if (!activeSource) return;
-    
+
     const config = configs[activeSourceId];
     if (!config) return;
 
     const apiKey = activeSource.getApiKey(config);
-    
-    // 兼容现有逻辑：Pixabay 必须 Key
-    if (activeSourceId === 'pixabay' && !apiKey) {
+
+    if (!apiKey) {
       toast.error(`${activeSource.name} 需要 API Key`);
+      setIsApiKeyDialogOpen(true);
       return;
     }
 
     setLoading(true);
     try {
-      const data = await getWallpapers(activeSourceId, config);
-      setWallpapers(data);
+      // 随机选择页码
+      const randomPage =
+        Math.floor(Math.random() * (maxPage - minPage + 1)) + minPage;
+
+      const data = await getWallpapers(activeSourceId, {
+        ...config,
+        page: randomPage,
+      });
+
+      if (data.length === 0) {
+        toast.info("未找到更多壁纸");
+      } else {
+        setAllWallpapers((prev) => {
+          // 过滤掉重复的项 (Source + ID)
+          const existingKeys = new Set(
+            prev.map((wp) => `${wp.source}-${wp.id}`),
+          );
+          const newUnique = data.filter(
+            (wp) => !existingKeys.has(`${wp.source}-${wp.id}`),
+          );
+          return [...newUnique, ...prev];
+        });
+        setCurrentPage(1); // 跳转到第一页查看新结果
+        toast.success(
+          `成功从 ${activeSource.name} 获取 ${data.length} 张壁纸 (第 ${randomPage} 页)`,
+        );
+      }
+
+      // 滚动到顶部
+      const container = document.getElementById("wallpaper-grid-container");
+      if (container) container.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: any) {
       toast.error(error.message || "获取失败");
     } finally {
@@ -72,7 +144,7 @@ export function WallpaperTab() {
     try {
       const fileName = `${wp.source}_${wp.id}.jpg`;
       const isNsfw = activeSource.isNsfw(config);
-      
+
       await uploadByUrl(wp.rawUrl, fileName, isNsfw);
       toast.success("已保存到云端");
     } catch (error: any) {
@@ -84,98 +156,265 @@ export function WallpaperTab() {
 
   if (!activeSource) return null;
 
+  const currentConfig = configs[activeSourceId];
+  const hasApiKey =
+    activeSource && currentConfig && !!activeSource.getApiKey(currentConfig);
+
+  // 计算当前页展示的壁纸
+  const displayWallpapers = allWallpapers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+  const totalPages = Math.ceil(allWallpapers.length / pageSize);
+
   return (
-    <div className="flex flex-col h-full space-y-6 overflow-hidden">
-      {/* 顶部数据源选择 */}
-      <div className="flex items-center justify-between">
-        <Tabs value={activeSourceId} onValueChange={setActiveSourceId} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
-            {WALLPAPER_SOURCES.map(source => (
-              <TabsTrigger key={source.id} value={source.id} className="gap-2">
-                <source.icon className="h-4 w-4" /> {source.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        
-        <div className="flex gap-2">
-          <Button onClick={fetchWallpapers} disabled={loading} className="h-9 gap-2 px-6">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            刷新壁纸
+    <div className="flex flex-col h-full space-y-5 overflow-hidden">
+      {/* 1. 顶部数据源切换区 - 独立出来 */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1">
+        <div className="space-y-3">
+          <Tabs
+            value={activeSourceId}
+            onValueChange={setActiveSourceId}
+            className="w-full md:w-auto"
+          >
+            <TabsList className="bg-muted/50 border border-border/40 p-1 h-11 rounded-xl">
+              {WALLPAPER_SOURCES.map((source) => (
+                <TabsTrigger
+                  key={source.id}
+                  value={source.id}
+                  className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all px-6 h-9 text-xs font-semibold rounded-lg"
+                >
+                  {source.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="flex items-center gap-2 pb-1">
+          {/* 随机页码范围选择 - 常驻极简版 */}
+          <div 
+            className="flex items-center bg-muted/30 h-10 rounded-xl border border-border/40 px-3 gap-1.5 group focus-within:border-primary/40 focus-within:bg-muted/50 transition-all"
+            title="随机页码范围"
+          >
+            <Hash className="h-3.5 w-3.5 opacity-40 group-focus-within:opacity-100 transition-opacity" />
+            <input
+              type="number"
+              value={minPage}
+              onChange={(e) =>
+                setMinPage(Math.max(1, parseInt(e.target.value) || 1))
+              }
+              className="w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="text-muted-foreground/80 text-[10px] font-bold">-</span>
+            <input
+              type="number"
+              value={maxPage}
+              onChange={(e) =>
+                setMaxPage(
+                  Math.max(minPage, parseInt(e.target.value) || minPage),
+                )
+              }
+              className="w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
+
+          <Separator orientation="vertical" className="h-6 mx-1 opacity-20" />
+
+          {/* 操作按钮组 */}
+          <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/40">
+            {/* API Key 按钮 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8 rounded-lg transition-all",
+                hasApiKey
+                  ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                  : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10",
+              )}
+              onClick={() => setIsApiKeyDialogOpen(true)}
+              title="配置 API Key"
+            >
+              <Key className="h-4 w-4" />
+            </Button>
+
+            {/* 清空按钮 */}
+            {allWallpapers.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setAllWallpapers([]);
+                  setCurrentPage(1);
+                  toast.info("已清空所有结果");
+                }}
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                title="清空当前结果"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <Button
+            onClick={() => fetchWallpapers()}
+            disabled={loading}
+            size="icon"
+            className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary hover:bg-primary/90"
+            title="随机壁纸"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Dices className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 overflow-hidden">
-        {/* 左侧配置栏 */}
-        <div className="lg:col-span-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-          
-          <section className="space-y-3">
-             <div className="flex items-center gap-2 text-sm font-bold text-primary">
-              <Sliders className="h-4 w-4" /> 配置参数
+      {/* 2. 过滤参数区 - 采用更扁平化的 Card */}
+      <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden py-0 pt-6">
+        <CardContent className="p-5">
+          <div className="relative pt-1">
+            <div className="absolute -top-7.5 left-0 px-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
+              <Settings2 className="h-3 w-3" /> 过滤与偏好
             </div>
-            
-            {/* 动态渲染当前源的配置面板 */}
-            {configs[activeSourceId] && (
-              <activeSource.ConfigPanel 
-                config={configs[activeSourceId]} 
-                onChange={(newConfig) => handleConfigChange(activeSourceId, newConfig)} 
-              />
-            )}
-          </section>
 
-          <div className="pt-4 border-t border-border">
-            <div className="flex items-start gap-2 text-[10px] text-muted-foreground bg-muted/50 p-3 rounded-lg">
-              <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-              <p>所有配置参数均保存在您的本地浏览器中，不会上传到服务器。</p>
+            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+              {configs[activeSourceId] && (
+                <activeSource.ConfigPanel
+                  config={configs[activeSourceId]}
+                  onChange={(newConfig) =>
+                    handleConfigChange(activeSourceId, newConfig)
+                  }
+                />
+              )}
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* 右侧展示区 */}
-        <div className="lg:col-span-3 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            {wallpapers.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-30 space-y-4">
-                <ImageIcon className="h-16 w-16" />
-                <p className="text-lg font-medium">配置参数后开始探索壁纸</p>
+      {/* 3. 下方展示区 */}
+      <div
+        id="wallpaper-grid-container"
+        className="flex-1 overflow-y-auto custom-scrollbar"
+      >
+        {loading && allWallpapers.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center space-y-4 py-20">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <ImageIcon className="h-6 w-6 text-primary animate-pulse" />
               </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {wallpapers.map((wp) => (
-                  <div key={wp.id} className="group relative aspect-[3/2] rounded-xl overflow-hidden border border-border bg-muted shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5">
-                    <img 
-                      src={wp.previewUrl} 
-                      alt={wp.source} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-white/70 truncate capitalize">{wp.source}</p>
-                        </div>
-                        <Button 
-                          size="icon" 
-                          className="h-9 w-9 rounded-full shadow-2xl bg-primary hover:bg-primary/90"
-                          onClick={() => handleUpload(wp)}
-                          disabled={uploadingId === wp.id}
-                        >
-                          {uploadingId === wp.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
+            </div>
+            <p className="text-sm text-muted-foreground animate-pulse font-medium">
+              正在探索精彩壁纸...
+            </p>
+          </div>
+        ) : allWallpapers.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground/20 space-y-4 py-20">
+            <div className="p-6 rounded-full bg-muted/50 border border-dashed border-border/50">
+              <ImageIcon className="h-16 w-16" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-muted-foreground/40">
+                空空如也...
+              </p>
+
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6 pb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {displayWallpapers.map((wp) => (
+                <div
+                  key={`${wp.source}-${wp.id}`}
+                  className="group relative aspect-[3/2] rounded-xl overflow-hidden border border-border/50 bg-muted shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1.5"
+                >
+                  <img
+                    src={wp.previewUrl}
+                    alt={wp.source}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    loading="lazy"
+                  />
+
+                  {/* 常驻来源 Badge */}
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <Badge
+                      variant="secondary"
+                      className="bg-black/40 text-white/90 border-none text-[8px] h-4 backdrop-blur-md px-1.5 opacity-80 group-hover:opacity-100 transition-opacity"
+                    >
+                      {wp.source}
+                    </Badge>
+                  </div>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
+                    <div className="flex items-center justify-end gap-3">
+                      <Button
+                        size="icon"
+                        className="h-8 w-8 rounded-xl shadow-xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                        onClick={() => handleUpload(wp)}
+                        title={uploadingId === wp.id ? "上传中" : "下载"}
+                        disabled={uploadingId === wp.id}
+                      >
+                        {uploadingId === wp.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+
+            {/* 极简胶囊分页器 */}
+            {totalPages > 1 && (
+              <div className="flex justify-center pt-2">
+                <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-full border border-border/40 backdrop-blur-md shadow-sm">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-background/80 transition-all disabled:opacity-20"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="px-3 min-w-[60px] text-center">
+                    <span className="text-[10px] font-bold tracking-tighter tabular-nums text-primary/80">
+                      {currentPage} <span className="opacity-30 mx-0.5">/</span> {totalPages}
+                    </span>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-background/80 transition-all disabled:opacity-20"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
+
+      {activeSource && (
+        <ApiKeyDialog
+          open={isApiKeyDialogOpen}
+          onOpenChange={setIsApiKeyDialogOpen}
+          source={activeSource}
+          currentApiKey={activeSource.getApiKey(configs[activeSourceId] || {})}
+          onSave={handleApiKeySave}
+        />
+      )}
     </div>
   );
 }

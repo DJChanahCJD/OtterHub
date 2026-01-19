@@ -43,8 +43,7 @@ export type UnifiedWallpaper = {
 export interface WallpaperProvider<T = any> {
   id: string;
   name: string;
-  icon: LucideIcon;
-  storageKey: string;
+  storedConfig: string;
   defaultConfig: T;
 
   // 配置面板组件
@@ -55,6 +54,9 @@ export interface WallpaperProvider<T = any> {
 
   // 获取 API Key (用于判断是否已配置)
   getApiKey: (config: T) => string;
+
+  // 设置 API Key
+  setApiKey: (config: T, key: string) => T;
 
   // 检查是否为 NSFW 内容
   isNsfw: (config: T) => boolean;
