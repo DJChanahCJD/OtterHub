@@ -1,4 +1,4 @@
-import { fail } from "../../utils/common";
+import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { FileMetadata, FileTag } from "../../utils/types";
 
@@ -24,7 +24,7 @@ export async function onRequestPost(context: any) {
         const isNsfw = formData.get('nsfw') === 'true';
         console.log(formData);
 
-        const metadata : FileMetadata = {
+        const metadata: FileMetadata = {
             fileName,
             fileSize,
             uploadedAt: Date.now(),
@@ -33,7 +33,8 @@ export async function onRequestPost(context: any) {
         }
 
         // console.log('Uploading file:', fileName, fileSize);
-        return await dbAdapter.uploadFile(uploadFile, metadata);
+        const { key } = await dbAdapter.uploadFile(uploadFile, metadata);
+        return ok(key);
     } catch (error: any) {
         console.error('Upload error:', error);
         return fail(`Failed to upload file: ${error.message}`, 500);

@@ -29,7 +29,7 @@ export class R2AdapterV2 extends BaseAdapter {
   async uploadFile(
     file: File | Blob,
     metadata: FileMetadata,
-  ): Promise<Response> {
+  ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
     const fileExtension = fileName.split(".").pop().toLowerCase();
@@ -61,7 +61,7 @@ export class R2AdapterV2 extends BaseAdapter {
       await this.env[this.kvName].put(key, "", { metadata });
     }
 
-    return ok(key);
+    return { key };
   }
 
   /**

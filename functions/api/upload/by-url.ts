@@ -1,4 +1,4 @@
-import { fail } from "../../utils/common";
+import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { FileMetadata, FileTag } from "../../utils/types";
 
@@ -37,7 +37,8 @@ export async function onRequestPost(context: any) {
             tags: isNsfw ? [FileTag.NSFW] : [],
         };
 
-        return await dbAdapter.uploadFile(blob, metadata);
+        const key = await dbAdapter.uploadFile(blob, metadata);
+        return ok({ key, fileSize });
     } catch (error: any) {
         console.error('Remote upload error:', error);
         return fail(`Failed to upload remote file: ${error.message}`, 500);

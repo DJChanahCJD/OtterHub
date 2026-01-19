@@ -53,6 +53,12 @@ export async function onRequestPost(context: any): Promise<Response> {
 
   console.log(`Upload chunk ${chunkIndex} for key ${key}`);
 
-  const db = DBAdapterFactory.getAdapter(env);
-  return await db.uploadChunk(key, chunkIndex, chunk, waitUntil);
+  try {
+    const db = DBAdapterFactory.getAdapter(env);
+    const { chunkIndex: uploadedChunkIndex } = await db.uploadChunk(key, chunkIndex, chunk, waitUntil);
+    return ok(uploadedChunkIndex);
+  } catch (error: any) {
+    console.error(`Upload chunk error: ${error.message}`);
+    return fail(error.message, 400);
+  }
 }

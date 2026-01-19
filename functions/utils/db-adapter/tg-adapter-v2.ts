@@ -34,7 +34,7 @@ export class TGAdapterV2 extends BaseAdapter {
   async uploadFile(
     file: File | Blob,
     metadata: FileMetadata,
-  ): Promise<Response> {
+  ): Promise<{ key: string }> {
     if (metadata.fileSize > MAX_CHUNK_SIZE) {
       throw new Error(`File size exceeds ${MAX_CHUNK_SIZE}MB`);
     }
@@ -82,7 +82,7 @@ export class TGAdapterV2 extends BaseAdapter {
       await kv.put(key, "", { metadata });
     }
 
-    return ok(key, JSON.stringify(result));
+    return { key };
   }
 
   /**

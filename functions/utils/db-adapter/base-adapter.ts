@@ -21,7 +21,7 @@ export abstract class BaseAdapter implements DBAdapter {
   abstract uploadFile(
     file: File | Blob,
     metadata: FileMetadata,
-  ): Promise<Response>;
+  ): Promise<{ key: string }>;
   abstract get(key: string, req?: Request): Promise<Response>;
   abstract delete(key: string): Promise<boolean>;
 
@@ -133,24 +133,22 @@ export abstract class BaseAdapter implements DBAdapter {
     chunkIndex: number,
     chunkFile: File | Blob,
     waitUntil?: (promise: Promise<any>) => void,
-  ): Promise<Response> {
+  ): Promise<{ chunkIndex: number }> {
     const kv = this.env[this.kvName];
 
     // 1. 获取当前 metadata
     const metaResult = await this.getMetadata(key);
     if (!metaResult?.metadata?.chunkInfo) {
-      return fail("Not a chunked file", 400);
+      throw new Error("Not a chunked file");
     }
 
     const metadata = metaResult.metadata;
-    const chunks: Chunk[] = metaResult.value
-      ? JSON.parse(metaResult.value)
-      : [];
+
 
     // 2. 检查分片是否已上传（使用通用工具函数）
     const isUploaded = isUploadedChunk(metadata, chunkIndex);
     if (isUploaded) {
-      return ok(chunkIndex);
+      return { chunkIndex };
     }
 
     // 3. 将分片内容暂存到临时 KV（带过期时间）
@@ -170,7 +168,7 @@ export abstract class BaseAdapter implements DBAdapter {
       await uploadPromise;
     }
 
-    return ok({ chunkIndex });
+    return { chunkIndex };
   }
 
   /**
