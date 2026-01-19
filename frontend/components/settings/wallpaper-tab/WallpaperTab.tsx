@@ -5,13 +5,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-  Download,
   Loader2,
   Key,
   Settings2,
   Trash2,
   Dices,
   Hash,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -235,7 +235,7 @@ export function WallpaperTab() {
       <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl py-0 pt-6">
         <CardContent className="p-5">
           <div className="relative pt-1">
-            <div className="absolute -top-7.5 left-0 px-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
+            <div className="absolute -top-7.5 left-0 px-1 text-[10px] font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-1.5">
               <Settings2 className="h-3 w-3" /> 过滤与偏好
             </div>
 
@@ -304,22 +304,21 @@ export function WallpaperTab() {
                     </Badge>
                   </div>
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4 pointer-events-none">
-                    <div className="flex items-center justify-end gap-3 pointer-events-auto">
-                      <Button
-                        size="icon"
-                        className="h-8 w-8 rounded-xl shadow-xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
-                        onClick={(e) => handleUpload(e, wp)}
-                        title={uploadingId === wp.id ? "上传中" : "下载"}
-                        disabled={uploadingId === wp.id}
-                      >
-                        {uploadingId === wp.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                  {/* 移动端下载按钮 */}
+                  <div className="absolute bottom-2 right-2 z-10 pointer-events-auto">
+                    <Button
+                      size="icon"
+                      className="h-8 w-8 rounded-xl bg-black/40 backdrop-blur-md text-white border-none shadow-lg active:scale-95 transition-all"
+                      onClick={(e) => handleUpload(e, wp)}
+                      title={uploadingId === wp.id ? "上传中" : "上传壁纸"}
+                      disabled={uploadingId === wp.id}
+                    >
+                      {uploadingId === wp.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
