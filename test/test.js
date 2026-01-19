@@ -2,12 +2,42 @@ var assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
-const BASIC_AUTH = "Basic YWRtaW46MTIzNDU2";  // BASIC_USER=admin && BASIC_PASS=123456
+
+const API_URL = "http://localhost:8080";
+const PASSWORD = "123456";
 
 describe("File API Endpoints", function () {
   // Shared state across tests
   let uploadedFileKey;
   let uploadedFileUrl;
+  let authCookie;
+
+  // 登录
+  describe("POST /api/login", function () {
+    it("should login successfully and get auth cookie", async function () {
+      const response = await fetch(`${API_URL}/api/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: PASSWORD }),
+      });
+
+      assert.equal(response.status, 200);
+
+      const result = await response.json();
+      assert.ok(result.success);
+
+      // Extract the auth cookie from the Set-Cookie header
+      const setCookieHeader = response.headers.get("Set-Cookie");
+      assert.ok(setCookieHeader, "No Set-Cookie header in response");
+
+      // Parse the auth cookie value
+      const authMatch = setCookieHeader.match(/auth=([^;]+)/);
+      assert.ok(authMatch, "No auth cookie found");
+      authCookie = `auth=${authMatch[1]}`;
+    });
+  });
 
   // 上传
   describe("POST /api/upload", function () {
@@ -21,14 +51,14 @@ describe("File API Endpoints", function () {
         contentType: "image/svg+xml",
       });
 
-      // Get headers from form-data and add authorization
+      // Get headers from form-data and add auth cookie
       const formHeaders = form.getHeaders();
       const headers = {
         ...formHeaders,
-        Authorization: BASIC_AUTH,
+        Cookie: authCookie,
       };
 
-      const response = await fetch("http://localhost:8080/api/upload", {
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
         body: form.getBuffer(),
         headers,
@@ -43,7 +73,7 @@ describe("File API Endpoints", function () {
       // Store the uploaded file key for the next test
       // API returns { success: true, data: "img:xxx.svg" } (key only, not full URL)
       uploadedFileKey = result.data;
-      uploadedFileUrl = `http://localhost:8080/file/${result.data}`;
+      uploadedFileUrl = `${API_URL}/file/${result.data}`;
     });
   });
 
@@ -55,14 +85,11 @@ describe("File API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(
-        `http://localhost:8080/file/${uploadedFileKey}`,
-        {
-          headers: {
-            Authorization: BASIC_AUTH,
-          },
+      const response = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
+        headers: {
+          Cookie: authCookie,
         },
-      );
+      });
       assert.equal(response.status, 200);
 
       // Check that the response is the SVG we uploaded
@@ -82,15 +109,12 @@ describe("File API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(
-        `http://localhost:8080/api/delete/${uploadedFileKey}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: BASIC_AUTH,
-          },
+      const response = await fetch(`${API_URL}/api/delete/${uploadedFileKey}`, {
+        method: "POST",
+        headers: {
+          Cookie: authCookie,
         },
-      );
+      });
       assert.equal(response.status, 200);
 
       const result = await response.json();
