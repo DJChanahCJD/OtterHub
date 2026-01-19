@@ -379,14 +379,17 @@ export function WallpaperTab() {
         open={!!previewUrl}
         onOpenChange={(open) => !open && setPreviewUrl(null)}
       >
-        <DialogContent className="max-w-[95vw] w-auto h-auto p-0 border-none bg-transparent shadow-none gap-0 flex items-center justify-center">
+        <DialogContent 
+          showCloseButton={false}
+          className="max-w-none w-auto h-auto p-0 border-none bg-transparent shadow-none gap-0 flex items-center justify-center"
+        >
           <DialogTitle className="sr-only">图片预览</DialogTitle>
           {previewUrl && (
             <div className="relative animate-in zoom-in-95 duration-200">
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="max-h-[90vh] w-auto object-contain rounded-lg shadow-2xl cursor-zoom-out"
+                className="max-w-[98vw] max-h-[98vh] w-auto h-auto object-contain rounded-lg shadow-2xl cursor-zoom-out"
                 onClick={() => setPreviewUrl(null)}
               />
             </div>
