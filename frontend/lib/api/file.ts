@@ -1,39 +1,14 @@
-// lib/api.ts
-import { request } from "./utils";
+import { request } from "../utils";
 import {
   FileType,
   ListFilesRequest,
   ListFilesResponse,
-  UnifiedWallpaper,
-  WallpaperSourceId,
-} from "./types";
+} from "../types";
+import { API_URL } from ".";
 
-// 开发环境：.env.local
-// 生产环境：当前域名
-// 注意：使用typeof window !== 'undefined'检查，避免服务端渲染错误
-export const API_URL =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? process.env.NEXT_PUBLIC_BACKEND_URL || ""
-    : "";
-
-  // 登录
-export function login(password: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
-  });
-}
-
-// 登出
-export function logout(): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/logout`, {
-    method: "POST",
-  });
-}
-
+/**
+ * 上传文件
+ */
 export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
@@ -47,6 +22,9 @@ export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
   });
 }
 
+/**
+ * 初始化分片上传
+ */
 export function uploadChunkInit(
   fileType: FileType,
   fileName: string,
@@ -63,6 +41,10 @@ export function uploadChunkInit(
     method: "GET",
   });
 }
+
+/**
+ * 上传分片
+ */
 export function uploadChunk(
   key: string,
   chunkIndex: number,
@@ -79,6 +61,9 @@ export function uploadChunk(
   });
 }
 
+/**
+ * 获取文件列表
+ */
 export function getFileList(
   params?: ListFilesRequest
 ): Promise<ListFilesResponse> {
@@ -86,62 +71,59 @@ export function getFileList(
   return request<ListFilesResponse>(`${API_URL}/api/list?${query}`);
 }
 
+/**
+ * 获取文件预览/下载 URL
+ */
 export function getFileUrl(key: string): string {
   return `${API_URL}/file/${key}`;
 }
 
+/**
+ * 获取回收站文件 URL
+ */
 export function getTrashFileUrl(key: string): string {
-  // trash:img:xxx123.png
   return `${API_URL}/api/trash/${key}`;
 }
 
+/**
+ * 彻底删除文件
+ */
 export function deleteFile(key: string): Promise<boolean> {
   return request<boolean>(`${API_URL}/api/delete/${key}`, {
     method: "POST",
   });
 }
 
+/**
+ * 移动文件到回收站
+ */
 export function moveToTrash(key: string): Promise<boolean> {
   return request<boolean>(`${API_URL}/api/trash/moveToTrash/${key}`, {
     method: "POST",
   });
 }
 
+/**
+ * 从回收站恢复文件
+ */
 export function restoreFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/trash/restore/${key}`, {  //  传 trash:<key>
+  return request<boolean>(`${API_URL}/api/trash/restore/${key}`, {
     method: "POST",
   });
 }
 
+/**
+ * 切换收藏状态
+ */
 export function toggleLike(key: string): Promise<boolean> {
   return request<boolean>(`${API_URL}/api/toggleLike/${key}`, {
     method: "POST",
   });
 }
 
-// === 设置相关 API ===
-
 /**
- * 获取云端同步设置
+ * 编辑文件元数据
  */
-export function getSettings(): Promise<any> {
-  return request<any>(`${API_URL}/api/settings`);
-}
-
-/**
- * 更新云端同步设置
- * @param settings 部分或全部设置项
- */
-export function updateSettings(settings: any): Promise<any> {
-  return request<any>(`${API_URL}/api/settings`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(settings),
-  });
-}
-
 export function editMetadata(
   key: string,
   updates: { fileName?: string; tags?: string[] }
@@ -152,48 +134,5 @@ export function editMetadata(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(updates),
-  });
-}
-
-// === 壁纸相关 API ===
-
-/**
- * 获取壁纸列表
- * @param source 壁纸源
- * @param params 查询参数
- * @returns 统一的壁纸列表
- */
-export function getWallpapers(
-  source: WallpaperSourceId, 
-  params: Record<string, any>
-): Promise<UnifiedWallpaper[]> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v) searchParams.append(k === 'key' || k === 'apiKey' ? 'apikey' : k, String(v));
-  });
-
-  return request<UnifiedWallpaper[]>(`${API_URL}/api/providers/wallpaper/${source}?${searchParams.toString()}`);
-}
-
-/**
- * 通过 URL 上传文件
- * @param url 文件 URL
- * @param fileName 文件名
- * @param isNsfw 是否为 NSFW
- * @returns 上传结果
- */
-export function uploadByUrl(
-  url: string, 
-  fileName: string, 
-  isNsfw: boolean = false
-): Promise<any> {
-  return request<any>(`${API_URL}/api/upload/by-url`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      url,
-      fileName,
-      isNsfw,
-    }),
   });
 }
