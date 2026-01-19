@@ -4,6 +4,19 @@
 export enum CF {
   KV_NAME = 'oh_file_url',
   R2_BUCKET = 'oh_file_r2',
+  SETTINGS_KEY = 'oh_settings', //  单独放一个用于存储设置数据的key
+}
+
+// === 全局设置相关类型 ===
+export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing";
+
+export interface WallpaperCloudConfig {
+  apiKey: string;
+}
+
+export interface AppSettings {
+  wallpaper?: Record<WallpaperSourceId, WallpaperCloudConfig>;
+  // 待补充...
 }
 
 // 文件类型

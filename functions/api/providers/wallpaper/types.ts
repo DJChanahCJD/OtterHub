@@ -1,7 +1,8 @@
 /**
  * 壁纸 API 配置
  */
-export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing";
+
+import { WallpaperSourceId } from "../../../utils/types";
 
 // https://pixabay.com/api/
 export type PixabayConfig = {
@@ -28,6 +29,11 @@ export type WallhavenConfig = {
   topRange?: "1d" | "3d" | "1w" | "1M" | "3M" | "6M" | "1y";
   page?: number | string; // 指定或随机项(1-20)
 };
+
+export type BingConfig = {
+  // Bing 每日壁纸目前不需要配置
+};
+
 
 /**
  * 统一的壁纸数据格式
