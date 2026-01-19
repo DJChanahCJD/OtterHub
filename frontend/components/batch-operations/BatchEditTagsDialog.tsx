@@ -84,7 +84,7 @@ export function BatchEditTagsDialog({
         }),
       );
 
-      toast(`成功更新 ${files.length} 个文件的标签`);
+      toast.success(`成功更新 ${files.length} 个文件的标签`);
 
       onOpenChange(false);
       onSuccess?.(updatedFiles);

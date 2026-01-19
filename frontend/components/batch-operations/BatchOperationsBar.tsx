@@ -91,6 +91,7 @@ export function BatchOperationsBar() {
     if (selectedKeys.length === 0) return;
 
     const oversizedFiles: string[] = [];
+    let downloadCount = 0;
 
     for (const key of selectedKeys) {
       const file = itemMap.get(key);
@@ -104,13 +105,17 @@ export function BatchOperationsBar() {
       }
 
       downloadFile(getFileUrl(key), file.metadata);
+      downloadCount++;
+    }
+
+    if (downloadCount > 0) {
+      toast.success(`正在下载 ${downloadCount} 个文件`);
     }
 
     if (oversizedFiles.length > 0) {
-      toast.error("部分文件未自动下载", {
-        description: `以下 ${oversizedFiles.length} 个文件过大，请在新页面使用浏览器原生控件下载：\n${oversizedFiles.join(
-          "、",
-        )}`,
+      toast.warning("部分文件未自动下载", {
+        description: `${oversizedFiles.length} 个文件过大，请在新页面使用浏览器原生控件下载`,
+        duration: 5000,
       });
     }
   };
@@ -119,27 +124,43 @@ export function BatchOperationsBar() {
   const handleBatchDelete = async () => {
     if (!confirm(`确认删除这 ${selectedKeys.length} 个文件？`)) return;
 
-    const results = await Promise.all(
-      selectedKeys.map(async (key) => {
-        const success = await moveToTrash(key);
-        return { key, success };
-      }),
-    );
+    const toastId = toast.loading(`正在删除 ${selectedKeys.length} 个文件...`);
 
-    const failed = results.filter((r) => !r.success);
+    try {
+      const results = await Promise.all(
+        selectedKeys.map(async (key) => {
+          try {
+            const success = await moveToTrash(key);
+            return { key, success };
+          } catch (err) {
+            return { key, success: false };
+          }
+        }),
+      );
 
-    results
-      .filter((r) => r.success)
-      .forEach((r) => moveToTrashLocal(itemMap.get(r.key)!));
+      const successful = results.filter((r) => r.success);
+      const failed = results.filter((r) => !r.success);
 
-    if (failed.length > 0) {
-      toast.error("部分文件删除失败", {
-        description: failed.map((f) => f.key).join("、"),
+      successful.forEach((r) => moveToTrashLocal(itemMap.get(r.key)!));
+
+      if (failed.length === 0) {
+        toast.success(`成功删除 ${successful.length} 个文件`, { id: toastId });
+      } else {
+        toast.error(`部分文件删除失败`, {
+          id: toastId,
+          description: `${failed.length} 个文件删除失败，成功删除 ${successful.length} 个`,
+        });
+      } 
+    } catch (error) {
+      toast.error("操作失败", {
+        id: toastId,
+        description: "执行批量删除时发生未知错误",
       });
+    } finally {
+      clearSelection(activeType);
     }
-  
-    clearSelection(activeType);
   };
+
 
   /** ===== 批量复制 ===== */
   const handleBatchCopy = async () => {
