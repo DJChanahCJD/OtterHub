@@ -10,8 +10,8 @@ export async function onRequestGet({ env, params, request }: any) {
   const db = DBAdapterFactory.getAdapter(env);
   const key = params.key;
 
-  const meta = await db.getPublicMetadata?.(key);
-  if (!meta) return fail("File not found", 404);
+  const item = await db.getFileMetadataWithValue?.(key);
+  if (!item) return fail("File not found", 404);
 
   // Range 请求：明确不缓存
   if (request.headers.has("Range")) {
@@ -26,22 +26,3 @@ export async function onRequestGet({ env, params, request }: any) {
 
   return resp;
 }
-
-// export async function onRequestHead({ env, params, request }: any) {
-//   const db = DBAdapterFactory.getAdapter(env);
-//   const key = params.key;
-
-//   const meta = await db.getPublicMetadata?.(key);
-//   if (!meta) {
-//     return fail(`File not found: ${key}`, 404);
-//   }
-
-//   const authError = checkAuthOrFail(
-//     meta.metadata.tags,
-//     request,
-//     env
-//   );
-//   if (authError) return authError;
-
-//   return db.get(key, request);
-// }

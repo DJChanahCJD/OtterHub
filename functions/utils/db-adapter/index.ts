@@ -21,13 +21,19 @@ export interface DBAdapter {
 
   // 删除文件
   // TODO: 是否要在key不存在时直接返回
-  delete(key: string): Promise<boolean>;
+  delete(key: string): Promise<{ isDeleted: boolean }>;
 
   // 获取文件元数据（用于权限检查）
-  getPublicMetadata?(key: string): Promise<{
+  getFileMetadataWithValue(key: string): Promise<{
     metadata: FileMetadata;
     value: string | null;
   } | null>;
+
+  // 将文件移入回收站
+  moveToTrash(key: string): Promise<void>;
+
+  // 从回收站还原文件
+  restoreFromTrash(trashKey: string): Promise<void>;
 }
 
 export enum DBAdapterType {

@@ -1,5 +1,5 @@
 import { BaseAdapter } from "./base-adapter";
-import { ok, fail, encodeContentDisposition } from "../common";
+import { fail, encodeContentDisposition } from "../common";
 import {
   getUniqueFileId,
   buildKeyId,
@@ -12,6 +12,7 @@ import {
   FileType,
 } from "../types";
 import {
+  extractKeyFromTrash,
   parseRangeHeader,
   sortChunksAndCalculateSize,
   validateChunksForMerge,
@@ -95,9 +96,10 @@ export class R2AdapterV2 extends BaseAdapter {
 
   private async getSingleFile(key: string, req?: Request): Promise<Response> {
     try {
-      const object = await this.env[this.bucketName].get(key);
+      const r2Key = extractKeyFromTrash(key);
+      const object = await this.env[this.bucketName].get(r2Key);
       if (!object) {
-        console.error(`[getSingleFile] File not found: ${key}`);
+        console.error(`[getSingleFile] File not found in R2: ${r2Key}`);
         return fail(`File not found for key: ${key}`, 404);
       }
 
@@ -107,7 +109,7 @@ export class R2AdapterV2 extends BaseAdapter {
       headers.set("Accept-Ranges", "bytes");
 
       // 覆盖 Content-Type 为标准的（带 charset）
-      const ext = key.substring(key.lastIndexOf(".") + 1);
+      const ext = r2Key.substring(r2Key.lastIndexOf(".") + 1);
       headers.set("Content-Type", getContentTypeByExt(ext));
 
       const size = object.size;
@@ -118,7 +120,7 @@ export class R2AdapterV2 extends BaseAdapter {
       if (rangeResult) {
         const { start, end } = rangeResult;
 
-        const partial = await this.env[this.bucketName].get(key, {
+        const partial = await this.env[this.bucketName].get(r2Key, {
           range: { offset: start, length: end - start + 1 },
         });
 
@@ -133,12 +135,15 @@ export class R2AdapterV2 extends BaseAdapter {
       }
 
       headers.set("Content-Length", String(size));
-
       // 获取元数据以获取原始文件名
-      const { metadata } = await this.env[this.kvName].getWithMetadata(key);
+      const { metadata } = await this.getFileMetadataWithValue(key);  //  这里如果是trash, 则用trash的key，如果非trash，即用原Key，即都是key
+      if (!metadata) {
+        console.error(`[getSingleFile] No metadata found for key: ${key}`);
+        return fail("Metadata not found", 404);
+      }
       headers.set(
         "Content-Disposition",
-        "attachment; filename=\"" + metadata.fileName + "\"",
+        encodeContentDisposition(metadata.fileName, false),
       );
 
       return new Response(object.body, { status: 200, headers });
@@ -150,7 +155,7 @@ export class R2AdapterV2 extends BaseAdapter {
 
   private async getMergedFile(key: string, req?: Request): Promise<Response> {
     try {
-      const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
+      const { metadata, value } = await this.getFileMetadataWithValue(key);
       
       if (!metadata) {
         console.error(`[getMergedFile] No metadata found for key: ${key}`);
@@ -325,12 +330,19 @@ export class R2AdapterV2 extends BaseAdapter {
     });
   }
 
-  async delete(key: string): Promise<boolean> {
+  async delete(key: string): Promise<{ isDeleted: boolean }> {
     try {
-      const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
+      const { value } = await this.getFileMetadataWithValue(key);
 
       let chunks: Chunk[] = [];
-      chunks = JSON.parse(value);
+      if (value) {
+        try {
+          chunks = JSON.parse(value);
+        } catch (e) {
+          console.error(`[delete] Failed to parse chunks for ${key}:`, e);
+          // 如果解析失败，可能是单文件或损坏的元数据，继续尝试删除主文件
+        }
+      }
 
       // 删除所有分片
       if (chunks.length > 0) {
@@ -346,10 +358,10 @@ export class R2AdapterV2 extends BaseAdapter {
       // 从KV存储中删除文件信息
       await this.env[this.kvName].delete(key);
 
-      return true;
+      return { isDeleted: true };
     } catch (error) {
       console.error("R2 delete error:", error);
-      return false;
+      return { isDeleted: false };
     }
   }
 }

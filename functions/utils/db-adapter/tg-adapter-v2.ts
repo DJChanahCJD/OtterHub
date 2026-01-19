@@ -146,13 +146,16 @@ export class TGAdapterV2 extends BaseAdapter {
    */
   private async getSingleFile(key: string, req?: Request): Promise<Response> {
     try {
-      const { fileId, isChunk } = getFileIdFromKey(key);
+      const { fileId } = getFileIdFromKey(key);
       const ext = key.substring(key.lastIndexOf(".") + 1);
       const contentType = getContentTypeByExt(ext);
 
       const file = await getTgFile(fileId, this.env.TG_BOT_TOKEN);
 
-      const { metadata } = await this.env[this.kvName].getWithMetadata(key);
+      const { metadata } = await this.getFileMetadataWithValue(key);
+      if (!metadata) {
+        return fail(`Metadata not found for key: ${key}`, 404);
+      }
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
@@ -205,8 +208,11 @@ export class TGAdapterV2 extends BaseAdapter {
     const contentType = getContentTypeByExt(ext);
 
     const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
-    if (!metadata?.chunkInfo) {
-      return fail("Invalid metadata", 400);
+    if (!metadata) {
+      return fail(`Metadata not found for key: ${key}`, 404);
+    }
+    if (!metadata.chunkInfo) {
+      return fail("Invalid metadata: not a chunked file", 400);
     }
 
 
@@ -348,15 +354,15 @@ export class TGAdapterV2 extends BaseAdapter {
     });
   }
 
-  async delete(key: string): Promise<boolean> {
+  async delete(key: string): Promise<{ isDeleted: boolean }> {
     try {
       // Telegram API不支持直接删除文件
       // 只从KV存储中删除文件信息
       await this.env[this.kvName].delete(key);
 
-      return true;
+      return { isDeleted: true };
     } catch (error) {
-      return false;
+      return { isDeleted: false };
     }
   }
 

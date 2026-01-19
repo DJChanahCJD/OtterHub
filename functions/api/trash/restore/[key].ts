@@ -1,27 +1,14 @@
 
 import { fail, ok } from "../../../utils/common";
-import { CF, trashPrefix } from "../../../utils/types";
+import { DBAdapterFactory } from "../../../utils/db-adapter";
 
 export async function onRequestPost({ env, params }: any) {
   try {
+    const db = DBAdapterFactory.getAdapter(env);
     const trashKey = params.key; // Original key, e.g., 'trash:img:xxx'
-    console.log('Restore file:', trashKey);
-    const kv = env[CF.KV_NAME];
 
-    // 1. Check if file exists in trash
-    const { value, metadata } = await kv.getWithMetadata(trashKey);
-    
-    if (!metadata) {
-       return fail('File not found in trash', 404);
-    }
-
-    // 2. Restore file (remove expiration)
-    await kv.put(trashKey.replace(trashPrefix, ""), value || "", {
-      metadata: metadata,
-    });
-
-    // 3. Delete from trash
-    await kv.delete(trashKey);
+    // 使用统一的 DBAdapter 处理还原逻辑
+    await db.restoreFromTrash(trashKey);
 
     return ok(trashKey, 'File restored successfully');
   } catch (error: any) {

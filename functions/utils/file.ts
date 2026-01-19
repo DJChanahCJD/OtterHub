@@ -1,3 +1,4 @@
+import { extractKeyFromTrash } from "./db-adapter/shared-utils";
 import { FileType, chunkPrefix } from "./types";
 
 // 获取文件扩展名
@@ -12,12 +13,13 @@ export function buildKeyId(fileType: FileType, fileId: string, ext: string): str
 
 // 从存储键提取文件ID
 export function getFileIdFromKey(key: string): { fileId: string, isChunk: boolean } {
+  // 处理回收站前缀
+  const cleanKey = extractKeyFromTrash(key)
+
   // img:AgACAgUAAyEGAASJIjr1AAIC5WlbsF4QGE2g_21Ln6AFzqUDj27uAAIZC2sbI3PhVp15EFHwmGQcAQADAgADbQADOAQ.png
-  const [prefix, rest] = key.split(":");
-  const fileId = rest.split(".")[0];
-
-  // AgACAgUAA...DeQADOAQ
-
+  const [prefix, rest] = cleanKey.split(":");
+  const fileId = rest.split(".")[0];  // AgACAgUAA...DeQADOAQ
+  
   // 处理分片文件ID
   if (fileId.startsWith(chunkPrefix)) {
     return { fileId: fileId.slice(chunkPrefix.length), isChunk: true };

@@ -1,4 +1,4 @@
-import { Chunk, FileMetadata } from "../types";
+import { Chunk, FileMetadata, trashPrefix } from "../types";
 
 /**
  * 解析 Range 请求头
@@ -139,4 +139,12 @@ export async function streamToBlob(
   }
 
   return new Blob(chunks);
+}
+
+
+/**
+ * 解析原来的存储 Key（如果是回收站文件，则移除前缀）
+ */
+export function extractKeyFromTrash(key: string): string {
+  return key.startsWith(trashPrefix) ? key.slice(trashPrefix.length) : key;
 }

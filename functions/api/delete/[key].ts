@@ -9,7 +9,7 @@ export async function onRequestPost({ env, params, request }: any) {
     const key = params.key;
 
     // 硬删除
-    const isDeleted = await db.delete(key);
+    const { isDeleted } = await db.delete(key);
     if (!isDeleted) {
       return fail('Failed to delete file', 404);
     }

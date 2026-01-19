@@ -1,7 +1,6 @@
 import { DBAdapter } from ".";
-import { Chunk, chunkPrefix, FileMetadata, TEMP_CHUNK_TTL } from "../types";
-import { fail, ok } from "../common";
-import { isUploadedChunk, streamToBlob } from "./shared-utils";
+import { Chunk, chunkPrefix, FileMetadata, TEMP_CHUNK_TTL, TRASH_EXPIRATION_TTL, trashPrefix } from "../types";
+import { extractKeyFromTrash, isUploadedChunk, streamToBlob } from "./shared-utils";
 import { getUniqueFileId } from "../file";
 
 /**
@@ -22,8 +21,46 @@ export abstract class BaseAdapter implements DBAdapter {
     file: File | Blob,
     metadata: FileMetadata,
   ): Promise<{ key: string }>;
+
   abstract get(key: string, req?: Request): Promise<Response>;
-  abstract delete(key: string): Promise<boolean>;
+
+  abstract delete(key: string): Promise<{ isDeleted: boolean }>;
+
+  /**
+   * 将文件移入回收站
+   */
+  async moveToTrash(key: string): Promise<void> {
+    const kv = this.env[this.kvName];
+    const item = await this.getFileMetadataWithValue(key);
+    if (!item) {
+      throw new Error("File not found");
+    }
+
+    const trashKey = `${trashPrefix}${key}`;
+    await kv.put(trashKey, item.value || "", {
+      metadata: item.metadata,
+      expirationTtl: TRASH_EXPIRATION_TTL,
+    });
+
+    // 从 KV 中删除原文件记录
+    await kv.delete(key);
+  }
+
+  /**
+   * 从回收站还原文件
+   */
+  async restoreFromTrash(trashKey: string): Promise<void> {
+    const kv = this.env[this.kvName];
+    const { value, metadata } = await kv.getWithMetadata(trashKey);
+    if (!metadata) {
+      throw new Error("File not found in trash");
+    }
+
+    const originalKey = extractKeyFromTrash(trashKey);
+
+    await kv.put(originalKey, value || "", { metadata });
+    await kv.delete(trashKey);
+  }
 
   /**
    * 子类必须实现的抽象方法：上传分片到目标存储
@@ -137,7 +174,7 @@ export abstract class BaseAdapter implements DBAdapter {
     const kv = this.env[this.kvName];
 
     // 1. 获取当前 metadata
-    const { metadata } = this.env[this.kvName].getWithMetadata(key);
+    const { metadata } = await this.getFileMetadataWithValue(key);
     if (!metadata?.chunkInfo) {
       throw new Error("Not a chunked file");
     }
@@ -176,7 +213,7 @@ export abstract class BaseAdapter implements DBAdapter {
     total: number;
     complete: boolean;
   } | null> {
-    const item = await this.env[this.kvName].getWithMetadata(key);
+    const item = await this.getFileMetadataWithValue(key);
     const metadata: FileMetadata = item.metadata;
 
     if (!metadata?.chunkInfo) {
@@ -194,7 +231,7 @@ export abstract class BaseAdapter implements DBAdapter {
   /**
    * 获取文件元数据（公开方法，用于权限检查）
    */
-  public async getPublicMetadata(key: string): Promise<{
+  public async getFileMetadataWithValue(key: string): Promise<{
     metadata: FileMetadata;
     value: string | null;
   } | null> {
@@ -222,10 +259,7 @@ export abstract class BaseAdapter implements DBAdapter {
     for (let i = 0; i < maxRetries; i++) {
       try {
         // 1. 获取最新状态
-        const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
-        if (!metadata) {
-          throw new Error(`Metadata not found for key: ${key}`);
-        }
+        const { metadata, value } = await this.getFileMetadataWithValue(key);
 
         const chunks: Chunk[] = value
           ? JSON.parse(value)

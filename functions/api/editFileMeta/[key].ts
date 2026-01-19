@@ -6,8 +6,6 @@ import { CF, FileMetadata } from "../../utils/types";
 export async function onRequestPatch(context: any) {
   const { request, params, env } = context;
 
-  const url = new URL(request.url);
-
   try {
     const body = await request.json();
     const { fileName, tags } = body;
