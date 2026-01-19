@@ -6,6 +6,15 @@ import { STORAGE_KEYS } from "@/lib/local-storage";
 import { WallpaperProvider, WallhavenConfig } from "../types";
 import { cn } from "@/lib/utils";
 
+/**
+ * 通用位掩码切换工具
+ */
+function toggleBitMask(value: string, index: number, fallback: string) {
+  const arr = (value || fallback).split("");
+  arr[index] = arr[index] === "1" ? "0" : "1";
+  return arr.join("");
+}
+
 export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   id: "wallhaven",
   name: "Wallhaven",
@@ -20,7 +29,7 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   },
   getApiKey: (config) => config.apiKey,
   setApiKey: (config, key) => ({ ...config, apiKey: key }),
-  isNsfw: (config) => config.purity !== '100',
+  isNsfw: (config) => config.purity !== "100",
   
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -37,52 +46,55 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
       <div className="space-y-1">
         <Label className="text-[10px] uppercase opacity-50 font-bold">内容分类</Label>
         <div className="flex items-center gap-1.5 p-1 bg-background/30 border border-border/50 rounded-lg w-fit">
-          {[
-            { label: '常规' },
-            { label: '动漫' },
-            { label: '人物' }
-          ].map((cat, i) => (
+          {[{ label: "常规" }, { label: "动漫" }, { label: "人物" }].map(
+            (cat, i) => (
             <Button
               key={cat.label}
               variant={config.categories?.[i] === '1' ? 'default' : 'ghost'}
               size="sm"
               className={cn(
                 "h-7 px-3 text-[10px] font-medium transition-all rounded-md",
-                config.categories?.[i] === '1' ? "shadow-sm" : "hover:bg-background/50"
+                  config.categories?.[i] === "1"
+                    ? "shadow-sm"
+                    : "hover:bg-background/50",
               )}
-              onClick={() => {
-                const cats = config.categories?.split('') || ['1', '1', '1'];
-                cats[i] = cats[i] === '1' ? '0' : '1';
-                onChange({ ...config, categories: cats.join('') });
-              }}
+                onClick={() =>
+                  onChange({
+                    ...config,
+                    categories: toggleBitMask(config.categories!, i, "111"),
+                  })
+                }
             >
               {cat.label}
             </Button>
-          ))}
+            ),
+          )}
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">分级筛选</Label>
+        <Label className="text-[10px] uppercase opacity-50 font-bold">
+          分级筛选
+        </Label>
         <div className="flex items-center gap-1.5 p-1 bg-background/30 border border-border/50 rounded-lg w-fit">
-          {[
-            { label: '安全' },
-            { label: '暗示' },
-            { label: '限制' }
-          ].map((p, i) => (
+          {[{ label: "安全" }, { label: "暗示" }, { label: "限制" }].map(
+            (p, i) => (
             <Button
               key={p.label}
-              variant={config.purity?.[i] === '1' ? 'default' : 'ghost'}
+                variant={config.purity?.[i] === "1" ? "default" : "ghost"}
               size="sm"
               className={cn(
                 "h-7 px-3 text-[10px] font-medium transition-all rounded-md",
-                config.purity?.[i] === '1' ? "shadow-sm" : "hover:bg-background/50"
+                  config.purity?.[i] === "1"
+                    ? "shadow-sm"
+                    : "hover:bg-background/50",
               )}
-              onClick={() => {
-                const purities = config.purity?.split('') || ['1', '0', '0'];
-                purities[i] = purities[i] === '1' ? '0' : '1';
-                onChange({ ...config, purity: purities.join('') });
-              }}
+                onClick={() =>
+                  onChange({
+                    ...config,
+                    purity: toggleBitMask(config.purity!, i, "100"),
+                  })
+                }
             >
               {p.label}
             </Button>

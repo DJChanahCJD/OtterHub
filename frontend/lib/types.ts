@@ -175,9 +175,11 @@ export type WallhavenSearchParams = {
     page?: number | string;
 }
 
+export type WallpaperSourceId = "pixabay" | "wallhaven";
+
 export type UnifiedWallpaper = {
     id: string | number;
     previewUrl: string;
     rawUrl: string;
-    source: string;
+    source: WallpaperSourceId;
 }

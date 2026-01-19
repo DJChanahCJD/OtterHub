@@ -1,5 +1,4 @@
-// === 壁纸相关类型 ===
-import { LucideIcon } from "lucide-react";
+import { WallpaperSourceId } from "@/lib/types";
 
 // https://pixabay.com/api/
 export type PixabayConfig = {
@@ -27,37 +26,26 @@ export type WallhavenConfig = {
   page?: number | string; // 指定或随机项(1-20)
 };
 
-/**
- * 统一的壁纸数据格式
- */
-export type UnifiedWallpaper = {
-  id: string | number;
-  previewUrl: string; //  前端直接使用的预览图 URL  TODO: 创建proxy 接口单独做代理
-  rawUrl: string; //  原图 URL
-  source: string; //  'pixabay' | 'wallhaven' | ...
-};
-
-/**
- * 壁纸提供商接口
- */
-export interface WallpaperProvider<T = any> {
-  id: string;
+export interface WallpaperProviderMeta {
+  id: WallpaperSourceId;
   name: string;
   storedConfig: string;
-  defaultConfig: T;
+}
 
-  // 配置面板组件
+export interface WallpaperProviderLogic<T> {
+  defaultConfig: T;
+  getApiKey(config: T): string;
+  setApiKey(config: T, key: string): T;
+  isNsfw(config: T): boolean;
+}
+
+export interface WallpaperProviderUI<T> {
   ConfigPanel: React.FC<{
     config: T;
-    onChange: (newConfig: T) => void;
+    onChange: (c: T) => void;
   }>;
-
-  // 获取 API Key (用于判断是否已配置)
-  getApiKey: (config: T) => string;
-
-  // 设置 API Key
-  setApiKey: (config: T, key: string) => T;
-
-  // 检查是否为 NSFW 内容
-  isNsfw: (config: T) => boolean;
 }
+
+export type WallpaperProvider<T = any> = WallpaperProviderMeta &
+  WallpaperProviderLogic<T> &
+  WallpaperProviderUI<T>;
