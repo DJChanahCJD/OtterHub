@@ -156,3 +156,28 @@ export interface LyricResponse {
   tlyric?: string;         // 翻译歌词（可选）
 }
 
+// === 壁纸相关类型 ===
+
+export type PixabaySearchParams = {
+    q?: string;
+    lang?: string;
+    category?: string;
+    order?: 'popular' | 'latest';
+    page?: number | string;
+}
+
+export type WallhavenSearchParams = {
+    q?: string;
+    categories?: string;
+    purity?: string;
+    sorting?: 'date_added' | 'relevance' | 'random' | 'views' | 'favorites' | 'toplist';
+    topRange?: '1d' | '3d' | '1w' | '1M' | '3M' | '6M' | '1y';
+    page?: number | string;
+}
+
+export type UnifiedWallpaper = {
+    id: string | number;
+    previewUrl: string;
+    rawUrl: string;
+    source: string;
+}
