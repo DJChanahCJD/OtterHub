@@ -46,7 +46,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
           "group relative aspect-square rounded-xl overflow-hidden backdrop-blur-xl border transition-all cursor-pointer",
           isSelected
             ? "bg-primary/20 border-primary/50 ring-2 ring-primary/50"
-            : "bg-glass-bg border-glass-border hover:border-primary/50"
+            : "bg-glass-bg border-glass-border hover:border-primary/50",
         )}
       >
         {/* Checkbox */}
@@ -56,7 +56,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
               "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all backdrop-blur-sm",
               isSelected
                 ? "bg-primary border-primary"
-                : "bg-secondary/50 border-glass-border opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                : "bg-secondary/50 border-glass-border opacity-100 md:opacity-0 md:group-hover:opacity-100",
             )}
             onClick={handleSelect}
           >
@@ -109,7 +109,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs  text-white/50">
               {formatFileSize(file.metadata.fileSize || 0)}
             </p>
             {isIncompleteUpload && (
@@ -128,7 +128,8 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
                 ) : (
                   <>
                     <RotateCw className="h-3 w-3 mr-1" />
-                    {file.metadata.chunkInfo!.uploadedIndices.length}/{file.metadata.chunkInfo!.total}
+                    {file.metadata.chunkInfo!.uploadedIndices.length}/
+                    {file.metadata.chunkInfo!.total}
                   </>
                 )}
               </Button>
