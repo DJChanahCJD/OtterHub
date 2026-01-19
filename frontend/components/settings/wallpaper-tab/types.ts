@@ -29,6 +29,25 @@ export type WallhavenConfig = {
 export type BingConfig = {
   // Bing 每日壁纸目前不需要配置
 };
+
+export type PicsumConfig = {
+  page?: number;
+  limit?: number;
+  grayscale?: boolean;
+};
+
+export type LoliconConfig = {
+  r18: number;
+  tag: string;
+  excludeAI: boolean;
+};
+
+export type UnsplashConfig = {
+  accessKey: string;
+  query?: string;
+  orientation?: "landscape" | "portrait" | "squarish";
+  content_filter?: "low" | "high";
+};
 export const WP_API_KEY_PLACEHOLDER = "public"
 
 export interface WallpaperProviderMeta {

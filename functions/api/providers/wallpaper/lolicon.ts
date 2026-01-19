@@ -1,0 +1,78 @@
+import { ok, fail } from "../../../utils/common";
+import { getProxyUrl } from "../../../utils/proxy";
+import { UnifiedWallpaper, LoliconConfig } from "./types";
+
+const API_URL = "https://api.lolicon.app/setu/v2";
+
+// https://docs.api.lolicon.app/#/setu
+export async function onRequest(context: any) {
+  const { request } = context;
+
+  try {
+    const url = new URL(request.url);
+    const origin = url.origin;
+
+    // 获取参数
+    const r18 = url.searchParams.get("r18") || "0";
+    const num = url.searchParams.get("num") || "20";
+    const tag = url.searchParams.getAll("tag");
+    const keyword = url.searchParams.get("q") || url.searchParams.get("keyword");
+    const excludeAI = url.searchParams.get("excludeAI") === "true";
+    const aspectRatio = url.searchParams.get("aspectRatio");
+
+    // 构造请求 Lolicon 的 URL
+    const loliconUrl = new URL(API_URL);
+    loliconUrl.searchParams.set("r18", r18);
+    loliconUrl.searchParams.set("num", num);
+    loliconUrl.searchParams.set("proxy", "i.pixiv.re"); // 使用 lolicon 推荐的反代，或者我们自己的
+    
+    if (tag && tag.length > 0) {
+      tag.forEach(t => loliconUrl.searchParams.append("tag", t));
+    }
+    if (keyword) {
+      loliconUrl.searchParams.set("keyword", keyword);
+    }
+    if (excludeAI) {
+      loliconUrl.searchParams.set("excludeAI", "true");
+    }
+
+    // 默认请求 regular 和 original 规格
+    loliconUrl.searchParams.append("size", "regular");
+    loliconUrl.searchParams.append("size", "original");
+
+    console.log("Lolicon API request:", loliconUrl.toString());
+    const response = await fetch(loliconUrl.toString());
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Lolicon API error: ${response.status} - ${errorText}`);
+    }
+
+    const data: any = await response.json();
+    console.log("Lolicon API response:", data);
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // 统一数据格式
+    const unifiedData: UnifiedWallpaper[] = data.data.map((item: any) => {
+      // 预览图
+      const previewUrl = item.urls.small || item.urls.thumb || item.urls.regular || item.urls.original;
+      const rawUrl = item.urls.original;
+
+      return {
+        id: item.pid,
+        // 使用项目内置代理包装，确保国内环境可用
+        previewUrl: getProxyUrl(origin, previewUrl),
+        rawUrl: getProxyUrl(origin, rawUrl),
+        source: "lolicon",
+      };
+    });
+
+    return ok(unifiedData, `获取成功`);
+  } catch (error: any) {
+    console.error("Lolicon provider error:", error);
+    return fail(error.message, 500);
+  }
+}

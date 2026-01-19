@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WallpaperProvider } from "./types";
+import { WallpaperSourceId } from "@/lib/types";
 
 interface ApiKeyDialogProps {
   open: boolean;
@@ -44,9 +45,11 @@ export function ApiKeyDialog({
     onOpenChange(false);
   };
 
-  const getHelpUrl = () => {
-    if (source.id === 'pixabay') return "https://pixabay.com/api/docs/";
-    if (source.id === 'wallhaven') return "https://wallhaven.cc/settings/account";
+  const getHelpUrl = (sourceId: WallpaperSourceId) => {
+    if (sourceId === 'pixabay') return "https://pixabay.com/api/docs/";
+    if (sourceId === 'wallhaven') return "https://wallhaven.cc/settings/account";
+    if (sourceId === 'unsplash') return "https://unsplash.com/developers";  //  似乎没用
+    // TODO: 对接更多壁纸源 https://blog.jixiaob.cn/?post=93
     return "";
   };
 
@@ -86,9 +89,9 @@ export function ApiKeyDialog({
             </div>
           </div>
 
-          {getHelpUrl() && (
+          {getHelpUrl(source.id) && (
             <a
-              href={getHelpUrl()}
+              href={getHelpUrl(source.id)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[10px] text-primary hover:underline flex items-center gap-1 w-fit"

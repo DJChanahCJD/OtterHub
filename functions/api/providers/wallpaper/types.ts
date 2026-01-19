@@ -34,6 +34,31 @@ export type BingConfig = {
   // Bing 每日壁纸目前不需要配置
 };
 
+export type PicsumConfig = {
+  page?: number | string;
+  limit?: number | string;
+  blur?: number | string;
+  grayscale?: boolean | string;
+};
+
+export type LoliconConfig = {
+  r18?: number | string;
+  num?: number | string;
+  tag?: string | string[];
+  size?: string | string[];
+  proxy?: string;
+  excludeAI?: boolean | string;
+  aspectRatio?: string;
+};
+
+export type UnsplashConfig = {
+  accessKey: string;
+  query?: string;
+  orientation?: "landscape" | "portrait" | "squarish";
+  content_filter?: "low" | "high";
+  page?: number | string;
+};
+
 
 /**
  * 统一的壁纸数据格式

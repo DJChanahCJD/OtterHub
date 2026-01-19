@@ -189,7 +189,7 @@ export function useWallpaperList(
         });
         setCurrentPage(1);
         toast.success(
-          `成功从 ${activeSource.name} 获取 ${data.length} 张壁纸 (第 ${randomPage} 页)`,
+          `${activeSource.name}: 新增 ${data.length} 张壁纸 (第 ${randomPage} 页)`,
         );
       }
     } catch (error: any) {

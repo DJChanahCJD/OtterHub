@@ -8,7 +8,7 @@ export enum CF {
 }
 
 // === 全局设置相关类型 ===
-export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing";
+export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing" | "picsum" | "lolicon" | "unsplash";
 
 export interface WallpaperCloudConfig {
   apiKey: string;
