@@ -2,7 +2,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { STORAGE_KEYS } from "@/lib/local-storage";
 import { WallpaperProvider, WallhavenConfig } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +17,6 @@ function toggleBitMask(value: string, index: number, fallback: string) {
 export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   id: "wallhaven",
   name: "Wallhaven",
-  storedConfig: STORAGE_KEYS.WALLHAVEN_CONFIG,
   defaultConfig: {
     apiKey: "",
     q: "",

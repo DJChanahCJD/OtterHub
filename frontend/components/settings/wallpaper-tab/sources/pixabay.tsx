@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STORAGE_KEYS } from "@/lib/local-storage";
 import { WallpaperProvider, PixabayConfig } from "../types";
 
 const PIXABAY_CATEGORIES = [
@@ -36,7 +35,6 @@ const PIXABAY_CATEGORIES = [
 export const PixabaySource: WallpaperProvider<PixabayConfig> = {
   id: "pixabay",
   name: "Pixabay",
-  storedConfig: STORAGE_KEYS.PIXABAY_CONFIG,
   defaultConfig: {
     key: "",
     q: "",

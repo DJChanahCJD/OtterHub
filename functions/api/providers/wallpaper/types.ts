@@ -1,6 +1,7 @@
 /**
  * 壁纸 API 配置
  */
+export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing";
 
 // https://pixabay.com/api/
 export type PixabayConfig = {
@@ -35,5 +36,5 @@ export type UnifiedWallpaper = {
   id: string | number;
   previewUrl: string; //  前端直接使用的预览图 URL  TODO: 创建proxy 接口单独做代理
   rawUrl: string; //  原图 URL
-  source: "pixabay" | "wallhaven";
+  source: WallpaperSourceId;
 };

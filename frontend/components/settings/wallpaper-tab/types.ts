@@ -26,10 +26,13 @@ export type WallhavenConfig = {
   page?: number | string; // 指定或随机项(1-20)
 };
 
+export type BingConfig = {
+  // Bing 每日壁纸目前不需要配置
+};
+
 export interface WallpaperProviderMeta {
   id: WallpaperSourceId;
   name: string;
-  storedConfig: string;
 }
 
 export interface WallpaperProviderLogic<T> {

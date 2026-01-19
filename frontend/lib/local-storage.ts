@@ -12,8 +12,7 @@ export const STORAGE_KEYS = {
   IMAGE_LOAD_MODE: `${projectName}_image_load_mode`,
   ITEMS_PER_PAGE: `${projectName}_items_per_page`,
   FAB_POSITION: `${projectName}_fab_position`,
-  PIXABAY_CONFIG: `${projectName}_pixabay_config`,
-  WALLHAVEN_CONFIG: `${projectName}_wallhaven_config`,
+  WALLPAPER_SETTINGS: `${projectName}_wallpaper_settings`,
 } as const;
 
 /**

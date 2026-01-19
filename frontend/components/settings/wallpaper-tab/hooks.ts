@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { getFromStorage, setToStorage } from "@/lib/local-storage";
+import { getFromStorage, setToStorage, STORAGE_KEYS } from "@/lib/local-storage";
 import { getWallpapers } from "@/lib/api";
 import {
   WallpaperProvider,
@@ -16,10 +16,10 @@ export function useWallpaperSources() {
     WALLPAPER_SOURCE_LIST[0].id,
   );
   const [configs, setConfigs] = useState<Record<WallpaperSourceId, any>>(() => {
+    const allConfigs = getFromStorage<Record<string, any>>(STORAGE_KEYS.WALLPAPER_SETTINGS, {});
     const newConfigs: any = {};
     WALLPAPER_SOURCE_LIST.forEach((source) => {
-      const saved = getFromStorage(source.storedConfig, null);
-      newConfigs[source.id] = saved || source.defaultConfig;
+      newConfigs[source.id] = allConfigs[source.id] || source.defaultConfig;
     });
     return newConfigs;
   });
@@ -28,11 +28,11 @@ export function useWallpaperSources() {
 
   const updateConfig = useCallback(
     (sourceId: WallpaperSourceId, newConfig: any) => {
-      setConfigs((prev) => ({ ...prev, [sourceId]: newConfig }));
-      const source = getSourceById(sourceId);
-      if (source) {
-        setToStorage(source.storedConfig, newConfig);
-      }
+      setConfigs((prev) => {
+        const nextConfigs = { ...prev, [sourceId]: newConfig };
+        setToStorage(STORAGE_KEYS.WALLPAPER_SETTINGS, nextConfigs);
+        return nextConfigs;
+      });
     },
     [],
   );
