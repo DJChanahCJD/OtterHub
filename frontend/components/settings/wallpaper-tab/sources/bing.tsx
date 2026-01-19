@@ -1,11 +1,11 @@
 import { Label } from "@/components/ui/label";
-import { WallpaperProvider, BingConfig } from "../types";
+import { WallpaperProvider, BingConfig, WP_API_KEY_PLACEHOLDER } from "../types";
 
 export const BingSource: WallpaperProvider<BingConfig> = {
   id: "bing",
   name: "Bing 每日壁纸",
   defaultConfig: {},
-  getApiKey: () => "public", // Bing 不需要 API Key
+  getApiKey: () => WP_API_KEY_PLACEHOLDER, // Bing 不需要 API Key
   setApiKey: (config) => config,
   isNsfw: () => false,
 

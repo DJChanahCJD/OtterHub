@@ -39,6 +39,7 @@ export function WallpaperTab() {
     updateConfig,
     activeSource,
     hasApiKey,
+    syncToCloud,
   } = useWallpaperSources();
 
   const [uploadingId, setUploadingId] = useState<string | number | null>(null);
@@ -62,13 +63,24 @@ export function WallpaperTab() {
   });
 
   // 处理 API Key 保存
-  const handleApiKeySave = (newKey: string) => {
+  const handleApiKeySave = async (newKey: string) => {
     if (!activeSource) return;
     const currentConfig = configs[activeSourceId];
     const newConfig = activeSource.setApiKey(currentConfig, newKey);
+    
+    // 1. 更新本地状态
     updateConfig(activeSourceId, newConfig);
-    toast.success(`${activeSource.name} API Key 已更新`);
+    
+    // 2. 显式同步到云端
+    try {
+      const nextConfigs = { ...configs, [activeSourceId]: newConfig };
+      await syncToCloud(nextConfigs);
+      toast.success(`${activeSource.name} API Key 已同步到云端`);
+    } catch (error) {
+      toast.error("同步到云端失败，请稍后重试");
+    }
   };
+
 
   const handleFetch = async () => {
     try {

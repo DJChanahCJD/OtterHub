@@ -29,11 +29,13 @@ export type WallhavenConfig = {
 export type BingConfig = {
   // Bing 每日壁纸目前不需要配置
 };
+export const WP_API_KEY_PLACEHOLDER = "public"
 
 export interface WallpaperProviderMeta {
   id: WallpaperSourceId;
   name: string;
 }
+
 
 export interface WallpaperProviderLogic<T> {
   defaultConfig: T;

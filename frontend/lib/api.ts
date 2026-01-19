@@ -5,8 +5,7 @@ import {
   ListFilesRequest,
   ListFilesResponse,
   UnifiedWallpaper,
-  PixabaySearchParams,
-  WallhavenSearchParams,
+  WallpaperSourceId,
 } from "./types";
 
 // 开发环境：.env.local
@@ -120,6 +119,29 @@ export function toggleLike(key: string): Promise<boolean> {
   });
 }
 
+// === 设置相关 API ===
+
+/**
+ * 获取云端同步设置
+ */
+export function getSettings(): Promise<any> {
+  return request<any>(`${API_URL}/api/settings`);
+}
+
+/**
+ * 更新云端同步设置
+ * @param settings 部分或全部设置项
+ */
+export function updateSettings(settings: any): Promise<any> {
+  return request<any>(`${API_URL}/api/settings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(settings),
+  });
+}
+
 export function editMetadata(
   key: string,
   updates: { fileName?: string; tags?: string[] }
@@ -137,12 +159,12 @@ export function editMetadata(
 
 /**
  * 获取壁纸列表
- * @param source 壁纸源 (pixabay | wallhaven)
+ * @param source 壁纸源
  * @param params 查询参数
  * @returns 统一的壁纸列表
  */
 export function getWallpapers(
-  source: string, 
+  source: WallpaperSourceId, 
   params: Record<string, any>
 ): Promise<UnifiedWallpaper[]> {
   const searchParams = new URLSearchParams();
