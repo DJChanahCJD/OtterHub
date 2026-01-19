@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { logout } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { TrashSheet } from "./trash/TrashSheet";
+import { SettingsDialog } from "./settings/SettingsDialog";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { STORAGE_KEYS, getFromStorage, setToStorage } from "@/lib/local-storage";
@@ -17,6 +18,7 @@ import { STORAGE_KEYS, getFromStorage, setToStorage } from "@/lib/local-storage"
 export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [position, setPosition] = useState({ x: 32, y: 32 }); // 默认距离右下角 32px (bottom-8, right-8)
   const [isDragging, setIsDragging] = useState(false);
   
@@ -108,21 +110,21 @@ export function FloatingActionButton() {
       icon: <LogOut className="h-5 w-5" />,
       label: "安全退出",
       onClick: handleLogout,
-      className: "bg-red-500 text-white hover:bg-red-600 shadow-red-500/20",
+      className: "bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-destructive/20",
     },
     {
       id: "settings",
       icon: <Settings className="h-5 w-5" />,
       label: "系统设置",
-      onClick: () => toast.info("设置功能开发中"),
-      className: "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20",
+      onClick: () => setIsSettingsOpen(true),
+      className: "bg-sky-400/90 text-white hover:bg-sky-500 shadow-sky-400/20",
     },
     {
       id: "trash",
       icon: <Trash2 className="h-5 w-5" />,
       label: "回收站",
       onClick: () => setIsTrashOpen(true),
-      className: "bg-blue-500 text-white hover:bg-blue-600 shadow-blue-500/20",
+      className: "bg-indigo-400/90 text-white hover:bg-indigo-500 shadow-indigo-400/20",
     },
   ];
 
@@ -140,7 +142,7 @@ export function FloatingActionButton() {
         {/* 遮罩层：开启时点击背景关闭 */}
         {isOpen && (
           <div 
-            className="fixed inset-0 bg-background/20 backdrop-blur-md z-[-1] animate-in fade-in duration-300"
+            className="fixed inset-0 bg-background/40 backdrop-blur-sm z-[-1] animate-in fade-in duration-300"
             onClick={() => setIsOpen(false)}
           />
         )}
@@ -149,7 +151,7 @@ export function FloatingActionButton() {
         <div className="relative">
           {actions.map((action, index) => {
             // 计算弧形位置 (180度到270度，即从左侧到上方)
-            const radius = 90; // 半径
+            const radius = 80; // 稍微减小半径使结构更紧凑
             const totalActions = actions.length;
             const angle = 180 + (index * (90 / (totalActions - 1)));
             const radian = (angle * Math.PI) / 180;
@@ -175,7 +177,7 @@ export function FloatingActionButton() {
               >
                 <div className="group relative">
                   {/* 标签提示 */}
-                  <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-foreground text-background text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
+                  <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-foreground/90 text-background text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg backdrop-blur-md">
                     {action.label}
                   </span>
                   
@@ -186,7 +188,7 @@ export function FloatingActionButton() {
                       setIsOpen(false);
                     }}
                     className={cn(
-                      "h-12 w-12 rounded-2xl shadow-lg transition-transform hover:scale-110 active:scale-95 border-none",
+                      "h-11 w-11 rounded-xl shadow-md transition-all hover:scale-110 active:scale-95 border-none",
                       action.className
                     )}
                   >
@@ -207,22 +209,23 @@ export function FloatingActionButton() {
               if (!isDragging) setIsOpen(!isOpen);
             }}
             className={cn(
-              "h-14 w-14 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500 border-none z-10 cursor-move",
+              "h-13 w-13 rounded-2xl shadow-xl transition-all duration-500 border-none z-10 cursor-move",
               isOpen 
-                ? "bg-foreground text-background rotate-90 scale-90" 
-                : "bg-primary text-primary-foreground hover:scale-110",
-              isDragging && "scale-110 shadow-[0_30px_60px_rgba(0,0,0,0.4)] ring-4 ring-primary/30"
+                ? "bg-primary/90 text-background rotate-45 scale-90 shadow-foreground/10" 
+                : "bg-primary/70 text-primary-foreground hover:scale-105 shadow-primary/30",
+              isDragging && "scale-110 shadow-2xl ring-4 ring-primary/20"
             )}
           >
             {isOpen ? (
-              <X className="h-7 w-7 animate-in spin-in-90 duration-300" />
+              <X className="h-6 w-6 animate-in zoom-in duration-300" />
             ) : (
-              <Menu className="h-7 w-7" />
+              <Menu className="h-6 w-6" />
             )}
           </Button>
         </div>
       </div>
       <TrashSheet open={isTrashOpen} onOpenChange={setIsTrashOpen} />
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   );
 }
