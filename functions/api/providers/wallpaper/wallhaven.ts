@@ -54,13 +54,21 @@ export async function onRequest(context: any) {
 
     const data: any = await response.json();
 
-    const unifiedData: UnifiedWallpaper[] = data.data.map((item: any) => ({
-      id: item.id,
-      previewUrl:
-        item.thumbs.original || item.thumbs.large || item.thumbs.small,
-      rawUrl: item.path,
-      source: "wallhaven",
-    }));
+    // 构建代理 URL 的基础路径
+    const proxyBase = `${url.origin}/api/proxy?url=`;
+
+    const unifiedData: UnifiedWallpaper[] = data.data.map((item: any) => {
+      const previewUrl = item.thumbs.original || item.thumbs.large || item.thumbs.small;
+      const rawUrl = item.path;
+
+      return {
+        id: item.id,
+        // 对预览图和原图使用代理，解决国内环境访问慢或无法访问的问题
+        previewUrl: `${proxyBase}${encodeURIComponent(previewUrl)}`,
+        rawUrl: `${proxyBase}${encodeURIComponent(rawUrl)}`,
+        source: "wallhaven",
+      };
+    });
 
     return ok(unifiedData, `获取成功`);
   } catch (error: any) {
