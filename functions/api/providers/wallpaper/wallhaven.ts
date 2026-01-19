@@ -1,4 +1,5 @@
 import { ok, fail } from "../../../utils/common";
+import { getProxyUrl } from "../../../utils/proxy";
 import { UnifiedWallpaper } from "./types";
 
 const baseUrl = "https://wallhaven.cc/api/v1/search";
@@ -54,9 +55,6 @@ export async function onRequest(context: any) {
 
     const data: any = await response.json();
 
-    // 构建代理 URL 的基础路径
-    const proxyBase = `${url.origin}/api/proxy?url=`;
-
     const unifiedData: UnifiedWallpaper[] = data.data.map((item: any) => {
       const previewUrl = item.thumbs.original || item.thumbs.large || item.thumbs.small;
       const rawUrl = item.path;
@@ -64,8 +62,8 @@ export async function onRequest(context: any) {
       return {
         id: item.id,
         // 对预览图和原图使用代理，解决国内环境访问慢或无法访问的问题
-        previewUrl: `${proxyBase}${encodeURIComponent(previewUrl)}`,
-        rawUrl: `${proxyBase}${encodeURIComponent(rawUrl)}`,
+        previewUrl: getProxyUrl(url.origin, previewUrl),
+        rawUrl: getProxyUrl(url.origin, rawUrl),
         source: "wallhaven",
       };
     });

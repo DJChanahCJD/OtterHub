@@ -3,9 +3,6 @@ import { proxyGetRequest } from "../utils/proxy";
 
 /**
  * 代理接口 - 只处理 GET 请求
- *
- * 1. GET /api/proxy?url=<目标URL>
- *
  * 用于代理获取外部资源，绕过 CORS 限制
  */
 export async function onRequestGet(context: any) {

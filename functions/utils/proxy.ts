@@ -244,3 +244,7 @@ export async function proxyGetRequest(
   // 其他类型，使用流式传输
   return handleStreamResponse(response);
 }
+
+export function getProxyUrl(origin: string, targetUrl: string) {
+  return `${origin}/api/proxy?url=${encodeURIComponent(targetUrl)}`;
+}

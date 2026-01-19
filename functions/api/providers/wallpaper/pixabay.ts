@@ -41,19 +41,15 @@ export async function onRequest(context: any) {
 
     const data: any = await response.json();
 
-    // 构建代理 URL 的基础路径
-    const proxyBase = `${url.origin}/api/proxy?url=`;
-
     // 统一数据格式
     const unifiedData: UnifiedWallpaper[] = data.hits.map((item: any) => {
       const previewUrl = item.webformatURL;
       const rawUrl = item.largeImageURL || item.imageURL;
-
+      // 国内可访问 pixabay, 无需代理
       return {
         id: item.id,
-        // 使用代理以确保国内环境访问稳定性
-        previewUrl: `${proxyBase}${encodeURIComponent(previewUrl)}`,
-        rawUrl: `${proxyBase}${encodeURIComponent(rawUrl)}`,
+        previewUrl: previewUrl,
+        rawUrl: rawUrl,
         source: "pixabay",
       };
     });
