@@ -152,7 +152,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
       const file = await getTgFile(fileId, this.env.TG_BOT_TOKEN);
 
-      const { metadata } = await this.getMetadata(key);
+      const { metadata } = await this.env[this.kvName].getWithMetadata(key);
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
@@ -204,12 +204,11 @@ export class TGAdapterV2 extends BaseAdapter {
     const ext = key.substring(key.lastIndexOf(".") + 1);
     const contentType = getContentTypeByExt(ext);
 
-    const item = await this.getMetadata(key);
-    if (!item?.metadata?.chunkInfo) {
+    const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
+    if (!metadata?.chunkInfo) {
       return fail("Invalid metadata", 400);
     }
 
-    const { metadata, value } = item;
 
     // 解析 chunks（从 value 中获取，而非 metadata.chunkInfo.chunks）
     let chunks: Chunk[] = [];

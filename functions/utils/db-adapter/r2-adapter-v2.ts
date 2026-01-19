@@ -135,14 +135,11 @@ export class R2AdapterV2 extends BaseAdapter {
       headers.set("Content-Length", String(size));
 
       // 获取元数据以获取原始文件名
-      const metaResult = await this.getMetadata(key);
-      if (metaResult) {
-        const { metadata } = metaResult;
-        headers.set(
-          "Content-Disposition",
-          "attachment; filename=\"" + metadata.fileName + "\"",
-        );
-      }
+      const { metadata } = await this.env[this.kvName].getWithMetadata(key);
+      headers.set(
+        "Content-Disposition",
+        "attachment; filename=\"" + metadata.fileName + "\"",
+      );
 
       return new Response(object.body, { status: 200, headers });
     } catch (error) {
@@ -153,13 +150,12 @@ export class R2AdapterV2 extends BaseAdapter {
 
   private async getMergedFile(key: string, req?: Request): Promise<Response> {
     try {
-      const metaResult = await this.getMetadata(key);
-      if (!metaResult) {
+      const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
+      
+      if (!metadata) {
         console.error(`[getMergedFile] No metadata found for key: ${key}`);
         return fail("Metadata not found", 404);
       }
-
-      const { metadata, value } = metaResult;
 
       // 解析 chunks
       let chunks: Chunk[] = [];
@@ -331,20 +327,10 @@ export class R2AdapterV2 extends BaseAdapter {
 
   async delete(key: string): Promise<boolean> {
     try {
-      const metaResult = await this.getMetadata(key);
-      if (!metaResult) {
-        return false;
-      }
+      const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
 
-      const { value } = metaResult;
       let chunks: Chunk[] = [];
-      try {
-        if (value) {
-          chunks = JSON.parse(value);
-        }
-      } catch (e) {
-        console.error(`[delete] Failed to parse chunks for ${key}:`, e);
-      }
+      chunks = JSON.parse(value);
 
       // 删除所有分片
       if (chunks.length > 0) {

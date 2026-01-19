@@ -137,13 +137,10 @@ export abstract class BaseAdapter implements DBAdapter {
     const kv = this.env[this.kvName];
 
     // 1. 获取当前 metadata
-    const metaResult = await this.getMetadata(key);
-    if (!metaResult?.metadata?.chunkInfo) {
+    const { metadata } = this.env[this.kvName].getWithMetadata(key);
+    if (!metadata?.chunkInfo) {
       throw new Error("Not a chunked file");
     }
-
-    const metadata = metaResult.metadata;
-
 
     // 2. 检查分片是否已上传（使用通用工具函数）
     const isUploaded = isUploadedChunk(metadata, chunkIndex);
@@ -195,36 +192,19 @@ export abstract class BaseAdapter implements DBAdapter {
   }
 
   /**
-   * 获取文件元数据
+   * 获取文件元数据（公开方法，用于权限检查）
    */
-  protected async getMetadata(key: string): Promise<{
+  public async getPublicMetadata(key: string): Promise<{
     metadata: FileMetadata;
     value: string | null;
   } | null> {
     try {
       const item = await this.env[this.kvName].getWithMetadata(key);
-      const metadata: FileMetadata = item.metadata;
-      const value = item.value;
-
-      if (!metadata) {
-        return null;
-      }
-
-      return { metadata, value };
+      return { metadata: item.metadata, value: item.value };
     } catch (error) {
       console.error(`[getMetadata] Error for key ${key}:`, error);
       return null;
     }
-  }
-
-  /**
-   * 获取文件元数据（公开方法，用于权限检查）
-   */
-  async getPublicMetadata(key: string): Promise<{
-    metadata: FileMetadata;
-    value: string | null;
-  } | null> {
-    return this.getMetadata(key);
   }
 
   /**
@@ -242,14 +222,13 @@ export abstract class BaseAdapter implements DBAdapter {
     for (let i = 0; i < maxRetries; i++) {
       try {
         // 1. 获取最新状态
-        const metaResult = await this.getMetadata(key);
-        if (!metaResult) {
+        const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
+        if (!metadata) {
           throw new Error(`Metadata not found for key: ${key}`);
         }
 
-        const metadata = metaResult.metadata;
-        const chunks: Chunk[] = metaResult.value
-          ? JSON.parse(metaResult.value)
+        const chunks: Chunk[] = value
+          ? JSON.parse(value)
           : [];
 
         // 2. 检查是否已上传
