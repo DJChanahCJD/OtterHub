@@ -37,7 +37,7 @@ export async function onRequestPost(context: any) {
             tags: isNsfw ? [FileTag.NSFW] : [],
         };
 
-        const key = await dbAdapter.uploadFile(blob, metadata);
+        const { key } = await dbAdapter.uploadFile(blob, metadata);
         return ok({ key, fileSize });
     } catch (error: any) {
         console.error('Remote upload error:', error);
