@@ -28,7 +28,7 @@ export class R2AdapterV2 extends BaseAdapter {
   }
 
   async uploadFile(
-    file: File | Blob,
+    file: File | Blob | Uint8Array,
     metadata: FileMetadata,
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
@@ -37,11 +37,13 @@ export class R2AdapterV2 extends BaseAdapter {
 
     // 根据文件类型确定前缀
     let fileType: FileType;
-    if (file.type.startsWith("image/")) {
+    const mimeType = (file as any).type || getContentTypeByExt(fileExtension);
+
+    if (mimeType.startsWith("image/")) {
       fileType = FileType.Image;
-    } else if (file.type.startsWith("audio/")) {
+    } else if (mimeType.startsWith("audio/")) {
       fileType = FileType.Audio;
-    } else if (file.type.startsWith("video/")) {
+    } else if (mimeType.startsWith("video/")) {
       fileType = FileType.Video;
     } else {
       fileType = FileType.Document;
@@ -53,11 +55,49 @@ export class R2AdapterV2 extends BaseAdapter {
     // 将文件上传到R2存储
     await this.env[this.bucketName].put(key, file, {
       httpMetadata: {
-        contentType: file.type,
+        contentType: mimeType,
       },
     });
 
     // 将文件信息保存到KV存储（value 为空字符串，chunks 在 metadata）
+    if (this.env[this.kvName]) {
+      await this.env[this.kvName].put(key, "", { metadata });
+    }
+
+    return { key };
+  }
+
+  async uploadStream(
+    stream: ReadableStream,
+    metadata: FileMetadata,
+  ): Promise<{ key: string }> {
+    const fileId = getUniqueFileId();
+    const fileName = metadata.fileName;
+    const fileExtension = fileName.split(".").pop().toLowerCase();
+    const contentType = getContentTypeByExt(fileExtension);
+
+    // 根据文件类型确定前缀
+    let fileType: FileType;
+    if (contentType.startsWith("image/")) {
+      fileType = FileType.Image;
+    } else if (contentType.startsWith("audio/")) {
+      fileType = FileType.Audio;
+    } else if (contentType.startsWith("video/")) {
+      fileType = FileType.Video;
+    } else {
+      fileType = FileType.Document;
+    }
+
+    const key = buildKeyId(fileType, fileId, fileExtension);
+
+    // 直接流式上传到 R2
+    await this.env[this.bucketName].put(key, stream, {
+      httpMetadata: {
+        contentType,
+      },
+    });
+
+    // 保存元数据
     if (this.env[this.kvName]) {
       await this.env[this.kvName].put(key, "", { metadata });
     }
@@ -70,7 +110,7 @@ export class R2AdapterV2 extends BaseAdapter {
    * 由基类的 consumeChunk 模板方法调用
    */
   protected async uploadToTarget(
-    chunkFile: File,
+    chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
   ): Promise<string> {
@@ -79,7 +119,7 @@ export class R2AdapterV2 extends BaseAdapter {
 
     await bucket.put(chunkId, chunkFile, {
       httpMetadata: {
-        contentType: chunkFile.type,
+        contentType: (chunkFile as any).type || "application/octet-stream",
       },
     });
 

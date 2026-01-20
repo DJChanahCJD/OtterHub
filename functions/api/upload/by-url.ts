@@ -24,9 +24,13 @@ export async function onRequestPost(context: any) {
             return fail(`Failed to fetch remote file: Status ${response.status}`, response.status);
         }
 
-        const blob = await response.blob();
+        if (!response.body) {
+            return fail('Empty response body from remote URL', 502);
+        }
+
         const finalFileName = (fileName || 'remote_file').substring(0, 100);
-        const fileSize = blob.size;
+        // 尝试从 headers 获取文件大小，如果没有则设为 0（流式上传可能不知道大小）
+        const fileSize = parseInt(response.headers.get('content-length') || '0');
 
         // 创建存储适配器实例
         const dbAdapter = DBAdapterFactory.getAdapter(env);
@@ -39,7 +43,8 @@ export async function onRequestPost(context: any) {
             tags: isNsfw ? [FileTag.NSFW] : [],
         };
 
-        const { key } = await dbAdapter.uploadFile(blob, metadata);
+        // 使用流式上传，避免 Blob 在 Cloudflare Pages 上的兼容性问题及大文件内存压力
+        const { key } = await dbAdapter.uploadStream(response.body, metadata);
         return ok({ key, fileSize });
     } catch (error: any) {
         console.error('Remote upload error:', error);

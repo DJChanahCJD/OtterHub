@@ -22,6 +22,11 @@ export abstract class BaseAdapter implements DBAdapter {
     metadata: FileMetadata,
   ): Promise<{ key: string }>;
 
+  abstract uploadStream(
+    stream: ReadableStream,
+    metadata: FileMetadata,
+  ): Promise<{ key: string }>;
+
   abstract get(key: string, req?: Request): Promise<Response>;
 
   abstract delete(key: string): Promise<{ isDeleted: boolean }>;
@@ -70,7 +75,7 @@ export abstract class BaseAdapter implements DBAdapter {
    * @returns 上传后的分片 ID
    */
   protected abstract uploadToTarget(
-    chunkFile: File,
+    chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
   ): Promise<string>;

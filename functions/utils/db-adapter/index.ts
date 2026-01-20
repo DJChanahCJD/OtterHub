@@ -7,6 +7,7 @@ import { TGAdapterV2 } from "./tg-adapter-v2";
 export interface DBAdapter {
   // 上传单个完整文件
   uploadFile(file: File | Blob | Uint8Array, metadata: FileMetadata): Promise<{ key: string }>;
+  uploadStream(stream: ReadableStream, metadata: FileMetadata): Promise<{ key: string }>;
   // 上传分片文件
   uploadChunk(
     key: string,

@@ -41,13 +41,13 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const { fileName } = metadata;
 
-    // 统一转换为 File 对象，确保兼容性
+    // 如果不是 File 实例，将其转换为 File
     let finalFile: File;
     if (file instanceof File) {
       finalFile = file;
     } else {
-      const ext = fileName.split(".").pop()?.toLowerCase() || "bin";
-      const contentType = getContentTypeByExt(ext);
+      const extension = fileName.split(".").pop()?.toLowerCase() || "";
+      const contentType = getContentTypeByExt(extension);
       finalFile = new File([file], fileName, { type: contentType });
     }
 
@@ -91,18 +91,37 @@ export class TGAdapterV2 extends BaseAdapter {
     return { key };
   }
 
+  async uploadStream(
+    stream: ReadableStream,
+    metadata: FileMetadata,
+  ): Promise<{ key: string }> {
+    // Telegram 不支持流式上传，需要转为 Blob
+    const response = new Response(stream);
+    const blob = await response.blob();
+    return this.uploadFile(blob, metadata);
+  }
+
   /**
    * 上传分片到 Telegram 存储
    * 由基类的 consumeChunk 模板方法调用
    */
   protected async uploadToTarget(
-    chunkFile: File,
+    chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
   ): Promise<string> {
     const formData = new FormData();
     formData.append("chat_id", this.env.TG_CHAT_ID);
-    formData.append("document", chunkFile);
+    
+    // 确保是 File 实例以便带有文件名
+    let fileToUpload: File;
+    if (chunkFile instanceof File) {
+      fileToUpload = chunkFile;
+    } else {
+      fileToUpload = new File([chunkFile], `part-${chunkIndex}`);
+    }
+    
+    formData.append("document", fileToUpload);
 
     const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
 
