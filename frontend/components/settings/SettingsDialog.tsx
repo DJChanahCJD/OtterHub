@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WallpaperTab } from "./wallpaper-tab/WallpaperTab";
+import { GeneralTab } from "./general-tab/GeneralTab";
 import { LayoutGrid, Image as ImageIcon, Settings, Shield, HardDrive } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -18,7 +19,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   const menuItems = [
     { id: "wallpaper", label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
-    { id: "general", label: "常规设置", icon: Settings, color: "text-slate-500", disabled: true },
+    { id: "general", label: "常规设置", icon: Settings, color: "text-slate-500" },
   ];
 
   return (
@@ -76,7 +77,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <main className="flex-1 p-4 md:p-8 overflow-hidden flex flex-col bg-background/50">
             <div className="flex-1 min-h-0">
               {activeTab === "wallpaper" && <WallpaperTab />}
-              {activeTab !== "wallpaper" && (
+              {activeTab === "general" && <GeneralTab />}
+              {activeTab !== "wallpaper" && activeTab !== "general" && (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground/20">
                   <div className="p-8 rounded-full bg-muted/30 border border-dashed border-border/50 mb-4">
                     <LayoutGrid className="h-16 w-16" />

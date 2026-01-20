@@ -6,7 +6,7 @@ import { Upload } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
 import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils"
-import { useFileDataStore } from "@/lib/file-store"
+import { useFileDataStore, useFileUIStore } from "@/lib/file-store"
 
 import {
   FileItem,
@@ -26,6 +26,7 @@ import { toast } from "sonner"
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal)
+  const nsfwDetection = useFileUIStore((s) => s.nsfwDetection)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -47,7 +48,7 @@ export function FileUploadZone() {
       setUploadProgress({ ...uploadProgressMap })
 
       try {
-        const isUnsafe = await nsfwDetector.isUnsafeImg(file)
+        const isUnsafe = nsfwDetection ? await nsfwDetector.isUnsafeImg(file) : false;
         const key = await uploadFile(file, isUnsafe)
 
         uploadProgressMap[tmpKey] = 100

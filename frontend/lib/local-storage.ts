@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
   SORT_ORDER: `${projectName}_sort_order`,
   SAFE_MODE: `${projectName}_safe_mode`,
   IMAGE_LOAD_MODE: `${projectName}_image_load_mode`,
+  DATA_SAVER_THRESHOLD: `${projectName}_data_saver_threshold`,
+  NSFW_DETECTION: `${projectName}_nsfw_detection`,
   ITEMS_PER_PAGE: `${projectName}_items_per_page`,
   FAB_POSITION: `${projectName}_fab_position`,
   WALLPAPER_SETTINGS: `${projectName}_wallpaper_settings`,

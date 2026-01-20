@@ -84,3 +84,14 @@ export type ListFilesResponse = {
   cursor?: string;
   cacheStatus?: string;
 };
+
+// 全局设置类型
+export interface GeneralSettings {
+  dataSaverThreshold: number; // MB
+  nsfwDetection: boolean;
+}
+
+export interface AppSettings {
+  wallpaper?: Record<string, any>;
+  general?: GeneralSettings;
+}

@@ -6,7 +6,6 @@ import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { PhotoView } from "react-photo-view";
 import { cn } from "@/lib/utils";
-import { SMART_NO_IMAGE_THRESHOLD } from "../file-card";
 import { NsfwSign } from "../file-card/NsfwSign";
 
 interface MasonryImageCardProps {
@@ -14,14 +13,14 @@ interface MasonryImageCardProps {
 }
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
-  const { safeMode, imageLoadMode: loadImageMode } = useFileUIStore();
+  const { safeMode, imageLoadMode: loadImageMode, dataSaverThreshold } = useFileUIStore();
 
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const load = shouldLoadImage({
     fileType: FileType.Image,
     loadImageMode,
     fileSize: file.metadata.fileSize,
-    threshold: SMART_NO_IMAGE_THRESHOLD,
+    threshold: dataSaverThreshold * 1024 * 1024,
   });
 
   const imageUrl = getFileUrl(file.name);

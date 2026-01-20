@@ -11,15 +11,35 @@ import {
 import { useFileUIStore } from "@/lib/file-store";
 import { ImageLoadMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 const MODES = {
   [ImageLoadMode.Default]: { label: "默认", icon: Image, desc: "全量加载" },
-  [ImageLoadMode.DataSaver]: { label: "省流", icon: ZapOff, desc: ">5MB跳过" },
+  [ImageLoadMode.DataSaver]: { label: "省流", icon: ZapOff, desc: `跳过大图` },
   [ImageLoadMode.NoImage]: { label: "无图", icon: ImageOff, desc: "禁用图片" },
 };
 
 export function ImageLoadModeToggle() {
   const { imageLoadMode, setImageLoadMode } = useFileUIStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    const DefaultIcon = MODES[ImageLoadMode.DataSaver].icon;
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-foreground/60"
+      >
+        <DefaultIcon className="h-4 w-4" />
+      </Button>
+    );
+  }
+
   const Icon = MODES[imageLoadMode].icon;
 
   return (
@@ -32,7 +52,7 @@ export function ImageLoadModeToggle() {
             "h-8 w-8 transition-colors",
             imageLoadMode !== ImageLoadMode.Default
               ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
-              : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
+              : "text-foreground/60 hover:text-foreground-muted hover:bg-secondary/50"
           )}
         >
           <Icon className="h-4 w-4" />
@@ -53,7 +73,7 @@ export function ImageLoadModeToggle() {
               <ModeIcon className="h-3.5 w-3.5 text-foreground/80" />
               <span className="text-sm font-medium text-foreground/80">{label}</span>
             </div>
-            <span className="text-[10px] opacity-40 italic">{desc}</span>
+            <span className="text-[10px] opacity-60 italic text-foreground/60">{desc}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

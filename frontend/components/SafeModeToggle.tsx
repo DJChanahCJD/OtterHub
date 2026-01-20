@@ -10,9 +10,27 @@ import {
 } from "@/components/ui/tooltip"
 import { useFileUIStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
 
 export function SafeModeToggle() {
   const { safeMode, setSafeMode } = useFileUIStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 text-foreground/60"
+      >
+        <Shield className="h-4 w-4" />
+      </Button>
+    )
+  }
 
   return (
     <TooltipProvider>

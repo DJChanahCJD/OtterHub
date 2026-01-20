@@ -13,6 +13,12 @@ export function useInitFileStore() {
     ui.setImageLoadMode(
       getFromStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, ImageLoadMode.DataSaver)
     );
+    ui.setDataSaverThreshold(
+      getFromStorage(STORAGE_KEYS.DATA_SAVER_THRESHOLD, 5.0)
+    );
+    ui.setNsfwDetection(
+      getFromStorage(STORAGE_KEYS.NSFW_DETECTION, true)
+    );
     ui.setItemsPerPage(getFromStorage(STORAGE_KEYS.ITEMS_PER_PAGE, 20));
 
     // Query Store

@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { useFileDataStore } from "./data";
-import { setToStorage, STORAGE_KEYS } from "../local-storage";
-import { ViewMode, ImageLoadMode, FileType } from "../types";
+import { setToStorage, getFromStorage, STORAGE_KEYS } from "../local-storage";
+import { ViewMode, ImageLoadMode, FileType, GeneralSettings } from "../types";
+import { updateSettings } from "../api/settings";
 
 interface FileUIState {
   viewMode: ViewMode;
   safeMode: boolean;
   imageLoadMode: ImageLoadMode;
+  dataSaverThreshold: number; // MB
+  nsfwDetection: boolean;
   itemsPerPage: number;
   
   // selection 按桶管理
@@ -16,7 +19,12 @@ interface FileUIState {
   setViewMode: (mode: ViewMode) => void;
   setSafeMode: (enabled: boolean) => void;
   setImageLoadMode: (mode: ImageLoadMode) => void;
+  setDataSaverThreshold: (threshold: number) => void;
+  setNsfwDetection: (enabled: boolean) => void;
   setItemsPerPage: (count: number) => void;
+  
+  // 云端同步
+  syncGeneralSettings: () => Promise<void>;
   
   toggleSelection: (name: string, type?: FileType) => void;
   selectAll: (names?: string[], type?: FileType) => void;
@@ -27,6 +35,8 @@ export const useFileUIStore = create<FileUIState>((set, get) => ({
   viewMode: ViewMode.Grid,
   safeMode: true,
   imageLoadMode: ImageLoadMode.DataSaver,
+  dataSaverThreshold: 5.0,
+  nsfwDetection: true,
   itemsPerPage: 20,
   
   selectedKeys: {
@@ -52,9 +62,29 @@ export const useFileUIStore = create<FileUIState>((set, get) => ({
     setToStorage(STORAGE_KEYS.IMAGE_LOAD_MODE, mode);
   },
 
+  setDataSaverThreshold: (threshold) => {
+    set({ dataSaverThreshold: threshold });
+    setToStorage(STORAGE_KEYS.DATA_SAVER_THRESHOLD, threshold);
+  },
+
+  setNsfwDetection: (enabled) => {
+    set({ nsfwDetection: enabled });
+    setToStorage(STORAGE_KEYS.NSFW_DETECTION, enabled);
+  },
+
   setItemsPerPage: (count) => {
     set({ itemsPerPage: count });
     setToStorage(STORAGE_KEYS.ITEMS_PER_PAGE, count);
+  },
+
+  syncGeneralSettings: async () => {
+    const { dataSaverThreshold, nsfwDetection } = get();
+    await updateSettings({
+      general: {
+        dataSaverThreshold,
+        nsfwDetection,
+      },
+    });
   },
 
   toggleSelection: (name, type) =>

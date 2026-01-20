@@ -10,7 +10,6 @@ import { FilterDropdown } from "@/components/FilterDropdown";
 import { Pagination } from "@/components/Pagination";
 import { ViewMode } from "@/lib/types";
 import { ChevronDown } from "lucide-react";
-import { useInitFileStore } from "@/hooks/use-init-file-store";
 import { MasonryGrid } from "./masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
 import { PhotoToolbar } from "./FileImagePreview";
@@ -53,8 +52,6 @@ function FileViewRenderer({
 }
 
 export function FileGallery() {
-  useInitFileStore();
-
   const { viewMode, itemsPerPage, setItemsPerPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
   const { searchQuery, filterLiked, filterTags, filterDateRange } = useFileQueryStore();

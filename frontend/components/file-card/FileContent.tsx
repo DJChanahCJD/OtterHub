@@ -7,8 +7,8 @@ import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
 import { FileTag, ImageLoadMode, FileType } from "@/lib/types";
 import { FileImagePreview } from "../FileImagePreview";
+import { useFileUIStore } from "@/lib/file-store";
 
-export const SMART_NO_IMAGE_THRESHOLD = 5 * 1024 * 1024;
 export const ICON_DISPLAY_SIZE = "h-18 w-18";
 
 interface FileContentProps {
@@ -36,12 +36,13 @@ export function FileContent({
   className,
   imgSrc,
 }: FileContentProps) {
+  const dataSaverThreshold = useFileUIStore((s) => s.dataSaverThreshold);
   const blur = shouldBlur({ safeMode, tags });
   const load = shouldLoadImage({
     fileType,
     loadImageMode,
     fileSize,
-    threshold: SMART_NO_IMAGE_THRESHOLD,
+    threshold: dataSaverThreshold * 1024 * 1024,
   });
 
   if (fileType === FileType.Image) {
