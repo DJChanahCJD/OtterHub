@@ -23,8 +23,8 @@ export async function onRequestGet(context: any) {
     const loliconUrl = new URL(API_URL);
     loliconUrl.searchParams.set("r18", r18);
     loliconUrl.searchParams.set("num", num);
-    // 使用假值以获取原始域名 i.pximg.net，由我们自己的代理处理防盗链
-    loliconUrl.searchParams.set("proxy", "0"); 
+    // 使用原始域名 i.pximg.net，由我们自己的代理处理防盗链
+    loliconUrl.searchParams.set("proxy", "i.pximg.net"); 
     
     if (tag && tag.length > 0) {
       tag.forEach(t => loliconUrl.searchParams.append("tag", t));
@@ -41,15 +41,7 @@ export async function onRequestGet(context: any) {
     loliconUrl.searchParams.append("size", "small");
 
     console.log("Lolicon API request:", loliconUrl.toString());
-    const response = await fetch(loliconUrl.toString(), {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        "Referer": "https://www.pixiv.net/",
-      },
-    });
+    const response = await fetch(loliconUrl.toString());
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -73,7 +65,7 @@ export async function onRequestGet(context: any) {
         id: item.pid,
         // 使用项目内置代理包装，确保国内环境可用
         previewUrl: getWallpaperProxyUrl(origin, previewUrl),
-        rawUrl: rawUrl,
+        rawUrl: rawUrl, //  rawUrl用于直接下载原始图片，同样通过cloudflare， 因此无需加代理
         source: "lolicon",
       };
     });
