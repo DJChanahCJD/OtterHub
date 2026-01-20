@@ -358,6 +358,8 @@ OtterHub/
 - [x] 基于 cookie 实现登录登出
 - [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面）
   - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
+- [x] 随机壁纸
+  - 多壁纸源（Wallhaven、Bing、Pixabay 等）
 - [ ] 临时分享文件（无论是否 Private 都可以访问）
   - [] KV实现, 一次性 / 有效期 URL （允许用户选择）
   - [] key: link:<uuid>
