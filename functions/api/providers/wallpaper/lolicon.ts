@@ -5,7 +5,7 @@ import { UnifiedWallpaper, LoliconConfig } from "./types";
 const API_URL = "https://api.lolicon.app/setu/v2";
 
 // https://docs.api.lolicon.app/#/setu
-export async function onRequest(context: any) {
+export async function onRequestGet(context: any) {
   const { request } = context;
 
   try {

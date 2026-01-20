@@ -3,7 +3,7 @@ import { UnifiedWallpaper } from "./types";
 
 const baseUrl = "https://picsum.photos/v2/list";
 
-export async function onRequest(context: any) {
+export async function onRequestGet(context: any) {
   const { request } = context;
 
   try {

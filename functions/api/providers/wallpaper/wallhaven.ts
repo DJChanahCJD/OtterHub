@@ -5,7 +5,7 @@ import { UnifiedWallpaper } from "./types";
 const baseUrl = "https://wallhaven.cc/api/v1/search";
 
 // !在本地环境无法请求成功, 尝试生产环境
-export async function onRequest(context: any) {
+export async function onRequestGet(context: any) {
   const { request, env } = context;
 
   try {

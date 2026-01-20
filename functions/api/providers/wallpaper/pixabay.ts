@@ -3,7 +3,7 @@ import { UnifiedWallpaper } from "./types";
 
 const baseUrl = "https://pixabay.com/api/";
 
-export async function onRequest(context: any) {
+export async function onRequestGet(context: any) {
   const { request, env } = context;
 
   try {
