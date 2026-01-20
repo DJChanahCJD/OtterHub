@@ -1,3 +1,5 @@
+// funcitons/utils/proxy/site-rules.ts
+// 站点规则配置
 export type SiteRule = {
   match: (url: URL) => boolean;
   headers: Record<string, string>;

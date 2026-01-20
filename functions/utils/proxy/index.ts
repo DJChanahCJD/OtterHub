@@ -1,3 +1,4 @@
+// functions/utils/proxy/index.ts
 import { safeFetch } from "./fetch";
 import { resolveSiteHeaders } from "./site-rules";
 import { filterResponseHeaders } from "./headers";

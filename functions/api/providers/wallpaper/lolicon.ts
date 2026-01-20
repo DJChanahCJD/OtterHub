@@ -24,7 +24,7 @@ export async function onRequestGet(context: any) {
     loliconUrl.searchParams.set("r18", r18);
     loliconUrl.searchParams.set("num", num);
     // 使用假值以获取原始域名 i.pximg.net，由我们自己的代理处理防盗链
-    loliconUrl.searchParams.set("proxy", ""); 
+    loliconUrl.searchParams.set("proxy", "0"); 
     
     if (tag && tag.length > 0) {
       tag.forEach(t => loliconUrl.searchParams.append("tag", t));
@@ -41,7 +41,15 @@ export async function onRequestGet(context: any) {
     loliconUrl.searchParams.append("size", "small");
 
     console.log("Lolicon API request:", loliconUrl.toString());
-    const response = await fetch(loliconUrl.toString());
+    const response = await fetch(loliconUrl.toString(), {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Referer": "https://www.pixiv.net/",
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
