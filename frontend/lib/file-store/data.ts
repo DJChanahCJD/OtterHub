@@ -4,6 +4,7 @@ import {
   FileMetadata,
   FileType,
   ListFilesRequest,
+  TRASH_EXPIRATION_TTL,
   ViewMode,
   trashPrefix,
 } from "../types";
@@ -144,6 +145,7 @@ export const useFileDataStore = create<FileDataState>((set, get) => ({
     const fileType = getFileTypeFromKey(file.name);
     get().deleteFilesLocalByType([file.name], fileType);
     file.name = trashPrefix + file.name;
+    file.expiration = TRASH_EXPIRATION_TTL;
     get().addFileLocal(file, FileType.Trash);
   },
 
