@@ -46,4 +46,5 @@ description: 用于在 OtterHub 项目中快速添加和集成新的随机壁纸
 - **统一格式**：所有 Provider 必须返回 `UnifiedWallpaper` 结构，确保前端展示组件无需修改。
 - **配置同步**：API Key 应支持云端同步，普通过滤参数（如关键词）仅存在本地。
 - **错误处理**：后端 Provider 应捕获 API 错误并使用 `fail()` 函数返回友好的错误信息。
+- **API Key 规范**：前端统一传递 `apiKey` 参数，后端 Provider 需通过 `url.searchParams.get("apiKey")` 获取，并自行映射到第三方 API 所需的字段（如 `key`, `client_id` 或 Header）。
 - **NSFW 标识**：在 Provider 中显式定义 `isNsfw` 逻辑，以便前端打标。
