@@ -1,11 +1,12 @@
+// functions/api/upload/by-url.ts
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { FileMetadata, FileTag } from "../../utils/types";
+import { proxyGet } from "../../utils/proxy";
 
 /**
  * 通过 URL 远程上传文件
  */
-// TODO: 是否支持分片上传？
 export async function onRequestPost(context: any) {
     const { request, env } = context;
 
@@ -16,16 +17,11 @@ export async function onRequestPost(context: any) {
             return fail('No URL provided', 400);
         }
 
-        // 获取远程文件内容
-        const response = await fetch(url);
+        // 使用重构后的代理请求，自动处理不同站点的防盗链
+        const response = await proxyGet(url);
+        
         if (!response.ok) {
-            let errorDetail = response.statusText;
-            if (!errorDetail && response.status === 403) {
-                errorDetail = "Forbidden (Possible anti-hotlinking)";
-            } else if (!errorDetail) {
-                errorDetail = `Status ${response.status}`;
-            }
-            return fail(`Failed to fetch remote file: ${errorDetail}`, 400);
+            return fail(`Failed to fetch remote file: Status ${response.status}`, response.status);
         }
 
         const blob = await response.blob();

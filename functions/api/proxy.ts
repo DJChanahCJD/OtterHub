@@ -1,5 +1,5 @@
 import { fail } from "../utils/common";
-import { proxyGetRequest } from "../utils/proxy";
+import { proxyGet, handleStreamResponse } from "../utils/proxy";
 
 /**
  * 代理接口 - 只处理 GET 请求
@@ -29,7 +29,10 @@ export async function onRequestGet(context: any) {
       }
     }
 
-    return await proxyGetRequest(targetUrl, customHeaders);
+    const response = await proxyGet(targetUrl, customHeaders);
+    
+    // 对于通用代理，我们透传流式响应并过滤敏感头
+    return handleStreamResponse(response);
   } catch (e: any) {
     console.error("Proxy error:", e);
     return fail(`Proxy error: ${e.message || "Unknown error"}`, 500);

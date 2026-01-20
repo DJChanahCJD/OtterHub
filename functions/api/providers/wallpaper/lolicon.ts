@@ -23,8 +23,8 @@ export async function onRequestGet(context: any) {
     const loliconUrl = new URL(API_URL);
     loliconUrl.searchParams.set("r18", r18);
     loliconUrl.searchParams.set("num", num);
-    // 使用原始域名 i.pximg.net，由我们自己的代理处理防盗链
-    loliconUrl.searchParams.set("proxy", "i.pximg.net"); 
+    // 使用假值以获取原始域名 i.pximg.net，由我们自己的代理处理防盗链
+    loliconUrl.searchParams.set("proxy", ""); 
     
     if (tag && tag.length > 0) {
       tag.forEach(t => loliconUrl.searchParams.append("tag", t));

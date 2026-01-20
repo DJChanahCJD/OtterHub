@@ -1,5 +1,6 @@
+// functions/api/providers/wallpaper/proxy.ts
 import { fail } from "../../../utils/common";
-import { proxyGetRequest } from "../../../utils/proxy";
+import { proxyGet } from "../../../utils/proxy";
 
 /**
  * 壁纸专用代理接口
@@ -16,20 +17,8 @@ export async function onRequestGet(context: any) {
       return fail("URL parameter is required", 400);
     }
 
-    const targetUrlObj = new URL(targetUrl);
-    const customHeaders: Record<string, string> = {};
-
-    // 针对不同站点的防盗链处理
-    if (
-      targetUrlObj.hostname.includes("pximg.net") || 
-      targetUrlObj.hostname.includes("pixiv.re") || 
-      targetUrlObj.hostname.includes("pixiv.net")
-    ) {
-      customHeaders["Referer"] = "https://www.pixiv.net/";
-    }
-
-    // 发起代理请求
-    const response = await proxyGetRequest(targetUrl, customHeaders);
+    // 发起代理请求，使用重构后的统一代理
+    const response = await proxyGet(targetUrl);
 
     // 针对图片的缓存优化：如果成功获取，设置较长的缓存时间
     if (response.ok) {
