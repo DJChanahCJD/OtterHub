@@ -14,7 +14,7 @@ export function getWallpapers(
 ): Promise<UnifiedWallpaper[]> {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v) searchParams.append(k === 'key' || k === 'apiKey' ? 'apikey' : k, String(v));
+    if (v) searchParams.append(k, String(v));
   });
 
   return request<UnifiedWallpaper[]>(`${API_URL}/api/providers/wallpaper/${source}?${searchParams.toString()}`);

@@ -6,6 +6,7 @@ import { WallpaperProvider, PicsumConfig, WP_API_KEY_PLACEHOLDER } from "../type
 export const PicsumSource: WallpaperProvider<PicsumConfig> = {
   id: "picsum",
   name: "Picsum",
+  requiresApiKey: false,
   defaultConfig: {
     page: 1,
     limit: 20,

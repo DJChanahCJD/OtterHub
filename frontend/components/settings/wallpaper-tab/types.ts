@@ -2,7 +2,7 @@ import { WallpaperSourceId } from "@/lib/types";
 
 // https://pixabay.com/api/
 export type PixabayConfig = {
-  key: string;
+  apiKey: string;
   q?: string;
   category?: string; // nature, science, education, people, places, animals 等
   order?: "popular" | "latest";
@@ -43,7 +43,7 @@ export type LoliconConfig = {
 };
 
 export type UnsplashConfig = {
-  accessKey: string;
+  apiKey: string;
   query?: string;
   orientation?: "landscape" | "portrait" | "squarish";
   content_filter?: "low" | "high";
@@ -53,6 +53,7 @@ export const WP_API_KEY_PLACEHOLDER = "public"
 export interface WallpaperProviderMeta {
   id: WallpaperSourceId;
   name: string;
+  requiresApiKey?: boolean;
 }
 
 

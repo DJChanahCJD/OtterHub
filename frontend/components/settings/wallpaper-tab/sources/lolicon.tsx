@@ -13,6 +13,7 @@ import { WallpaperProvider, LoliconConfig, WP_API_KEY_PLACEHOLDER } from "../typ
 export const LoliconSource: WallpaperProvider<LoliconConfig> = {
   id: "lolicon",
   name: "Lolicon",
+  requiresApiKey: false,
   defaultConfig: {
     r18: 0,
     tag: "",

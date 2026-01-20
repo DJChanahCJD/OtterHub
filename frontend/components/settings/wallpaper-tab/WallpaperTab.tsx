@@ -12,6 +12,7 @@ import {
   Dices,
   Hash,
   Upload,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -43,6 +44,7 @@ export function WallpaperTab() {
   } = useWallpaperSources();
 
   const [uploadingId, setUploadingId] = useState<string | number | null>(null);
+  const [uploadedIds, setUploadedIds] = useState<Set<string | number>>(new Set());
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const [minPage, setMinPage] = useState(1);
   const [maxPage, setMaxPage] = useState(20);
@@ -119,6 +121,7 @@ export function WallpaperTab() {
         },
       };
       addFileLocal(fileItem, FileType.Image);
+      setUploadedIds((prev) => new Set(prev).add(wp.id));
 
       toast.success("已保存到云端");
     } catch (error: any) {
@@ -143,19 +146,19 @@ export function WallpaperTab() {
       className="flex flex-col h-full overflow-y-auto custom-scrollbar space-y-6 pr-2"
     >
       {/* 1. 顶部数据源切换区 */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1">
-        <div className="space-y-3">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 px-1">
+        <div className="w-full lg:w-auto overflow-hidden">
           <Tabs
             value={activeSourceId}
             onValueChange={(v) => setActiveSourceId(v as WallpaperSourceId)}
-            className="w-full md:w-auto"
+            className="w-full"
           >
-            <TabsList className="bg-muted/50 border border-border/40 p-1 h-11 rounded-xl">
+            <TabsList className="w-full flex justify-start bg-muted/50 border border-border/40 p-1 h-11 rounded-xl overflow-x-auto overflow-y-hidden custom-scrollbar scrollbar-none">
               {WALLPAPER_SOURCE_LIST.map((source) => (
                 <TabsTrigger
                   key={source.id}
                   value={source.id}
-                  className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all px-6 h-9 text-xs font-semibold rounded-lg"
+                  className="flex-shrink-0 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all px-4 sm:px-6 h-9 text-xs font-semibold rounded-lg"
                 >
                   {source.name}
                 </TabsTrigger>
@@ -164,19 +167,19 @@ export function WallpaperTab() {
           </Tabs>
         </div>
 
-        <div className="flex items-center gap-2 pb-1">
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           <div
-            className="flex items-center bg-muted/30 h-10 rounded-xl border border-border/40 px-3 gap-1.5 group focus-within:border-primary/40 focus-within:bg-muted/50 transition-all"
+            className="flex items-center bg-muted/30 h-10 rounded-xl border border-border/40 px-2 sm:px-3 gap-1 group focus-within:border-primary/40 focus-within:bg-muted/50 transition-all"
             title="随机页码范围"
           >
-            <Hash className="h-3.5 w-3.5 opacity-40 group-focus-within:opacity-100 transition-opacity" />
+            <Hash className="h-3.5 w-3.5 opacity-40 group-focus-within:opacity-100 transition-opacity hidden sm:block" />
             <input
               type="number"
               value={minPage}
               onChange={(e) =>
                 setMinPage(Math.max(1, parseInt(e.target.value) || 1))
               }
-              className="w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-7 sm:w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-muted-foreground/80 text-[10px] font-bold">
               -
@@ -189,27 +192,29 @@ export function WallpaperTab() {
                   Math.max(minPage, parseInt(e.target.value) || minPage),
                 )
               }
-              className="w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-7 sm:w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
-          <Separator orientation="vertical" className="h-6 mx-1 opacity-20" />
+          <Separator orientation="vertical" className="h-6 mx-0.5 opacity-20 hidden sm:block" />
 
           <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/40">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-8 w-8 rounded-lg transition-all",
-                hasApiKey
-                  ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                  : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10",
-              )}
-              onClick={() => setIsApiKeyDialogOpen(true)}
-              title="配置 API Key"
-            >
-              <Key className="h-4 w-4" />
-            </Button>
+            {activeSource.requiresApiKey && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 rounded-lg transition-all",
+                  hasApiKey
+                    ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                    : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10",
+                )}
+                onClick={() => setIsApiKeyDialogOpen(true)}
+                title="配置 API Key"
+              >
+                <Key className="h-4 w-4" />
+              </Button>
+            )}
 
             {wallpapers.length > 0 && (
               <Button
@@ -247,8 +252,15 @@ export function WallpaperTab() {
       <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl py-0 pt-6">
         <CardContent className="p-5">
           <div className="relative pt-1">
-            <div className="absolute -top-7.5 left-0 px-1 text-[10px] font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-1.5">
-              <Settings2 className="h-3 w-3" /> 过滤与偏好
+            <div className="absolute -top-7.5 left-0 px-1 text-[10px] font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-1.5 w-full justify-between">
+              <div className="flex items-center gap-1.5">
+                <Settings2 className="h-3 w-3" /> 过滤与偏好
+              </div>
+              {!activeSource.requiresApiKey && (
+                <span className="text-[9px] text-emerald-500/80 normal-case bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10">
+                  无需 API Key
+                </span>
+              )}
             </div>
 
             <div className="animate-in fade-in slide-in-from-top-1 duration-300">
@@ -293,47 +305,63 @@ export function WallpaperTab() {
         ) : (
           <div className="space-y-6 pb-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {displayWallpapers.map((wp) => (
-                <div
-                  key={`${wp.source}-${wp.id}`}
-                  className="group relative aspect-[3/2] rounded-xl overflow-hidden border border-border/50 bg-muted shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1.5 cursor-zoom-in"
-                  onClick={() => setPreviewUrl(wp.previewUrl)}
-                >
-                  <img
-                    src={wp.previewUrl}
-                    alt={wp.source}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    loading="lazy"
-                    decoding="async"
-                  />
+              {displayWallpapers.map((wp) => {
+                const isUploaded = uploadedIds.has(wp.id);
+                return (
+                  <div
+                    key={`${wp.source}-${wp.id}`}
+                    className="group relative aspect-[3/2] rounded-xl overflow-hidden border border-border/50 bg-muted shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1.5 cursor-zoom-in"
+                    onClick={() => setPreviewUrl(wp.previewUrl)}
+                  >
+                    <img
+                      src={wp.previewUrl}
+                      alt={wp.source}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                      loading="lazy"
+                      decoding="async"
+                    />
 
-                  <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
-                    <Badge
-                      variant="secondary"
-                      className="bg-black/40 text-white/90 border-none text-[8px] h-4 backdrop-blur-md px-1.5 opacity-80 group-hover:opacity-100 transition-opacity"
-                    >
-                      {wp.source}
-                    </Badge>
-                  </div>
+                    <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
+                      <Badge
+                        variant="secondary"
+                        className="bg-black/40 text-white/90 border-none text-[8px] h-4 backdrop-blur-md px-1.5 opacity-80 group-hover:opacity-100 transition-opacity"
+                      >
+                        {wp.source}
+                      </Badge>
+                    </div>
 
-                  {/* 移动端下载按钮 */}
-                  <div className="absolute bottom-2 right-2 z-10 pointer-events-auto">
-                    <Button
-                      size="icon"
-                      className="h-8 w-8 rounded-xl bg-black/40 backdrop-blur-md text-white border-none shadow-lg active:scale-95 transition-all"
-                      onClick={(e) => handleUpload(e, wp)}
-                      title={uploadingId === wp.id ? "上传中" : "上传壁纸"}
-                      disabled={uploadingId === wp.id}
-                    >
-                      {uploadingId === wp.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                    </Button>
+                    {/* 上传按钮 */}
+                    <div className="absolute bottom-2 right-2 z-10 pointer-events-auto">
+                      <Button
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8 rounded-xl backdrop-blur-md text-white border-none shadow-lg active:scale-95 transition-all",
+                          isUploaded
+                            ? "bg-emerald-500/60"
+                            : "bg-black/40 hover:bg-black/60",
+                        )}
+                        onClick={(e) => handleUpload(e, wp)}
+                        title={
+                          uploadingId === wp.id
+                            ? "上传中"
+                            : isUploaded
+                              ? "已保存到云端"
+                              : "上传壁纸"
+                        }
+                        disabled={uploadingId === wp.id || isUploaded}
+                      >
+                        {uploadingId === wp.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isUploaded ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {totalPages > 1 && (

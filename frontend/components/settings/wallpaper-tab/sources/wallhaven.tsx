@@ -17,6 +17,7 @@ function toggleBitMask(value: string, index: number, fallback: string) {
 export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   id: "wallhaven",
   name: "Wallhaven",
+  requiresApiKey: true,
   defaultConfig: {
     apiKey: "",
     q: "",

@@ -4,6 +4,7 @@ import { WallpaperProvider, BingConfig, WP_API_KEY_PLACEHOLDER } from "../types"
 export const BingSource: WallpaperProvider<BingConfig> = {
   id: "bing",
   name: "Bing 每日壁纸",
+  requiresApiKey: false,
   defaultConfig: {},
   getApiKey: () => WP_API_KEY_PLACEHOLDER, // Bing 不需要 API Key
   setApiKey: (config) => config,

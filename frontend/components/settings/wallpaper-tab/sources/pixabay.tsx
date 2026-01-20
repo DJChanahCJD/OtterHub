@@ -35,14 +35,15 @@ const PIXABAY_CATEGORIES = [
 export const PixabaySource: WallpaperProvider<PixabayConfig> = {
   id: "pixabay",
   name: "Pixabay",
+  requiresApiKey: true,
   defaultConfig: {
-    key: "",
+    apiKey: "", //  key
     q: "",
     category: "",
     order: "popular",
   },
-  getApiKey: (config) => config.key,
-  setApiKey: (config, key) => ({ ...config, key }),
+  getApiKey: (config) => config.apiKey,
+  setApiKey: (config, key) => ({ ...config, apiKey: key }),
   isNsfw: () => false, // Pixabay 默认开启 SafeSearch，且 API 强制 safe
 
   ConfigPanel: ({ config, onChange }) => (

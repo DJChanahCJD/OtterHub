@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,9 +54,12 @@ export function ApiKeyDialog({
     return "";
   };
 
+  if (!source.requiresApiKey) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-xl border-border shadow-2xl">
+        <DialogDescription></DialogDescription>
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2 rounded-lg bg-primary/10">

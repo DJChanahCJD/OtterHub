@@ -12,14 +12,15 @@ import { WallpaperProvider, UnsplashConfig } from "../types";
 export const UnsplashSource: WallpaperProvider<UnsplashConfig> = {
   id: "unsplash",
   name: "Unsplash",
+  requiresApiKey: true,
   defaultConfig: {
-    accessKey: "",
+    apiKey: "", //  Access Key
     query: "",
     orientation: "landscape",
     content_filter: "low",
   },
-  getApiKey: (config) => config.accessKey,
-  setApiKey: (config, accessKey) => ({ ...config, accessKey }),
+  getApiKey: (config) => config.apiKey,
+  setApiKey: (config, accessKey) => ({ ...config, apiKey: accessKey }),
   isNsfw: () => false, // Unsplash 内容通常是安全的
 
   ConfigPanel: ({ config, onChange }) => (
