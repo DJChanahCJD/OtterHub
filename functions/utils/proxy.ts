@@ -248,3 +248,10 @@ export async function proxyGetRequest(
 export function getProxyUrl(origin: string, targetUrl: string) {
   return `${origin}/api/proxy?url=${encodeURIComponent(targetUrl)}`;
 }
+
+/**
+ * 获取壁纸专用的代理 URL
+ */
+export function getWallpaperProxyUrl(origin: string, targetUrl: string) {
+  return `${origin}/api/providers/wallpaper/proxy?url=${encodeURIComponent(targetUrl)}`;
+}

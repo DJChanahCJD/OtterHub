@@ -8,7 +8,7 @@ export async function onRequest(context: any) {
 
   try {
     const url = new URL(request.url);
-    const accessKey = url.searchParams.get("apikey") || env.UNSPLASH_ACCESS_KEY;
+    const accessKey = url.searchParams.get("apiKey") || env.UNSPLASH_ACCESS_KEY;
 
     if (!accessKey) {
       return fail("Unsplash Access Key is required", 400);
@@ -38,21 +38,28 @@ export async function onRequest(context: any) {
     const response = await fetch(`${apiUrl}?${searchParams.toString()}`, {
       headers: {
         Authorization: `Client-ID ${accessKey}`,
+        "Accept-Version": "v1",
       },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Unsplash API error: ${response.status} - ${errorText}`);
+      const errorData: any = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.errors?.join(", ") ||
+        `Unsplash API error: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     const result: any = await response.json();
     const photos = query ? result.results : result;
 
     const unifiedData: UnifiedWallpaper[] = photos.map((photo: any) => ({
-      id: photo.id,
+      id: photo.id, 
+      // 使用 regular 版本作为预览图 (1080px)，平衡清晰度与加载速度
       previewUrl: photo.urls.regular,
-      rawUrl: photo.urls.full,
+      // 使用 raw 链接并添加优化参数作为下载/大图链接
+      // q=85 (质量), auto=format (自动选择格式), fm=webp (优先 webp)
+      rawUrl: `${photo.urls.regular}&q=85&fm=webp`,
       source: "unsplash",
     }));
 

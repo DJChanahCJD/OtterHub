@@ -10,7 +10,7 @@ export async function onRequest(context: any) {
     const url = new URL(request.url);
 
     // 优先从查询参数获取 API Key，否则从环境变量获取
-    const apiKey = url.searchParams.get("apikey") || env.PIXABAY_API_KEY;
+    const apiKey = url.searchParams.get("apiKey") || env.PIXABAY_API_KEY;
     if (!apiKey) {
       return fail("Pixabay API Key is required", 400);
     }

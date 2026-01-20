@@ -1,5 +1,5 @@
 import { ok, fail } from "../../../utils/common";
-import { getProxyUrl } from "../../../utils/proxy";
+import { getWallpaperProxyUrl } from "../../../utils/proxy";
 import { UnifiedWallpaper } from "./types";
 
 const baseUrl = "https://wallhaven.cc/api/v1/search";
@@ -12,7 +12,7 @@ export async function onRequest(context: any) {
     const url = new URL(request.url);
 
     // 优先从查询参数获取 API Key，否则从环境变量获取
-    const apiKey = url.searchParams.get("apikey") || env.WALLHAVEN_API_KEY;
+    const apiKey = url.searchParams.get("apiKey") || env.WALLHAVEN_API_KEY;
 
     const params = new URLSearchParams({
       q: url.searchParams.get("q") || "",
@@ -62,8 +62,8 @@ export async function onRequest(context: any) {
       return {
         id: item.id,
         // 对预览图和原图使用代理，解决国内环境访问慢或无法访问的问题
-        previewUrl: getProxyUrl(url.origin, previewUrl),
-        rawUrl: getProxyUrl(url.origin, rawUrl),
+        previewUrl: getWallpaperProxyUrl(url.origin, previewUrl),
+        rawUrl: getWallpaperProxyUrl(url.origin, rawUrl),
         source: "wallhaven",
       };
     });

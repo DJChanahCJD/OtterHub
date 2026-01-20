@@ -1,5 +1,5 @@
 import { ok, fail } from "../../../utils/common";
-import { getProxyUrl } from "../../../utils/proxy";
+import { getWallpaperProxyUrl } from "../../../utils/proxy";
 import { UnifiedWallpaper, LoliconConfig } from "./types";
 
 const API_URL = "https://api.lolicon.app/setu/v2";
@@ -18,13 +18,13 @@ export async function onRequest(context: any) {
     const tag = url.searchParams.getAll("tag");
     const keyword = url.searchParams.get("q") || url.searchParams.get("keyword");
     const excludeAI = url.searchParams.get("excludeAI") === "true";
-    const aspectRatio = url.searchParams.get("aspectRatio");
 
     // 构造请求 Lolicon 的 URL
     const loliconUrl = new URL(API_URL);
     loliconUrl.searchParams.set("r18", r18);
     loliconUrl.searchParams.set("num", num);
-    loliconUrl.searchParams.set("proxy", "i.pixiv.re"); // 使用 lolicon 推荐的反代，或者我们自己的
+    // 使用原始域名 i.pximg.net，由我们自己的代理处理防盗链
+    loliconUrl.searchParams.set("proxy", "i.pximg.net"); 
     
     if (tag && tag.length > 0) {
       tag.forEach(t => loliconUrl.searchParams.append("tag", t));
@@ -36,9 +36,9 @@ export async function onRequest(context: any) {
       loliconUrl.searchParams.set("excludeAI", "true");
     }
 
-    // 默认请求 regular 和 original 规格
+    // 默认请求 regular 和 small 规格
     loliconUrl.searchParams.append("size", "regular");
-    loliconUrl.searchParams.append("size", "original");
+    loliconUrl.searchParams.append("size", "small");
 
     console.log("Lolicon API request:", loliconUrl.toString());
     const response = await fetch(loliconUrl.toString());
@@ -49,7 +49,7 @@ export async function onRequest(context: any) {
     }
 
     const data: any = await response.json();
-    console.log("Lolicon API response:", data);
+    // console.log("Lolicon API response:", data);
 
     if (data.error) {
       throw new Error(data.error);
@@ -59,13 +59,13 @@ export async function onRequest(context: any) {
     const unifiedData: UnifiedWallpaper[] = data.data.map((item: any) => {
       // 预览图
       const previewUrl = item.urls.small || item.urls.thumb || item.urls.regular || item.urls.original;
-      const rawUrl = item.urls.original;
+      const rawUrl = item.urls.regular;
 
       return {
         id: item.pid,
         // 使用项目内置代理包装，确保国内环境可用
-        previewUrl: getProxyUrl(origin, previewUrl),
-        rawUrl: getProxyUrl(origin, rawUrl),
+        previewUrl: getWallpaperProxyUrl(origin, previewUrl),
+        rawUrl: getWallpaperProxyUrl(origin, rawUrl),
         source: "lolicon",
       };
     });

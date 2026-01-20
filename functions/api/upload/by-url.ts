@@ -19,7 +19,13 @@ export async function onRequestPost(context: any) {
         // 获取远程文件内容
         const response = await fetch(url);
         if (!response.ok) {
-            return fail(`Failed to fetch remote file: ${response.statusText}`, 400);
+            let errorDetail = response.statusText;
+            if (!errorDetail && response.status === 403) {
+                errorDetail = "Forbidden (Possible anti-hotlinking)";
+            } else if (!errorDetail) {
+                errorDetail = `Status ${response.status}`;
+            }
+            return fail(`Failed to fetch remote file: ${errorDetail}`, 400);
         }
 
         const blob = await response.blob();
