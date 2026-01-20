@@ -28,7 +28,7 @@ export const LoliconSource: WallpaperProvider<LoliconConfig> = {
       <div className="space-y-1">
         <Label className="text-[10px] uppercase opacity-50 font-bold">标签 (Tag)</Label>
         <Input
-          placeholder="例如: 萝莉, 少女..."
+          placeholder="Pixiv 标签，例如:  萝莉, 少女..."
           value={config.tag}
           onChange={(e) => onChange({ ...config, tag: e.target.value })}
           className="h-8 text-xs bg-background/50"
