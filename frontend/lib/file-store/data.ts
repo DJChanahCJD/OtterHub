@@ -145,7 +145,8 @@ export const useFileDataStore = create<FileDataState>((set, get) => ({
     const fileType = getFileTypeFromKey(file.name);
     get().deleteFilesLocalByType([file.name], fileType);
     file.name = trashPrefix + file.name;
-    file.expiration = TRASH_EXPIRATION_TTL;
+    // expiration 为绝对时间戳（秒）
+    file.expiration = Math.floor(Date.now() / 1000) + TRASH_EXPIRATION_TTL;
     get().addFileLocal(file, FileType.Trash);
   },
 

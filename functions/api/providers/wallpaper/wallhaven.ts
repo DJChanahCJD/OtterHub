@@ -63,7 +63,7 @@ export async function onRequestGet(context: any) {
         id: item.id,
         // 对预览图和原图使用代理，解决国内环境访问慢或无法访问的问题
         previewUrl: getWallpaperProxyUrl(url.origin, previewUrl),
-        rawUrl: getWallpaperProxyUrl(url.origin, rawUrl),
+        rawUrl: rawUrl,
         source: "wallhaven",
       };
     });

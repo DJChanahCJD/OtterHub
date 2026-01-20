@@ -65,7 +65,7 @@ export async function onRequestGet(context: any) {
         id: item.pid,
         // 使用项目内置代理包装，确保国内环境可用
         previewUrl: getWallpaperProxyUrl(origin, previewUrl),
-        rawUrl: getWallpaperProxyUrl(origin, rawUrl),
+        rawUrl: rawUrl,
         source: "lolicon",
       };
     });
