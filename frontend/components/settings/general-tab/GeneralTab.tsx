@@ -6,7 +6,7 @@ import {
   ShieldCheck, 
   Zap, 
   CloudSync, 
-  Save,
+  CloudUpload,
   Info,
   ShieldAlert
 } from "lucide-react";
@@ -18,7 +18,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useFileUIStore } from "@/lib/file-store";
 import { getSettings } from "@/lib/api/settings";
-import { STORAGE_KEYS } from "@/lib/local-storage";
 import { cn } from "@/lib/utils";
 
 export function GeneralTab() {
@@ -30,21 +29,28 @@ export function GeneralTab() {
     syncGeneralSettings
   } = useFileUIStore();
 
-  const [localThreshold, setLocalThreshold] = useState(dataSaverThreshold.toString());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [localThreshold, setLocalThreshold] = useState(dataSaverThreshold.toString());
 
-  // 初始化时尝试从云端拉取
-  useEffect(() => {
-    const hasLocalData = localStorage.getItem(STORAGE_KEYS.DATA_SAVER_THRESHOLD);
-    if (!hasLocalData) {
-      handleFetchFromCloud();
-    }
-  }, []);
-
-  // 当全局状态变化时更新本地显示
+  // 1. 当外部 store 变化时同步到本地输入框（如云端同步后）
   useEffect(() => {
     setLocalThreshold(dataSaverThreshold.toString());
   }, [dataSaverThreshold]);
+
+  // 2. 阈值输入防抖同步到本地 Store
+  useEffect(() => {
+    const threshold = parseFloat(localThreshold);
+    if (isNaN(threshold) || threshold < 0 || threshold === dataSaverThreshold) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDataSaverThreshold(threshold);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localThreshold, dataSaverThreshold, setDataSaverThreshold]);
 
   // 从云端同步
   const handleFetchFromCloud = async () => {
@@ -55,8 +61,7 @@ export function GeneralTab() {
         const { dataSaverThreshold: cloudThreshold, nsfwDetection: cloudNsfw } = settings.general;
         setDataSaverThreshold(cloudThreshold);
         setNsfwDetection(cloudNsfw);
-        setLocalThreshold(cloudThreshold.toString());
-        toast.success("已从云端同步常规设置");
+        toast.success("已从云端同步最新设置");
       } else {
         toast.info("云端暂无常规设置数据");
       }
@@ -67,21 +72,16 @@ export function GeneralTab() {
     }
   };
 
-  // 保存设置
-  const handleSave = async () => {
-    const threshold = parseFloat(localThreshold);
-    if (isNaN(threshold) || threshold < 0) {
-      toast.error("请输入有效的阈值数字");
-      return;
-    }
-
-    setDataSaverThreshold(threshold);
-    
+  // 上传到云端
+  const handleUploadToCloud = async () => {
+    setIsUploading(true);
     try {
       await syncGeneralSettings();
-      toast.success("设置已保存并同步到云端");
+      toast.success("设置已成功备份到云端");
     } catch (error) {
-      toast.error("同步到云端失败，但已保存到本地");
+      toast.error("备份到云端失败");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -90,7 +90,7 @@ export function GeneralTab() {
       <div className="flex items-center justify-between px-1">
         <div>
           <h2 className="text-xl font-bold tracking-tight">常规设置</h2>
-          <p className="text-sm text-muted-foreground">管理系统行为与全局偏好</p>
+          <p className="text-sm text-muted-foreground">修改立即生效，支持手动云端同步</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -98,18 +98,19 @@ export function GeneralTab() {
             size="sm"
             onClick={handleFetchFromCloud}
             disabled={isSyncing}
-            className="rounded-xl"
+            className="rounded-xl h-9"
           >
             <CloudSync className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
-            从云端拉取
+            从云端同步
           </Button>
           <Button
             size="sm"
-            onClick={handleSave}
-            className="rounded-xl shadow-lg shadow-primary/20"
+            onClick={handleUploadToCloud}
+            disabled={isUploading}
+            className="rounded-xl h-9 shadow-sm"
           >
-            <Save className="h-4 w-4 mr-2" />
-            保存设置
+            <CloudUpload className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")} />
+            备份到云端
           </Button>
         </div>
       </div>
@@ -129,7 +130,7 @@ export function GeneralTab() {
           <CardContent className="grid gap-4">
             <div className="flex flex-col space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="threshold" className="text-sm font-medium">省流无图阈值 (MB)</Label>
+                <Label htmlFor="threshold" className="text-sm font-medium">省流无图阈值</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="threshold"
@@ -140,6 +141,7 @@ export function GeneralTab() {
                     onChange={(e) => setLocalThreshold(e.target.value)}
                     className="w-24 h-9 text-right font-mono text-xs rounded-lg bg-background/50"
                   />
+                  MB
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">

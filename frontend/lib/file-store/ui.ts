@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { useFileDataStore } from "./data";
-import { setToStorage, getFromStorage, STORAGE_KEYS } from "../local-storage";
+import { setToStorage, STORAGE_KEYS } from "../local-storage";
 import { ViewMode, ImageLoadMode, FileType, GeneralSettings } from "../types";
 import { updateSettings } from "../api/settings";
 

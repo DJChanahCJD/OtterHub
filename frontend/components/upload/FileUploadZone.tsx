@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Upload } from "lucide-react"
 
 import { Progress } from "@/components/ui/progress"
@@ -27,6 +27,7 @@ import { toast } from "sonner"
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal)
   const nsfwDetection = useFileUIStore((s) => s.nsfwDetection)
+  console.log(nsfwDetection)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -161,7 +162,7 @@ export function FileUploadZone() {
         description: failed.join(", "),
       })
     }
-  }, [addFileLocal, toast])
+  }, [addFileLocal, nsfwDetection]) // 确保 nsfwDetection 在依赖项中
 
   return (
     <div className="mb-6">

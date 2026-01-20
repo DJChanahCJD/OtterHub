@@ -1,12 +1,11 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WallpaperTab } from "./wallpaper-tab/WallpaperTab";
 import { GeneralTab } from "./general-tab/GeneralTab";
-import { LayoutGrid, Image as ImageIcon, Settings, Shield, HardDrive } from "lucide-react";
+import { LayoutGrid, Image as ImageIcon, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Badge } from "../ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SettingsDialogProps {
@@ -18,8 +17,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState("wallpaper");
 
   const menuItems = [
-    { id: "wallpaper", label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
     { id: "general", label: "常规设置", icon: Settings, color: "text-slate-500" },
+    { id: "wallpaper", label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
   ];
 
   return (
@@ -44,7 +43,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <Tooltip key={item.id}>
                   <TooltipTrigger asChild>
                     <button
-                      disabled={item.disabled}
                       onClick={() => setActiveTab(item.id)}
                       className={cn(
                         "flex items-center rounded-xl text-xs md:text-sm font-semibold transition-all group relative overflow-hidden shrink-0",
@@ -55,18 +53,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         activeTab === item.id 
                           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]" 
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                        item.disabled && "opacity-30 cursor-not-allowed grayscale"
                       )}
                     >
                       <item.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", activeTab === item.id ? "text-primary-foreground" : item.color)} />
                       <span className="whitespace-nowrap md:hidden lg:inline">{item.label}</span>
-                      {item.disabled && (
-                        <Badge variant="secondary" className="hidden lg:flex absolute right-2 text-[7px] px-1 h-3 opacity-50 font-bold uppercase tracking-tighter">Soon</Badge>
-                      )}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="md:block lg:hidden">
-                    {item.label} {item.disabled && "(Soon)"}
+                    {item.label} 
                   </TooltipContent>
                 </Tooltip>
               ))}
