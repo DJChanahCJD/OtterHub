@@ -23,7 +23,7 @@ description: 用于在 OtterHub 项目中快速添加和集成新的随机壁纸
 - 导出 `onRequest` 函数。
 - 处理分页逻辑（建议默认随机页码）。
 - 调用第三方 API 并将结果映射为 `UnifiedWallpaper[]` 格式。
-- `UnifiedWallpaper` 必须包含 `id`, `previewUrl`, `rawUrl`, `source`。（若返回的url对网内网络不友好，需用 `functions/utils/proxy getProxyUrl`方法 包装）
+- `UnifiedWallpaper` 必须包含 `id`, `previewUrl`, `rawUrl`, `source`。（若返回的url对网内网络不友好，需用 `functions/utils/proxy getProxyUrl`方法包装, 仅需包装 previewUrl, 而 rawUrl 保持不变）
 
 ## 3. 前端实现 (Components)
 
