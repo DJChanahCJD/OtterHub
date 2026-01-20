@@ -43,7 +43,7 @@ export function WallpaperTab() {
     syncToCloud,
   } = useWallpaperSources();
 
-  const [uploadingId, setUploadingId] = useState<string | number | null>(null);
+  const [uploadingIds, setUploadingIds] = useState<Set<string | number>>(new Set());
   const [uploadedIds, setUploadedIds] = useState<Set<string | number>>(new Set());
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const [minPage, setMinPage] = useState(1);
@@ -103,7 +103,7 @@ export function WallpaperTab() {
     if (!activeSource) return;
     const config = configs[activeSourceId];
 
-    setUploadingId(wp.id);
+    setUploadingIds((prev) => new Set(prev).add(wp.id));
     try {
       const fileName = `${wp.source}_${wp.id}.jpg`;
       const isNsfw = activeSource.isNsfw(config);
@@ -127,7 +127,11 @@ export function WallpaperTab() {
     } catch (error: any) {
       toast.error(error.message || "上传失败");
     } finally {
-      setUploadingId(null);
+      setUploadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(wp.id);
+        return next;
+      });
     }
   };
 
@@ -307,6 +311,7 @@ export function WallpaperTab() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {displayWallpapers.map((wp) => {
                 const isUploaded = uploadedIds.has(wp.id);
+                const isUploading = uploadingIds.has(wp.id);
                 return (
                   <div
                     key={`${wp.source}-${wp.id}`}
@@ -342,15 +347,15 @@ export function WallpaperTab() {
                         )}
                         onClick={(e) => handleUpload(e, wp)}
                         title={
-                          uploadingId === wp.id
+                          isUploading
                             ? "上传中"
                             : isUploaded
                               ? "已保存到云端"
                               : "上传壁纸"
                         }
-                        disabled={uploadingId === wp.id || isUploaded}
+                        disabled={isUploading || isUploaded}
                       >
-                        {uploadingId === wp.id ? (
+                        {isUploading ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : isUploaded ? (
                           <Check className="h-4 w-4" />
