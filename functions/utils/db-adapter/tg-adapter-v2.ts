@@ -32,7 +32,7 @@ export class TGAdapterV2 extends BaseAdapter {
   }
 
   async uploadFile(
-    file: File | Blob,
+    file: File | Blob | Uint8Array,
     metadata: FileMetadata,
   ): Promise<{ key: string }> {
     if (metadata.fileSize > MAX_CHUNK_SIZE) {
@@ -41,12 +41,18 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const { fileName } = metadata;
 
-    if (!(file instanceof File)) {
-      throw new Error("Invalid file");
+    // 统一转换为 File 对象，确保兼容性
+    let finalFile: File;
+    if (file instanceof File) {
+      finalFile = file;
+    } else {
+      const ext = fileName.split(".").pop()?.toLowerCase() || "bin";
+      const contentType = getContentTypeByExt(ext);
+      finalFile = new File([file], fileName, { type: contentType });
     }
 
     const { file: processedFile, fileName: processedFileName } =
-      await processGifFile(file, fileName);
+      await processGifFile(finalFile, fileName);
 
     const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(
       processedFile,
@@ -55,7 +61,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const formData = new FormData();
     formData.append("chat_id", this.env.TG_CHAT_ID);
-    formData.append(field, file);
+    formData.append(field, processedFile);
 
     const result = await this.sendToTelegram(formData, apiEndpoint);
     if (!result.success) {

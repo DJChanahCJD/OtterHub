@@ -18,7 +18,7 @@ export abstract class BaseAdapter implements DBAdapter {
 
   // 子类必须实现的方法
   abstract uploadFile(
-    file: File | Blob,
+    file: File | Blob | Uint8Array,
     metadata: FileMetadata,
   ): Promise<{ key: string }>;
 
