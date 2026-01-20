@@ -2,7 +2,14 @@
 
 ## 基础信息
 - **Base URL**: `https://api.unsplash.com`
-- **认证方式**: 在 Header 中添加 `Authorization: Client-ID <YOUR_ACCESS_KEY>`
+- **版本控制**: 必须添加 Header `Accept-Version: v1`
+- **认证方式**: 在 Header 中添加 `Authorization: Client-ID <YOUR_ACCESS_KEY>` 或使用查询参数 `client_id=<YOUR_ACCESS_KEY>`
+
+## 凭据信息 (仅供开发参考)
+- **Application ID**: 868888
+- **Access Key**: `vFI5IamxxxxxxxxxxxmySvT7e_1uzU`
+- **Secret key**: `NV_zVBBxxxxxxxxxvQ2is_c6IuxOJpxxxxxx7e4gio`
+*注意：Access Key 和 Secret Key 必须保持私密。*
 
 ## 核心端点
 
@@ -53,5 +60,9 @@
 ```
 
 ## 注意事项
-- **Hotlinking**: 必须直接使用 Unsplash 返回的 `urls` 链接，且在下载时应调用 `download_location` 端点以触发下载计数。
-- **速率限制**: 免费版通常为 50 次/小时，生产版为 5000 次/小时。
+- **速率限制**: 
+  - Demo 模式: 50 次/小时
+  - Production 模式: 5000 次/小时
+  - 响应头中包含 `X-Ratelimit-Limit` 和 `X-Ratelimit-Remaining`。
+- **Hotlinking**: 必须直接使用 Unsplash 返回的 `urls` 链接。
+- **ixid 参数**: 必须保留图片 URL 中的 `ixid` 参数以符合 API 指南并报告图片查看次数。
