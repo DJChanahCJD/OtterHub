@@ -9,6 +9,7 @@ const API_URL = "https://api.lolicon.app/setu/v2";
 const LOLICON_PROXY = "i.pixiv.re";
 
 // https://docs.api.lolicon.app/#/setu
+// TODO: 生产环境似乎被拦截了，只能转前端获取，暂时搁置
 export async function onRequestGet(context: any) {
   const { request } = context;
 
