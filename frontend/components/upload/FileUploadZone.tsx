@@ -27,7 +27,6 @@ import { toast } from "sonner"
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal)
   const nsfwDetection = useFileUIStore((s) => s.nsfwDetection)
-  console.log(nsfwDetection)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)

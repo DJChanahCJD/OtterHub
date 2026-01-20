@@ -381,6 +381,8 @@ OtterHub/
   - [ ] wallheaven / Pixabay / Unsplash
   - [ ] ~~在线图片编辑（压缩`browser-image-compression` / 裁剪`cropperjs` / 缩放+格式转换`Pica`）~~
   - [ ] ~~音视频格式转换（Save As 功能 `ffmpeg.wasm`）~~
+- 其他
+  - 是否拓展V2 API， `blog:`/`music:` 拓展场景
 - [ ] Demo 站点上传限制可配置（环境变量）
 - [ ] KV vs D1 数据库评估
   - D1：单库 500MB，分库可达 5GB
