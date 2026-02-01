@@ -327,7 +327,7 @@ OtterHub/
 - [x] 核心能力
   - [x] 分片上传（≤20MB / 片），支持大文件（已实测 100MB，理论 1GB）
   - [x] HTTP Range 支持（视频 / 音频按需加载、断点续传）
-  - [x] Private 私有文件访问控制=
+  - [x] Private 私有文件访问控制
   - [x] 回收站功能（支持恢复 / 永久删除 / 自动清理）
 
 - [x] 文件管理
@@ -353,6 +353,7 @@ OtterHub/
   - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
 - [x] 随机壁纸
   - 多壁纸源（Wallhaven、Bing、Pixabay 等）
+- [ ] 全面迁移到V2的hono后端，不再保留 V1 代码
 - [ ] 临时分享文件（无论是否 Private 都可以访问）
   - [] KV实现, 一次性 / 有效期 URL （允许用户选择）
   - [] key: link:<uuid>
