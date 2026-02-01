@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { proxyGet } from '@utils/proxy';
-import { failV1 } from '@utils/common';
 import type { Env } from '../../types/hono';
 import { fail } from '@utils/response';
 

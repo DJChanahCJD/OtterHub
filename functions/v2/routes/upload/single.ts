@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { FileMetadata, FileTag } from '@shared/types';
-import { okV1, failV1 } from '@utils/common';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';

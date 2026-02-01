@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileMetadata, FileTag } from '@shared/types';
-import { okV1, failV1 } from '@utils/common';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';

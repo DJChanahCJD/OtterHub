@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { signJWT } from '@utils/auth';
-import { okV1, failV1 } from '@utils/common';
+
 import type { Env } from '../types/hono';
 import { fail, ok } from '@utils/response';
 

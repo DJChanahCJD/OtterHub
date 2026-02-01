@@ -9,7 +9,7 @@ const nextConfig = {
   },
   env: {
     // 从环境变量中读取后端URL，默认使用当前地址
-    BACKEND_URL: process.env.VUE_APP_BACKEND_URL || '',
+    BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || '',
   },
 }
 

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { CF } from '@utils/types';
 import type { Env } from '../types/hono';
-import { okV1, failV1 } from '@utils/common';
+
 import { ok, fail } from '@utils/response';
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();
@@ -36,9 +36,9 @@ settingsRoutes.post(
       };
       
       await kv.put(CF.SETTINGS_KEY, JSON.stringify(mergedSettings));
-      return okV1(mergedSettings, "设置已更新");
+      return ok(c, mergedSettings, "设置已更新");
     } catch (error: any) {
-      return failV1("保存设置失败: " + error.message, 500);
+      return fail(c, "保存设置失败: " + error.message, 500);
     }
   }
 );
