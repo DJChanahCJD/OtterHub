@@ -1,6 +1,6 @@
 "use client";
 
-import { FileTag } from "@/lib/types";
+import { FileTag } from "@shared/types";
 import { TAG_CONFIG } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Tag, AlertTriangle, Lock } from "lucide-react";

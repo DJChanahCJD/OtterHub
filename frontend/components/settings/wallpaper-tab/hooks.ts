@@ -7,7 +7,7 @@ import {
   WallpaperProvider,
 } from "./types";
 import { getSourceById, WALLPAPER_SOURCE_LIST } from "./sources";
-import { WallpaperSourceId, UnifiedWallpaper, AppSettings, WallpaperCloudConfig } from "@/lib/types";
+import { WallpaperSourceId, UnifiedWallpaper, AppSettings, WallpaperCloudConfig } from "@shared/types";
 
 /**
  * 数据源与配置管理 Hook

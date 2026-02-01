@@ -10,7 +10,7 @@ import {
   Chunk,
   FileMetadata,
   FileType,
-} from "../types";
+} from "@shared/types";
 import {
   extractKeyFromTrash,
   parseRangeHeader,

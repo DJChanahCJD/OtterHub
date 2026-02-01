@@ -1,6 +1,6 @@
 "use client";
 
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 import {
   Dialog,
   DialogContent,

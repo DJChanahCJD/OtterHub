@@ -1,5 +1,5 @@
 import { getFileExt } from "../file";
-import { FileType } from "../types";
+import { FileType } from "@shared/types";
 
 /**
  * 构建 Telegram API URL

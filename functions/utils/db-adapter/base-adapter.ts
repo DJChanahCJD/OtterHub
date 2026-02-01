@@ -1,7 +1,8 @@
 import { DBAdapter } from ".";
-import { Chunk, chunkPrefix, FileMetadata, TEMP_CHUNK_TTL, TRASH_EXPIRATION_TTL, trashPrefix } from "../types";
+import { Chunk, chunkPrefix, FileMetadata, trashPrefix } from "@shared/types";
 import { extractKeyFromTrash, isUploadedChunk, streamToBlob } from "./shared-utils";
 import { getUniqueFileId } from "../file";
+import { TRASH_EXPIRATION_TTL, TEMP_CHUNK_TTL } from "utils/types";
 
 /**
  * 存储适配器基类

@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { useFileDataStore } from "./data";
 import { setToStorage, STORAGE_KEYS } from "../local-storage";
-import { ViewMode, ImageLoadMode, FileType, GeneralSettings } from "../types";
+import { ViewMode, ImageLoadMode } from "../types";
+import { FileType } from "@shared/types";
+
 import { updateSettings } from "../api/settings";
 
 interface FileUIState {

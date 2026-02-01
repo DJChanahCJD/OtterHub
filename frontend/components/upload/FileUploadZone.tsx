@@ -1,179 +1,178 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Upload } from "lucide-react"
-
-import { Progress } from "@/components/ui/progress"
-import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api"
-import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils"
-import { useFileDataStore, useFileUIStore } from "@/lib/file-store"
-
-import {
-  FileItem,
-  FileTag,
-  FileType,
-  MAX_CHUNK_SIZE,
-  MAX_CONCURRENTS,
-  MAX_FILE_SIZE,
-} from "@/lib/types"
-import { nsfwDetector } from "@/lib/nsfw-detector"
+import { useCallback, useRef, useState } from "react";
+import { Upload } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
+import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils";
+import { useFileDataStore, useFileUIStore } from "@/lib/file-store";
+import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
+import { nsfwDetector } from "@/lib/nsfw-detector";
 import {
   updateProgress,
   getMissingChunkIndices,
   runBatches,
-} from "./upload-utils"
-import { toast } from "sonner"
+} from "./upload-utils";
+import { toast } from "sonner";
+import { FileItem, FileTag } from "@shared/types";
 
 export function FileUploadZone() {
-  const addFileLocal = useFileDataStore((s) => s.addFileLocal)
-  const nsfwDetection = useFileUIStore((s) => s.nsfwDetection)
-  const [isDragging, setIsDragging] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const addFileLocal = useFileDataStore((s) => s.addFileLocal);
+  const nsfwDetection = useFileUIStore((s) => s.nsfwDetection);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const processFiles = useCallback(async (files: FileList) => {
-    const fileArray = Array.from(files)
-    if (!fileArray.length) return
+  const processFiles = useCallback(
+    async (files: FileList) => {
+      const fileArray = Array.from(files);
+      if (!fileArray.length) return;
 
-    const uploadProgressMap: Record<string, number> = {}
-    setUploadProgress({})
+      const uploadProgressMap: Record<string, number> = {};
+      setUploadProgress({});
 
-    let successCount = 0
-    const failed: string[] = []
+      let successCount = 0;
+      const failed: string[] = [];
 
-    /** 普通上传 */
-    const uploadNormalFile = async (file: File) => {
-      const tmpKey = buildTmpFileKey(file)
-      uploadProgressMap[tmpKey] = 0
-      setUploadProgress({ ...uploadProgressMap })
+      /** 普通上传 */
+      const uploadNormalFile = async (file: File) => {
+        const tmpKey = buildTmpFileKey(file);
+        uploadProgressMap[tmpKey] = 0;
+        setUploadProgress({ ...uploadProgressMap });
 
-      try {
-        const isUnsafe = nsfwDetection ? await nsfwDetector.isUnsafeImg(file) : false;
-        const key = await uploadFile(file, isUnsafe)
+        try {
+          const isUnsafe = nsfwDetection
+            ? await nsfwDetector.isUnsafeImg(file)
+            : false;
+          const key = await uploadFile(file, isUnsafe);
 
-        uploadProgressMap[tmpKey] = 100
-        setUploadProgress({ ...uploadProgressMap })
+          uploadProgressMap[tmpKey] = 100;
+          setUploadProgress({ ...uploadProgressMap });
 
-        const fileItem: FileItem = {
-          name: key,
-          metadata: {
-            fileName: file.name,
-            fileSize: file.size,
-            uploadedAt: Date.now(),
-            liked: false,
-            tags: isUnsafe ? [FileTag.NSFW] : [],
-          },
+          const fileItem: FileItem = {
+            name: key,
+            metadata: {
+              fileName: file.name,
+              fileSize: file.size,
+              uploadedAt: Date.now(),
+              liked: false,
+              tags: isUnsafe ? [FileTag.NSFW] : [],
+            },
+          };
+
+          addFileLocal(fileItem, getFileType(file.type));
+          successCount++;
+        } catch (err) {
+          failed.push(`${file.name}: ${(err as Error).message}`);
+        } finally {
+          setTimeout(() => {
+            delete uploadProgressMap[tmpKey];
+            setUploadProgress({ ...uploadProgressMap });
+          }, 400);
+        }
+      };
+
+      /** 分片上传 */
+      const uploadChunkedFile = async (file: File) => {
+        if (file.size >= MAX_FILE_SIZE) {
+          toast.warning(`文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`);
+          return;
         }
 
-        addFileLocal(fileItem, getFileType(file.type))
-        successCount++
-      } catch (err) {
-        failed.push(`${file.name}: ${(err as Error).message}`)
-      } finally {
-        setTimeout(() => {
-          delete uploadProgressMap[tmpKey]
-          setUploadProgress({ ...uploadProgressMap })
-        }, 400)
-      }
-    }
+        const tmpKey = buildTmpFileKey(file);
+        uploadProgressMap[tmpKey] = 0;
+        setUploadProgress({ ...uploadProgressMap });
 
-    /** 分片上传 */
-    const uploadChunkedFile = async (file: File) => {
-      if (file.size >= MAX_FILE_SIZE) {
-        toast.warning(`文件大小超过 ${formatFileSize(MAX_FILE_SIZE)}`)
-        return
-      }
+        try {
+          const fileType = getFileType(file.type);
+          const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
 
-      const tmpKey = buildTmpFileKey(file)
-      uploadProgressMap[tmpKey] = 0
-      setUploadProgress({ ...uploadProgressMap })
-
-      try {
-        const fileType = getFileType(file.type)
-        const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE)
-
-        const key = await uploadChunkInit(
-          fileType,
-          file.name,
-          file.size,
-          totalChunks,
-        )
-
-        const missing = getMissingChunkIndices(totalChunks)
-
-        const uploadOne = async (idx: number) => {
-          const start = idx * MAX_CHUNK_SIZE
-          const end = Math.min(start + MAX_CHUNK_SIZE, file.size)
-          await uploadChunk(key, idx, file.slice(start, end))
-
-          updateProgress(
-            uploadProgressMap,
-            tmpKey,
-            idx + 1,
+          const key = await uploadChunkInit(
+            fileType,
+            file.name,
+            file.size,
             totalChunks,
-            setUploadProgress,
-          )
+          );
+
+          const missing = getMissingChunkIndices(totalChunks);
+
+          const uploadOne = async (idx: number) => {
+            const start = idx * MAX_CHUNK_SIZE;
+            const end = Math.min(start + MAX_CHUNK_SIZE, file.size);
+            await uploadChunk(key, idx, file.slice(start, end));
+
+            updateProgress(
+              uploadProgressMap,
+              tmpKey,
+              idx + 1,
+              totalChunks,
+              setUploadProgress,
+            );
+          };
+
+          await runBatches(missing, MAX_CONCURRENTS, uploadOne);
+
+          const fileItem: FileItem = {
+            name: key,
+            metadata: {
+              fileName: file.name,
+              fileSize: file.size,
+              uploadedAt: Date.now(),
+              liked: false,
+              tags: [],
+            },
+          };
+
+          addFileLocal(fileItem, fileType);
+          successCount++;
+        } catch (err) {
+          failed.push(`${file.name}: ${(err as Error).message}`);
+        } finally {
+          setTimeout(() => {
+            delete uploadProgressMap[tmpKey];
+            setUploadProgress({ ...uploadProgressMap });
+          }, 400);
         }
+      };
 
-        await runBatches(missing, MAX_CONCURRENTS, uploadOne)
-
-        const fileItem: FileItem = {
-          name: key,
-          metadata: {
-            fileName: file.name,
-            fileSize: file.size,
-            uploadedAt: Date.now(),
-            liked: false,
-            tags: [],
-          },
-        }
-
-        addFileLocal(fileItem, fileType)
-        successCount++
-      } catch (err) {
-        failed.push(`${file.name}: ${(err as Error).message}`)
-      } finally {
-        setTimeout(() => {
-          delete uploadProgressMap[tmpKey]
-          setUploadProgress({ ...uploadProgressMap })
-        }, 400)
+      /** 并发上传 */
+      for (let i = 0; i < fileArray.length; i += MAX_CONCURRENTS) {
+        const batch = fileArray.slice(i, i + MAX_CONCURRENTS);
+        await Promise.all(
+          batch.map((file) =>
+            file.size > MAX_CHUNK_SIZE
+              ? uploadChunkedFile(file)
+              : uploadNormalFile(file),
+          ),
+        );
       }
-    }
 
-    /** 并发上传 */
-    for (let i = 0; i < fileArray.length; i += MAX_CONCURRENTS) {
-      const batch = fileArray.slice(i, i + MAX_CONCURRENTS)
-      await Promise.all(
-        batch.map((file) =>
-          file.size > MAX_CHUNK_SIZE
-            ? uploadChunkedFile(file)
-            : uploadNormalFile(file),
-        ),
-      )
-    }
+      if (successCount > 0) {
+        toast.success(`成功上传 ${successCount} 个文件`);
+      }
 
-    if (successCount > 0) {
-      toast.success(`成功上传 ${successCount} 个文件`)
-    }
-
-    if (failed.length) {
-      toast.error(`${failed.length}个文件上传失败`, {
-        description: failed.join(", "),
-      })
-    }
-  }, [addFileLocal, nsfwDetection]) // 确保 nsfwDetection 在依赖项中
+      if (failed.length) {
+        toast.error(`${failed.length}个文件上传失败`, {
+          description: failed.join(", "),
+        });
+      }
+    },
+    [addFileLocal, nsfwDetection],
+  ); // 确保 nsfwDetection 在依赖项中
 
   return (
     <div className="mb-6">
       <div
         onDrop={(e) => {
-          e.preventDefault()
-          setIsDragging(false)
-          processFiles(e.dataTransfer.files)
+          e.preventDefault();
+          setIsDragging(false);
+          processFiles(e.dataTransfer.files);
         }}
         onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragging(true)
+          e.preventDefault();
+          setIsDragging(true);
         }}
         onDragLeave={() => setIsDragging(false)}
         onClick={() => fileInputRef.current?.click()}
@@ -181,18 +180,24 @@ export function FileUploadZone() {
           "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all backdrop-blur-sm bg-glass-bg",
           isDragging
             ? "border-primary bg-primary/10"
-            : "border-glass-border hover:border-primary/50"
+            : "border-glass-border hover:border-primary/50",
         )}
       >
-        <Upload className={cn(
-          "h-8 w-8 mx-auto mb-3 transition-colors",
-          isDragging ? "text-primary" : "text-foreground/50"
-        )} />
-        <p className={cn(
-          "text-sm transition-colors",
-          isDragging ? "text-primary font-medium" : "text-foreground/50"
-        )}>
-          {isDragging ? "Drop files to upload" : "Drag & drop files here, or click to browse"}
+        <Upload
+          className={cn(
+            "h-8 w-8 mx-auto mb-3 transition-colors",
+            isDragging ? "text-primary" : "text-foreground/50",
+          )}
+        />
+        <p
+          className={cn(
+            "text-sm transition-colors",
+            isDragging ? "text-primary font-medium" : "text-foreground/50",
+          )}
+        >
+          {isDragging
+            ? "Drop files to upload"
+            : "Drag & drop files here, or click to browse"}
         </p>
 
         <input
@@ -207,7 +212,10 @@ export function FileUploadZone() {
       {Object.keys(uploadProgress).length > 0 && (
         <div className="mt-4 space-y-2">
           {Object.entries(uploadProgress).map(([k, v]) => (
-            <div key={k} className="bg-secondary/30 p-3 rounded-lg border border-glass-border">
+            <div
+              key={k}
+              className="bg-secondary/30 p-3 rounded-lg border border-glass-border"
+            >
               <div className="flex justify-between text-xs mb-1 text-foreground/80">
                 <span>Uploading</span>
                 <span>{v}%</span>
@@ -218,5 +226,5 @@ export function FileUploadZone() {
         </div>
       )}
     </div>
-  )
+  );
 }

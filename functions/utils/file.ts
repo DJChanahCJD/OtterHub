@@ -1,5 +1,5 @@
 import { extractKeyFromTrash } from "./db-adapter/shared-utils";
-import { FileType, chunkPrefix } from "./types";
+import { FileType, chunkPrefix } from "@shared/types";
 
 // 获取文件扩展名
 export function getFileExt(fileName: string): string {

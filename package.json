@@ -1,10 +1,20 @@
 {
+  "name": "otterhub-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "shared",
+    "functions"
+  ],
   "scripts": {
-    "start:backend": "npx wrangler pages dev ./ --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding PASSWORD=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data",
-    "build:frontend": "cd frontend && npm install && npm run build",
-    "start": "npm run build:frontend && npm run start:backend",
-    "test": "mocha",
-    "ci-test": "concurrently -k -s first \"npm run start:backend\" \"wait-on http://localhost:8080 && mocha --exit\""
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" ",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npx wrangler pages dev ./ --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding PASSWORD=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data",
+
+    "build": "npm run build --prefix frontend",
+    
+    "ci-test": "concurrently -k -s first \"npm run dev:backend\" \"wait-on http://localhost:8080 && mocha --exit\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

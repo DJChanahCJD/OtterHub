@@ -3,7 +3,7 @@
 import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileDataStore } from "@/lib/file-store";
-import { FileType } from "@/lib/types";
+import { FileType } from "@shared/types";
 import { STORAGE_KEYS, getFromStorage } from "@/lib/local-storage";
 import { useEffect } from "react";
 

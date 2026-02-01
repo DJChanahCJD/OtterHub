@@ -1,4 +1,4 @@
-import { Chunk, FileMetadata, trashPrefix } from "../types";
+import { Chunk, FileMetadata, trashPrefix } from "@shared/types";
 
 /**
  * 解析 Range 请求头

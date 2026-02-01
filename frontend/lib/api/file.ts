@@ -1,10 +1,7 @@
 import { request } from "../utils";
-import {
-  FileType,
-  ListFilesRequest,
-  ListFilesResponse,
-} from "../types";
 import { API_URL } from ".";
+import { FileType, ListFilesResponse } from "@shared/types";
+import { ListFilesRequest } from "../types";
 
 /**
  * 上传文件

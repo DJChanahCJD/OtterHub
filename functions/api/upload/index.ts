@@ -1,6 +1,6 @@
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
-import { FileMetadata, FileTag } from "../../utils/types";
+import { FileMetadata, FileTag } from "@shared/types";
 
 // 单个文件上传
 export async function onRequestPost(context: any) {

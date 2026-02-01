@@ -5,10 +5,9 @@ import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 import {
   FileMetadata,
   ApiResponse,
-  MAX_CHUNK_SIZE,
   Chunk,
   FileType,
-} from "../types";
+} from "@shared/types";
 import {
   parseRangeHeader,
   sortChunksAndCalculateSize,
@@ -24,6 +23,7 @@ import {
   getTgFile,
   processGifFile,
 } from "./tg-tools";
+import { MAX_CHUNK_SIZE } from "utils/types";
 
 // Telegram存储适配器实现（新版本：优化分片上传）
 export class TGAdapterV2 extends BaseAdapter {

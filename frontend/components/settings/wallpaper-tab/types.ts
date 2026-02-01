@@ -1,4 +1,4 @@
-import { WallpaperSourceId } from "@/lib/types";
+import { WallpaperSourceId } from "@shared/types";
 
 // https://pixabay.com/api/
 export type PixabayConfig = {

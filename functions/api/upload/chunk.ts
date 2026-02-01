@@ -1,7 +1,8 @@
+import { FileType, chunkPrefix, FileMetadata } from "@shared/types";
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
 import { getUniqueFileId, buildKeyId, getFileExt } from "../../utils/file";
-import { CF, FileMetadata, FileType, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL, chunkPrefix } from "../../utils/types";
+import { CF, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from "../../utils/types";
 
 // 分片上传流程：
 // 1. 前端发起分片上传初始化请求，获取chunks对应的唯一key，然后前端自行分片上传

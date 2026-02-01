@@ -1,7 +1,7 @@
 "use client";
 
 import { X, Plus, Tag } from "lucide-react";
-import { FileTag } from "@/lib/types";
+import { FileTag } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { TAG_CONFIG } from "@/lib/utils";
 import {

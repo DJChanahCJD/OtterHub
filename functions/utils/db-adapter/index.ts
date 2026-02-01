@@ -1,7 +1,8 @@
+import { FileMetadata } from "@shared/types";
 import { isDev } from "../common";
-import { FileMetadata, CF } from "../types";
 import { R2AdapterV2 } from "./r2-adapter-v2";
 import { TGAdapterV2 } from "./tg-adapter-v2";
+import { CF } from "utils/types";
 
 // 存储适配器接口定义
 export interface DBAdapter {

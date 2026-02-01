@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 import { editMetadata } from "@/lib/api";
 import {
   Dialog,

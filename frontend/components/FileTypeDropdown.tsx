@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFileDataStore } from "@/lib/file-store";
-import { FileType } from "@/lib/types";
+import { FileType } from "@shared/types";
 
 const fileTypes = [
   { id: FileType.Image, label: "Images", icon: ImageIcon },

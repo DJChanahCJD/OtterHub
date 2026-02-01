@@ -1,7 +1,7 @@
 "use client";
 
 import { useFileUIStore } from "@/lib/file-store";
-import { FileItem, FileType } from "@/lib/types";
+import { FileItem, FileType } from "@shared/types";
 import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { PhotoView } from "react-photo-view";

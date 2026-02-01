@@ -1,17 +1,15 @@
 import { create } from "zustand";
 import {
-  FileItem,
-  FileMetadata,
-  FileType,
+
   ListFilesRequest,
   TRASH_EXPIRATION_TTL,
   ViewMode,
-  trashPrefix,
 } from "../types";
 import { getFileList } from "../api";
 import { STORAGE_KEYS, setToStorage } from "../local-storage";
 import { getFileTypeFromKey } from "../utils/file";
 import { useFileUIStore } from "./ui";
+import { FileItem, FileMetadata, trashPrefix, FileType } from "@shared/types";
 
 type FileBucket = {
   items: FileItem[];

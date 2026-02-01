@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { FileTag, FileItem } from "@/lib/types";
+import { FileTag, FileItem } from "@shared/types";
 import { editMetadata } from "@/lib/api";
 import {
   Dialog,

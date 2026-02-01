@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Minus, Tag } from "lucide-react";
-import { FileTag } from "@/lib/types";
+import { FileTag } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { BatchTagState, TagStateMap, getTagIntent, TAG_CONFIG } from "@/lib/utils";
 

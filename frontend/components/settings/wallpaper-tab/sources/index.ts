@@ -1,4 +1,3 @@
-import { WallpaperSourceId } from "@/lib/types";
 import { WallpaperProvider } from "../types";
 import { PixabaySource } from "./pixabay";
 import { WallhavenSource } from "./wallhaven";
@@ -6,6 +5,7 @@ import { BingSource } from "./bing";
 import { PicsumSource } from "./picsum";
 import { LoliconSource } from "./lolicon";
 import { UnsplashSource } from "./unsplash";
+import { WallpaperSourceId } from "@shared/types";
 
 export const WALLPAPER_SOURCES = {
   wallhaven: WallhavenSource,

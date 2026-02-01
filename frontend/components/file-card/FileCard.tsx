@@ -1,6 +1,6 @@
 "use client";
 
-import { FileItem, FileType } from "@/lib/types";
+import { FileItem, FileType } from "@shared/types";
 import { FileCardList } from "./FileCardList";
 import { FileCardGrid } from "./FileCardGrid";
 import { useFileCardActions } from "./hooks";

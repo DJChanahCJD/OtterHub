@@ -1,4 +1,4 @@
-import { FileItem, FileTag } from "@/lib/types";
+import { FileItem, FileTag } from "@shared/types";
 
 // 标签展示配置
 export interface TagDisplayConfig {

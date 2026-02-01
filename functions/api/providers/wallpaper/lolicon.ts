@@ -1,7 +1,7 @@
 // functions/api/providers/wallpaper/lolicon.ts
+import { UnifiedWallpaper } from "@shared/types";
 import { ok, fail } from "../../../utils/common";
 import { getWallpaperProxyUrl } from "../../../utils/proxy";
-import { UnifiedWallpaper } from "./types";
 
 const API_URL = "https://api.lolicon.app/setu/v2";
 

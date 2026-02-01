@@ -1,6 +1,6 @@
 import clsx, { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ApiResponse } from "../types";
+import { ApiResponse } from "@shared/types";
 import { getFileType } from "./file";
 
 export function cn(...inputs: ClassValue[]) {
@@ -39,7 +39,7 @@ export async function request<T>(
     throw new Error(result.message || "Request failed");
   }
 
-  return result.data;
+  return result.data as T;
 }
 
 // 格式化音视频时间为分秒格式

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
-import { FileItem } from "@/lib/types"
+import { FileItem } from "@shared/types"
 
 /**
  * 音频播放器 Hook

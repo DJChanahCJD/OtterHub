@@ -1,7 +1,7 @@
 // functions/api/upload/by-url.ts
 import { fail, ok } from "../../utils/common";
 import { DBAdapterFactory } from "../../utils/db-adapter";
-import { FileMetadata, FileTag } from "../../utils/types";
+import { FileMetadata, FileTag } from "@shared/types";
 import { proxyGet } from "../../utils/proxy";
 
 /**

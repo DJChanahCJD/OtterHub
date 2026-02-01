@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { useFileDataStore } from "@/lib/file-store"
 import { useFileUIStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
-import { FileType, ViewMode } from "@/lib/types"
+import { ViewMode } from "@/lib/types"
+import { FileType } from "@shared/types"
 
 export function ViewModeToggle() {
   const { viewMode, setViewMode } = useFileUIStore()

@@ -1,4 +1,5 @@
-import { FileMetadata, DIRECT_DOWNLOAD_LIMIT, FileType } from "../types";
+import { FileMetadata, FileType } from "@shared/types";
+import { DIRECT_DOWNLOAD_LIMIT } from "../types";
 
 export const getFileType = (mimeType: string): FileType => {
   if (mimeType.startsWith("image/")) return FileType.Image;

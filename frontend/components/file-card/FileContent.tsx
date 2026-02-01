@@ -5,9 +5,10 @@ import {
 } from "lucide-react";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
-import { FileTag, ImageLoadMode, FileType } from "@/lib/types";
+import { FileTag, FileType } from "@shared/types";
 import { FileImagePreview } from "../FileImagePreview";
 import { useFileUIStore } from "@/lib/file-store";
+import { ImageLoadMode } from "@/lib/types";
 
 export const ICON_DISPLAY_SIZE = "h-18 w-18";
 

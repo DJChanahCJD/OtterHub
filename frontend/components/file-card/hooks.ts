@@ -2,9 +2,10 @@ import { useState, useMemo, useRef } from "react";
 import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/lib/file-store";
 import { getFileTypeFromKey, downloadFile } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
-import { FileItem, MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
+import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
+import { FileItem } from "@shared/types";
 
 export function useFileCardActions(file: FileItem) {
   const {

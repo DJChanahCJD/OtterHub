@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { RefreshCcw, Trash2, Loader2, Check } from "lucide-react";
+import { RefreshCcw, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileDataStore } from "@/lib/file-store";
 import { useFileUIStore } from "@/lib/file-store";
-import { FileItem, FileType, trashPrefix } from "@/lib/types";
+import { FileItem, FileType, trashPrefix } from "@shared/types";
 import { getFileTypeFromKey, cn } from "@/lib/utils";
 import { FileContent } from "@/components/file-card";
 import { deleteFile, getTrashFileUrl, restoreFile } from "@/lib/api";

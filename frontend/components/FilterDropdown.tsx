@@ -14,7 +14,7 @@ import { useFileQueryStore } from "@/lib/file-store";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { FileTag } from "@/lib/types";
+import { FileTag } from "@shared/types";
 
 /**
  * 筛选下拉菜单组件

@@ -15,10 +15,11 @@ import { useFileDataStore, useActiveItems } from "@/lib/file-store";
 import { useFileUIStore, useActiveSelectedKeys } from "@/lib/file-store";
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
-import { DIRECT_DOWNLOAD_LIMIT, FileType } from "@/lib/types";
+import { DIRECT_DOWNLOAD_LIMIT } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
 import { toast } from "sonner";
+import { FileType } from "@shared/types";
 
 export function BatchOperationsBar() {
   const {

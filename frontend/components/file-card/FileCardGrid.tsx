@@ -4,7 +4,7 @@ import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";

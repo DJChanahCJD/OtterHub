@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { editMetadata } from "@/lib/api";
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { TagSelector } from "@/components/TagSelector";
 import {

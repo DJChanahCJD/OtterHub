@@ -1,4 +1,4 @@
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 
 export type BatchRenameMode = "none" | "prefix" | "suffix" | "basename";
 

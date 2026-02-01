@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Masonry } from "masonic";
 import { MasonryImageCard } from "@/components/masonry/MasonryImageCard";
-import { FileItem } from "@/lib/types";
+import { FileItem } from "@shared/types";
 
 interface MasonryGridProps {
   files: FileItem[];

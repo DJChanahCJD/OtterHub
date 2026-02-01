@@ -1,6 +1,6 @@
 import { request } from "../utils";
-import { UnifiedWallpaper, WallpaperSourceId } from "../types";
 import { API_URL } from ".";
+import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
 
 /**
  * 获取壁纸列表

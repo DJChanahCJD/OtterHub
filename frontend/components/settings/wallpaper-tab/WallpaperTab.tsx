@@ -26,7 +26,7 @@ import { ApiKeyDialog } from "./ApiKeyDialog";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useFileDataStore } from "@/lib/file-store";
-import { FileItem, FileTag, FileType, UnifiedWallpaper, WallpaperSourceId } from "@/lib/types";
+import { FileItem, FileTag, FileType, UnifiedWallpaper, WallpaperSourceId } from "@shared/types";
 import { useWallpaperSources, useWallpaperList } from "./hooks";
 
 export function WallpaperTab() {
