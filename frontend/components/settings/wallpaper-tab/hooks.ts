@@ -51,8 +51,8 @@ export function useWallpaperSources() {
 
   // 初始化时：如果本地没有数据，尝试从云端同步
   useEffect(() => {
-    const localData = window.localStorage.getItem(STORAGE_KEYS.WALLPAPER_SETTINGS);
-    if (!localData || localData === "{}") {
+    const localData = getFromStorage(STORAGE_KEYS.WALLPAPER_SETTINGS, null);
+    if (!localData || Object.keys(localData).length === 0) {
       handleFetchFromCloud();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
