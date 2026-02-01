@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileType, FileMetadata, chunkPrefix } from '@shared/types';
-import { ok, fail } from '../../../utils/common';
-import { DBAdapterFactory } from '../../../utils/db-adapter';
-import { getUniqueFileId, buildKeyId, getFileExt } from '../../../utils/file';
-import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from '../../../utils/types';
+import { ok, fail } from '@utils/common';
+import { DBAdapterFactory } from '@utils/db-adapter';
+import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
+import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from '@utils/types';
 import type { Env } from '../../types/hono';
 
 export const chunkUploadRoutes = new Hono<{ Bindings: Env }>();

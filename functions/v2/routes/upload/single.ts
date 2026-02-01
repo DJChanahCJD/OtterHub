@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { FileMetadata, FileTag } from '@shared/types';
-import { ok, fail } from '../../../utils/common';
-import { DBAdapterFactory } from '../../../utils/db-adapter';
+import { ok, fail } from '@utils/common';
+import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env } from '../../types/hono';
 
 export const singleUploadRoutes = new Hono<{ Bindings: Env }>();

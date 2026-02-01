@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getTgFilePath, buildTgFileUrl } from '../../../utils/db-adapter/tg-tools';
+import { getTgFilePath, buildTgFileUrl } from '@utils/db-adapter/tg-tools';
 import type { Env } from '../../types/hono';
 
 export const thumbRoutes = new Hono<{ Bindings: Env }>();

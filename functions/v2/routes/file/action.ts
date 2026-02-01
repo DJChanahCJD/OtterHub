@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { FileMetadata } from '@shared/types';
 import { authMiddleware } from '../../middleware/auth';
-import { DBAdapterFactory } from '../../../utils/db-adapter';
-import { deleteCache, deleteFileCache } from '../../../utils/cache';
+import { DBAdapterFactory } from '@utils/db-adapter';
+import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
+import { API_VERSION } from '@utils/types';
 
 export const actionRoutes = new Hono<{ Bindings: Env }>();
 
@@ -52,7 +53,7 @@ actionRoutes.delete(
 
       const url = new URL(c.req.url);
       await deleteCache(c.req.raw);
-      await deleteFileCache(url.origin, key);
+      await deleteFileCache(url.origin, key, API_VERSION.V2);
 
       return c.json({ success: true, message: 'File permanently deleted', data: key });
     } catch (error: any) {

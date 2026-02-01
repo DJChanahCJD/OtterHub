@@ -1,5 +1,7 @@
 // functions/utils/cache.ts
 
+import { API_VERSION } from "./types";
+
 /**
  * 缓存配置常量
  */
@@ -62,9 +64,9 @@ export async function deleteCache(request: Request) {
 /**
  * 删除文件访问缓存（/file/:key）
  */
-export async function deleteFileCache(origin: string, key: string) {
+export async function deleteFileCache(origin: string, key: string, version: API_VERSION) {
   const cache = await caches.open('otterhub-cache');
-  const url = `${origin}/file/${key}`;
+  const url = `${origin}/${version}/file/${key}`;
   const req = new Request(url, { method: "GET" });
   await cache.delete(req);
 }

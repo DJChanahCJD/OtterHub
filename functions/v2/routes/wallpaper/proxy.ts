@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { proxyGet } from '../../../utils/proxy';
-import { fail } from '../../../utils/common';
+import { proxyGet } from '@utils/proxy';
+import { fail } from '@utils/common';
 import type { Env } from '../../types/hono';
 
 export const wallpaperProxyRoutes = new Hono<{ Bindings: Env }>();

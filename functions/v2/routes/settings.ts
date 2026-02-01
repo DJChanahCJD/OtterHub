@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
-import { CF } from '../../utils/types';
+import { CF } from '@utils/types';
 import type { Env } from '../types/hono';
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();

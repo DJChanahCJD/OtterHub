@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { signJWT } from '../../utils/auth';
+import { signJWT } from '@utils/auth';
 import type { Env } from '../types/hono';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();

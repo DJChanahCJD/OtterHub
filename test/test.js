@@ -16,7 +16,7 @@ describe("File API Endpoints", function () {
   // 登录
   describe("POST /api/login", function () {
     it("should login successfully and get auth cookie", async function () {
-      const response = await fetch(`${API_URL}/api/login`, {
+      const response = await fetch(`${API_URL}/v1/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +59,7 @@ describe("File API Endpoints", function () {
         Cookie: authCookie,
       };
 
-      const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`${API_URL}/v1/api/upload`, {
         method: "POST",
         body: form.getBuffer(),
         headers,
@@ -74,7 +74,7 @@ describe("File API Endpoints", function () {
       // Store the uploaded file key for the next test
       // API returns { success: true, data: "img:xxx.svg" } (key only, not full URL)
       uploadedFileKey = result.data;
-      uploadedFileUrl = `${API_URL}/file/${result.data}`;
+      uploadedFileUrl = `${API_URL}/v1/file/${result.data}`;
     });
   });
 
@@ -86,7 +86,7 @@ describe("File API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
+      const response = await fetch(`${API_URL}/v1/file/${uploadedFileKey}`, {
         headers: {
           Cookie: authCookie,
         },
@@ -109,7 +109,7 @@ describe("File API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(`${API_URL}/api/trash/moveToTrash/${uploadedFileKey}`, {
+      const response = await fetch(`${API_URL}/v1/api/trash/moveToTrash/${uploadedFileKey}`, {
         method: "POST",
         headers: {
           Cookie: authCookie,
@@ -127,7 +127,7 @@ describe("File API Endpoints", function () {
       }
 
       // 移入回收站后，原始路径应该返回 404
-      const originalResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
+      const originalResponse = await fetch(`${API_URL}/v1/file/${uploadedFileKey}`, {
         headers: {
           Cookie: authCookie,
         },
@@ -135,7 +135,7 @@ describe("File API Endpoints", function () {
       assert.equal(originalResponse.status, 404);
 
       // 从回收站路径应该可以获取
-      const trashResponse = await fetch(`${API_URL}/api/trash/${trashPrefix}${uploadedFileKey}`, {
+      const trashResponse = await fetch(`${API_URL}/v1/api/trash/${trashPrefix}${uploadedFileKey}`, {
         headers: {
           Cookie: authCookie,
         },
@@ -151,7 +151,7 @@ describe("File API Endpoints", function () {
       }
 
       const trashKey = `${trashPrefix}${uploadedFileKey}`;
-      const response = await fetch(`${API_URL}/api/trash/restore/${trashKey}`, {
+      const response = await fetch(`${API_URL}/v1/api/trash/restore/${trashKey}`, {
         method: "POST",
         headers: {
           Cookie: authCookie,
@@ -163,7 +163,7 @@ describe("File API Endpoints", function () {
       assert.ok(result.success);
 
       // 还原后，原始路径应该恢复访问
-      const restoredResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
+      const restoredResponse = await fetch(`${API_URL}/v1/file/${uploadedFileKey}`, {
         headers: {
           Cookie: authCookie,
         },
@@ -180,7 +180,7 @@ describe("File API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(`${API_URL}/api/delete/${uploadedFileKey}`, {
+      const response = await fetch(`${API_URL}/v1/api/delete/${uploadedFileKey}`, {
         method: "POST",
         headers: {
           Cookie: authCookie,

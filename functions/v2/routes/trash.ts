@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
-import { ok, fail } from '../../utils/common';
-import { DBAdapterFactory } from '../../utils/db-adapter';
-import { deleteCache, deleteFileCache } from '../../utils/cache';
+import { ok, fail } from '@utils/common';
+import { DBAdapterFactory } from '@utils/db-adapter';
+import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../types/hono';
 import { authMiddleware } from '../middleware/auth';
+import { API_VERSION } from '@utils/types';
 
 export const trashRoutes = new Hono<{ Bindings: Env }>();
 
@@ -32,7 +33,7 @@ trashRoutes.post('/:key/move', async (c) => {
     // 删除缓存
     const url = new URL(c.req.url);
     await deleteCache(c.req.raw);
-    await deleteFileCache(url.origin, key);
+    await deleteFileCache(url.origin, key, API_VERSION.V2);
 
     return c.json(ok(key, 'File moved to trash'));
   } catch (error: any) {

@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileMetadata, FileTag } from '@shared/types';
-import { ok, fail } from '../../../utils/common';
-import { DBAdapterFactory } from '../../../utils/db-adapter';
-import { proxyGet } from '../../../utils/proxy';
+import { ok, fail } from '@utils/common';
+import { DBAdapterFactory } from '@utils/db-adapter';
+import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 
 export const urlUploadRoutes = new Hono<{ Bindings: Env }>();

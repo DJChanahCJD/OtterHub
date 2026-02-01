@@ -13,7 +13,7 @@ export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
     formData.append("nsfw", "true");
   }
 
-  return request<string>(`${API_URL}/api/upload`, {
+  return request<string>(`${API_URL}/v1/api/upload`, {
     method: "POST",
     body: formData,
   });
@@ -34,7 +34,7 @@ export function uploadChunkInit(
     fileSize: fileSize.toString(),
     totalChunks: totalChunks.toString(),
   }).toString();
-  return request<string>(`${API_URL}/api/upload/chunk?${query}`, {
+  return request<string>(`${API_URL}/v1/api/upload/chunk?${query}`, {
     method: "GET",
   });
 }
@@ -52,7 +52,7 @@ export function uploadChunk(
   formData.append("chunkIndex", chunkIndex.toString());
   formData.append("chunkFile", chunkFile);
 
-  return request<string>(`${API_URL}/api/upload/chunk`, {
+  return request<string>(`${API_URL}/v1/api/upload/chunk`, {
     method: "POST",
     body: formData,
   });
@@ -65,28 +65,28 @@ export function getFileList(
   params?: ListFilesRequest
 ): Promise<ListFilesResponse> {
   const query = new URLSearchParams(params).toString();
-  return request<ListFilesResponse>(`${API_URL}/api/list?${query}`);
+  return request<ListFilesResponse>(`${API_URL}/v1/api/list?${query}`);
 }
 
 /**
  * 获取文件预览/下载 URL
  */
 export function getFileUrl(key: string): string {
-  return `${API_URL}/file/${key}`;
+  return `${API_URL}/v1/file/${key}`;
 }
 
 /**
  * 获取回收站文件 URL
  */
 export function getTrashFileUrl(key: string): string {
-  return `${API_URL}/api/trash/${key}`;
+  return `${API_URL}/v1/api/trash/${key}`;
 }
 
 /**
  * 彻底删除文件
  */
 export function deleteFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/delete/${key}`, {
+  return request<boolean>(`${API_URL}/v1/api/delete/${key}`, {
     method: "POST",
   });
 }
@@ -95,7 +95,7 @@ export function deleteFile(key: string): Promise<boolean> {
  * 移动文件到回收站
  */
 export function moveToTrash(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/trash/moveToTrash/${key}`, {
+  return request<boolean>(`${API_URL}/v1/api/trash/moveToTrash/${key}`, {
     method: "POST",
   });
 }
@@ -104,7 +104,7 @@ export function moveToTrash(key: string): Promise<boolean> {
  * 从回收站恢复文件
  */
 export function restoreFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/trash/restore/${key}`, {
+  return request<boolean>(`${API_URL}/v1/api/trash/restore/${key}`, {
     method: "POST",
   });
 }
@@ -113,7 +113,7 @@ export function restoreFile(key: string): Promise<boolean> {
  * 切换收藏状态
  */
 export function toggleLike(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/api/toggleLike/${key}`, {
+  return request<boolean>(`${API_URL}/v1/api/toggleLike/${key}`, {
     method: "POST",
   });
 }
@@ -125,7 +125,7 @@ export function editMetadata(
   key: string,
   updates: { fileName?: string; tags?: string[] }
 ): Promise<{ metadata: any }> {
-  return request<{ metadata: any }>(`${API_URL}/api/editFileMeta/${key}`, {
+  return request<{ metadata: any }>(`${API_URL}/v1/api/editFileMeta/${key}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

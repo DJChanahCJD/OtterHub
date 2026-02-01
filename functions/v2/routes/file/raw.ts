@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { DBAdapterFactory } from '../../../utils/db-adapter';
-import { getFromCache, putToCache } from '../../../utils/cache';
+import { DBAdapterFactory } from '@utils/db-adapter';
+import { getFromCache, putToCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
 
 export const rawRoutes = new Hono<{ Bindings: Env }>();

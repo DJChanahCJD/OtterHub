@@ -1,21 +1,20 @@
-import { Hono } from 'hono';
-import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '@utils/common';
-import type { Env } from '../../types/hono';
-
-export const bingRoutes = new Hono<{ Bindings: Env }>();
+import { ok, fail } from "@utils/common";
+import { UnifiedWallpaper } from "@shared/types";
 
 const PEAPIX_COUNTRIES = ["au", "br", "ca", "cn", "de", "fr", "in", "it", "jp", "es", "gb", "us"];
 
-async function safeFetch<T = any>(url: string): Promise<T | null> {
-  try {
-    const res = await fetch(url);
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
+/**
+ * 安全 fetch：失败时返回 null
+ */
+function safeFetch<T = any>(url: string): Promise<T | null> {
+  return fetch(url)
+    .then(res => res.ok ? res.json() : null)
+    .catch(() => null);
 }
 
+/**
+ * Peapix / Spotlight 通用映射
+ */
 function mapPeapix(data: any[]): UnifiedWallpaper[] {
   return data.map(img => ({
     id: img.imageUrl.split("/").pop()?.split(".")[0] || img.imageUrl,
@@ -25,9 +24,10 @@ function mapPeapix(data: any[]): UnifiedWallpaper[] {
   }));
 }
 
-bingRoutes.get('/bing', async (c) => {
+export async function onRequestGet(context: any) {
   try {
-    const randomCountry = PEAPIX_COUNTRIES[Math.floor(Math.random() * PEAPIX_COUNTRIES.length)];
+    const randomCountry =
+      PEAPIX_COUNTRIES[Math.floor(Math.random() * PEAPIX_COUNTRIES.length)];
 
     const [bingRes, peapixBingRes, spotlightRes] = await Promise.all([
       safeFetch(`https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8`),
@@ -37,6 +37,7 @@ bingRoutes.get('/bing', async (c) => {
 
     const wallpapers: UnifiedWallpaper[] = [];
 
+    // 官方 Bing
     if (bingRes?.images) {
       wallpapers.push(
         ...bingRes.images.map((img: any) => ({
@@ -48,25 +49,28 @@ bingRoutes.get('/bing', async (c) => {
       );
     }
 
+    // Peapix Bing
     if (Array.isArray(peapixBingRes)) {
       wallpapers.push(...mapPeapix(peapixBingRes));
     }
 
+    // Peapix Spotlight
     if (Array.isArray(spotlightRes)) {
       wallpapers.push(...mapPeapix(spotlightRes));
     }
 
     if (wallpapers.length === 0) {
-      return c.json(fail("获取壁纸失败：所有数据源均不可用"), 500);
+      return fail("获取壁纸失败：所有数据源均不可用");
     }
 
+    // 根据 rawUrl 去重
     const uniqueWallpapers = Array.from(
       new Map(wallpapers.map(w => [w.rawUrl, w])).values()
     );
 
-    return c.json(ok(uniqueWallpapers));
+    return ok(uniqueWallpapers);
   } catch (err) {
-    console.error("Fetch bing wallpaper error:", err);
-    return c.json(fail("获取壁纸失败"), 500);
+    console.error("Fetch wallpaper error:", err);
+    return fail("获取壁纸失败");
   }
-});
+}

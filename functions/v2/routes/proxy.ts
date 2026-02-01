@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { proxyGet, handleStreamResponse } from '../../utils/proxy';
+import { proxyGet, handleStreamResponse } from '@utils/proxy';
 import type { Env } from '../types/hono';
-import { ok, fail } from '../../utils/common';
-import { authMiddleware } from 'v2/middleware/auth';
+import { ok, fail } from '@utils/common';
+import { authMiddleware } from '../middleware/auth';
 
 export const proxyRoutes = new Hono<{ Bindings: Env }>();
 

@@ -18,9 +18,10 @@ const app = new Hono<{
 app.use('*', corsMiddleware);
 
 // Routes
+app.route('/file', fileRoutes);
+
 app.route('/auth', authRoutes);
 app.route('/settings', settingsRoutes);
-app.route('/file', fileRoutes);
 app.route('/health', healthRoutes);
 app.route('/wallpaper', wallpaperRoutes);
 app.route('/upload', uploadRoutes);

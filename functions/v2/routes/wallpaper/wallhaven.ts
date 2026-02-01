@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '../../../utils/common';
-import { getWallpaperProxyUrl } from '../../../utils/proxy';
+import { ok, fail } from '@utils/common';
+import { getWallpaperProxyUrl } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 
 export const wallhavenRoutes = new Hono<{ Bindings: Env }>();

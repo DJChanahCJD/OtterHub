@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory';
-import { verifyJWT } from '../../utils/auth';
+import { verifyJWT } from '@utils/auth';
 import type { Env } from '../types/hono';
 
 const PUBLIC_PATHS = [
