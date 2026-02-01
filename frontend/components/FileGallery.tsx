@@ -52,18 +52,16 @@ function FileViewRenderer({
 }
 
 export function FileGallery() {
-  const { viewMode, itemsPerPage, setItemsPerPage } = useFileUIStore();
+  const { viewMode, itemsPerPage, setItemsPerPage, currentPage, setCurrentPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
   const { searchQuery, filterLiked, filterTags, filterDateRange } = useFileQueryStore();
   const files = useFilteredFiles();
   const bucket = useActiveBucket();
 
-  const [currentPage, setCurrentPage] = useState(0);
-
   // 当筛选条件变化时，重置页码到第一页
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchQuery, filterLiked, filterTags, filterDateRange]);
+  }, [searchQuery, filterLiked, filterTags, filterDateRange, setCurrentPage]);
 
   const handlePageChange = (selectedItem: { selected: number }) => {
     setCurrentPage(selectedItem.selected);
@@ -71,7 +69,6 @@ export function FileGallery() {
 
   const handleItemsPerPageChange = (size: number) => {
     setItemsPerPage(size);
-    setCurrentPage(0);
   };
 
   const offset = currentPage * itemsPerPage;

@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useFileDataStore, useActiveItems } from "@/lib/file-store";
+import { useFileDataStore, useActiveItems, useFilteredFiles } from "@/lib/file-store";
 import { useFileUIStore, useActiveSelectedKeys } from "@/lib/file-store";
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
-import { DIRECT_DOWNLOAD_LIMIT } from "@/lib/types";
+import { DIRECT_DOWNLOAD_LIMIT, ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
 import { toast } from "sonner";
@@ -31,6 +31,9 @@ export function BatchOperationsBar() {
   const {
     clearSelection,
     selectAll,
+    viewMode,
+    currentPage,
+    itemsPerPage,
   } = useFileUIStore();
 
   const selectedKeys = useActiveSelectedKeys();
@@ -39,8 +42,16 @@ export function BatchOperationsBar() {
   const [showBatchRename, setShowBatchRename] = useState(false);
 
   const items = useActiveItems();
+  const filteredFiles = useFilteredFiles();
 
   /** ===== 派生数据 ===== */
+  // 当前页显示的文件
+  const currentFiles = useMemo(() => {
+    if (viewMode === ViewMode.Masonry) return filteredFiles;
+    const offset = currentPage * itemsPerPage;
+    return filteredFiles.slice(offset, offset + itemsPerPage);
+  }, [filteredFiles, viewMode, currentPage, itemsPerPage]);
+
   const selectedSet = useMemo(
     () => new Set(selectedKeys),
     [selectedKeys],
@@ -52,7 +63,8 @@ export function BatchOperationsBar() {
   );
 
   const isAllSelected =
-    items.length > 0 && selectedKeys.length === items.length;
+    currentFiles.length > 0 && 
+    currentFiles.every(file => selectedSet.has(file.name));
 
   const isMediaType =
     activeType === FileType.Audio || activeType === FileType.Video;
@@ -230,7 +242,7 @@ export function BatchOperationsBar() {
                 className="min-w-[180px] border-glass-border bg-popover"
               >
                 <DropdownMenuItem
-                  onClick={() => isAllSelected ? clearSelection(activeType) : selectAll(items.map(i => i.name), activeType)}
+                  onClick={() => isAllSelected ? clearSelection(activeType) : selectAll(currentFiles.map(i => i.name), activeType)}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Check

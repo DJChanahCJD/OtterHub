@@ -13,6 +13,7 @@ interface FileUIState {
   dataSaverThreshold: number; // MB
   nsfwDetection: boolean;
   itemsPerPage: number;
+  currentPage: number;
   
   // selection 按桶管理
   selectedKeys: Record<FileType, string[]>;
@@ -24,6 +25,7 @@ interface FileUIState {
   setDataSaverThreshold: (threshold: number) => void;
   setNsfwDetection: (enabled: boolean) => void;
   setItemsPerPage: (count: number) => void;
+  setCurrentPage: (page: number) => void;
   
   // 云端同步
   syncGeneralSettings: () => Promise<void>;
@@ -40,6 +42,7 @@ export const useFileUIStore = create<FileUIState>((set, get) => ({
   dataSaverThreshold: 5.0,
   nsfwDetection: true,
   itemsPerPage: 20,
+  currentPage: 0,
   
   selectedKeys: {
     [FileType.Image]: [],
@@ -50,7 +53,7 @@ export const useFileUIStore = create<FileUIState>((set, get) => ({
   },
 
   setViewMode: (mode) => {
-    set({ viewMode: mode });
+    set({ viewMode: mode, currentPage: 0 }); // 切换视图模式时重置页码
     setToStorage(STORAGE_KEYS.VIEW_MODE, mode);
   },
 
@@ -75,9 +78,11 @@ export const useFileUIStore = create<FileUIState>((set, get) => ({
   },
 
   setItemsPerPage: (count) => {
-    set({ itemsPerPage: count });
+    set({ itemsPerPage: count, currentPage: 0 }); // 更改每页数量时重置页码
     setToStorage(STORAGE_KEYS.ITEMS_PER_PAGE, count);
   },
+
+  setCurrentPage: (page) => set({ currentPage: page }),
 
   syncGeneralSettings: async () => {
     const { dataSaverThreshold, nsfwDetection } = get();
