@@ -6,6 +6,7 @@ const PUBLIC_PATHS = [
   /^\/api\/login/,
   /^\/api\/logout/,
   /^\/_next\//,
+  /^\/v2\//,
   /\.(ico|png|svg|jpg|jpeg|css|js|webmanifest|json|woff|woff2|ttf|eot)$/,
 ];
 
