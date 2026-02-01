@@ -1,8 +1,8 @@
 import { FileMetadata } from "@shared/types";
 import { isDev } from "../common";
-import { R2AdapterV2 } from "./r2-adapter-v2";
-import { TGAdapterV2 } from "./tg-adapter-v2";
-import { CF } from "utils/types";
+import { R2Adapter } from "./r2-adapter";
+import { TGAdapter } from "./tg-adapter";
+import { CF } from "types";
 
 // 存储适配器接口定义
 export interface DBAdapter {
@@ -60,10 +60,10 @@ export class DBAdapterFactory {
     let adapter: DBAdapter;
     switch (type.toLowerCase()) {
       case DBAdapterType.R2:
-        adapter = new R2AdapterV2(env, CF.R2_BUCKET, CF.KV_NAME);
+        adapter = new R2Adapter(env, CF.R2_BUCKET, CF.KV_NAME);
         break;
       case DBAdapterType.TG:
-        adapter = new TGAdapterV2(env, CF.KV_NAME);
+        adapter = new TGAdapter(env, CF.KV_NAME);
         break;
       default:
         throw new Error(`Unsupported storage adapter type: ${type}`);

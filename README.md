@@ -301,8 +301,8 @@ OtterHub/
 │   ├── utils/
 │   │   ├── db-adapter/  # 存储适配器（抽象层）
 │   │   │   ├── base-adapter.ts    # 适配器基类
-│   │   │   ├── tg-adapter-v2.ts    # Telegram 适配器
-│   │   │   ├── r2-adapter-v2.ts     # R2 适配器
+│   │   │   ├── tg-adapter.ts    # Telegram 适配器
+│   │   │   ├── r2-adapter.ts     # R2 适配器
 │   │   ├── ...
 │   └── _middleware.ts    # 全局中间件（CORS）
 ├── public/           # 静态资源
@@ -353,7 +353,7 @@ OtterHub/
   - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
 - [x] 随机壁纸
   - 多壁纸源（Wallhaven、Bing、Pixabay 等）
-- [ ] 全面迁移到V2的hono后端，不再保留 V1 代码
+- [x] 全面重构为 Hono 后端（鉴权更灵活，可移植性更好）
 - [ ] 临时分享文件（无论是否 Private 都可以访问）
   - [] KV实现, 一次性 / 有效期 URL （允许用户选择）
   - [] key: link:<uuid>
