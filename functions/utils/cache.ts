@@ -1,5 +1,4 @@
 // functions/utils/cache.ts
-import { trashPrefix, FileMetadata } from "./types";
 
 /**
  * 缓存配置常量
@@ -28,7 +27,7 @@ export function createCacheKey(request: Request): Request {
 export async function getFromCache(
   request: Request
 ): Promise<Response | null> {
-  const cache = caches.default;
+  const cache = await caches.open('otterhub-cache');
   const key = createCacheKey(request);
   return cache.match(key);
 }
@@ -40,7 +39,7 @@ export async function putToCache(
 ) {
   if (!response.ok) return;
 
-  const cache = caches.default;
+  const cache = await caches.open('otterhub-cache');
   const key = createCacheKey(request);
 
   const maxAge = CACHE_CONFIG[type].maxAge;
@@ -55,7 +54,7 @@ export async function putToCache(
 }
 
 export async function deleteCache(request: Request) {
-  const cache = caches.default;
+  const cache = await caches.open('otterhub-cache');
   const key = createCacheKey(request);
   await cache.delete(key);
 }
@@ -64,7 +63,7 @@ export async function deleteCache(request: Request) {
  * 删除文件访问缓存（/file/:key）
  */
 export async function deleteFileCache(origin: string, key: string) {
-  const cache = caches.default;
+  const cache = await caches.open('otterhub-cache');
   const url = `${origin}/file/${key}`;
   const req = new Request(url, { method: "GET" });
   await cache.delete(req);
