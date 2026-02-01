@@ -5,13 +5,14 @@ import { fail } from '@utils/response';
 
 const PUBLIC_PATHS = [
   /^\/$/,
-  /^\/auth\/login/,
+  /^\/v2\/auth\/login/,
   /^\/_next\//,
   /\.(ico|png|svg|jpg|jpeg|css|js|webmanifest|json|woff|woff2|ttf|eot)$/,
 ];
 
 export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next) => {
   const path = c.req.path;
+  console.log(`[authMiddleware] Request path: ${path}`);
   if (PUBLIC_PATHS.some(pattern => pattern.test(path))) {
     await next();
     return;
