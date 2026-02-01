@@ -1,4 +1,4 @@
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { UnifiedWallpaper } from "@shared/types";
 
 const API_BASE = "https://api.unsplash.com";
@@ -11,7 +11,7 @@ export async function onRequestGet(context: any) {
     const accessKey = url.searchParams.get("apiKey") || env.UNSPLASH_ACCESS_KEY;
 
     if (!accessKey) {
-      return fail("Unsplash Access Key is required", 400);
+      return failV1("Unsplash Access Key is required", 400);
     }
 
     const query = url.searchParams.get("q") || url.searchParams.get("query");
@@ -63,9 +63,9 @@ export async function onRequestGet(context: any) {
       source: "unsplash",
     }));
 
-    return ok(unifiedData, "获取成功");
+    return okV1(unifiedData, "获取成功");
   } catch (error: any) {
     console.error("Unsplash provider error:", error);
-    return fail(error.message, 500);
+    return failV1(error.message, 500);
   }
 }

@@ -1,9 +1,5 @@
-export * from "./auth";
-export * from "./file";
-export * from "./settings";
-export * from "./wallpaper";
-
-export const API_URL =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? process.env.NEXT_PUBLIC_BACKEND_URL || ""
-    : "";
+/**
+ * API 版本切换
+ * 如果需要切换回 v1，请将下面的 "./v2" 改为 "./v1"
+ */
+export * from "./v1";

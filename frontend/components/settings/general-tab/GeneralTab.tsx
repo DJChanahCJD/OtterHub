@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useFileUIStore } from "@/lib/file-store";
-import { getSettings } from "@/lib/api/settings";
+import { getSettings } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function GeneralTab() {

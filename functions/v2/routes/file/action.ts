@@ -5,6 +5,7 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
 import { API_VERSION } from '@utils/types';
+import { fail, ok } from '@utils/response';
 
 export const actionRoutes = new Hono<{ Bindings: Env }>();
 
@@ -21,16 +22,16 @@ actionRoutes.post(
       const metadata = value.metadata as FileMetadata;
 
       if (!metadata) {
-        return c.json({ success: false, message: `File metadata not found for key: ${key}` }, 404);
+        return fail(c, `File metadata not found for key: ${key}`, 404);
       }
 
       metadata.liked = !metadata.liked;
       await kv.put(key, "", { metadata });
 
-      return c.json({ success: true, data: { liked: metadata.liked } });
+      return ok(c, { liked: metadata.liked });
     } catch (e: any) {
       console.error('Toggle like error:', e);
-      return c.json({ success: false, message: `Failed to toggle like: ${e.message}` }, 500);
+      return fail(c, `Failed to toggle like: ${e.message}`, 500);
     }
   }
 );
@@ -55,10 +56,10 @@ actionRoutes.delete(
       await deleteCache(c.req.raw);
       await deleteFileCache(url.origin, key, API_VERSION.V2);
 
-      return c.json({ success: true, message: 'File permanently deleted', data: key });
+      return ok(c, { key }, 'File permanently deleted');
     } catch (error: any) {
       console.error('Delete file error:', error);
-      return c.json({ success: false, message: `Failed to delete file: ${error.message}` }, 500);
+      return fail(c, `Failed to delete file: ${error.message}`, 500);
     }
   }
 );

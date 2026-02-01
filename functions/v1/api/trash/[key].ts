@@ -1,5 +1,5 @@
 
-import { fail } from "@utils/common";
+import { failV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 
 export async function onRequestGet({ env, params, request }: any) {
@@ -11,6 +11,6 @@ export async function onRequestGet({ env, params, request }: any) {
     return await db.get(trashKey, request);
   } catch (error: any) {
     console.error('Fetch trash file error:', error);
-    return fail(`Failed to fetch trash file: ${error.message}`, 500);
+    return failV1(`Failed to fetch trash file: ${error.message}`, 500);
   }
 }

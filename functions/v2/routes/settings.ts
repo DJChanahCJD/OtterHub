@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { CF } from '@utils/types';
 import type { Env } from '../types/hono';
+import { okV1, failV1 } from '@utils/common';
+import { ok, fail } from '@utils/response';
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();
 
@@ -12,9 +14,9 @@ settingsRoutes.get('/', async (c) => {
     const kv = c.env.oh_file_url;
     const settingsStr = await kv.get(CF.SETTINGS_KEY);
     const settings = settingsStr ? JSON.parse(settingsStr) : {};
-    return c.json({ success: true, data: settings });
+    return ok(c, settings);
   } catch (error: any) {
-    return c.json({ success: false, message: "获取设置失败: " + error.message }, 500);
+    return fail(c, "获取设置失败: " + error.message, 500);
   }
 });
 
@@ -34,9 +36,9 @@ settingsRoutes.post(
       };
       
       await kv.put(CF.SETTINGS_KEY, JSON.stringify(mergedSettings));
-      return c.json({ success: true, data: mergedSettings, message: "设置已更新" });
+      return okV1(mergedSettings, "设置已更新");
     } catch (error: any) {
-      return c.json({ success: false, message: "保存设置失败: " + error.message }, 500);
+      return failV1("保存设置失败: " + error.message, 500);
     }
   }
 );

@@ -1,4 +1,4 @@
-import { request } from "../utils";
+import { request } from "@/lib/utils";
 import { API_URL } from ".";
 import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
 
@@ -17,7 +17,7 @@ export function getWallpapers(
     if (v) searchParams.append(k, String(v));
   });
 
-  return request<UnifiedWallpaper[]>(`${API_URL}/v1/api/providers/wallpaper/${source}?${searchParams.toString()}`);
+  return request<UnifiedWallpaper[]>(`${API_URL}/api/providers/wallpaper/${source}?${searchParams.toString()}`);
 }
 
 /**
@@ -32,7 +32,7 @@ export function uploadByUrl(
   fileName: string, 
   isNsfw: boolean = false
 ): Promise<any> {
-  return request<any>(`${API_URL}/v1/api/upload/by-url`, {
+  return request<any>(`${API_URL}/api/upload/by-url`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '@utils/common';
 import type { Env } from '../../types/hono';
+import { fail, ok } from '@utils/response';
 
 export const bingRoutes = new Hono<{ Bindings: Env }>();
 
@@ -57,16 +57,16 @@ bingRoutes.get('/bing', async (c) => {
     }
 
     if (wallpapers.length === 0) {
-      return c.json(fail("获取壁纸失败：所有数据源均不可用"), 500);
+      return fail(c, "获取壁纸失败：所有数据源均不可用", 500);
     }
 
     const uniqueWallpapers = Array.from(
       new Map(wallpapers.map(w => [w.rawUrl, w])).values()
     );
 
-    return c.json(ok(uniqueWallpapers));
+    return ok(c, uniqueWallpapers);
   } catch (err) {
     console.error("Fetch bing wallpaper error:", err);
-    return c.json(fail("获取壁纸失败"), 500);
+    return fail(c, "获取壁纸失败", 500);
   }
 });

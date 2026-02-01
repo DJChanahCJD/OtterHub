@@ -1,5 +1,5 @@
 import { getTgFilePath, buildTgFileUrl } from "@utils/db-adapter/tg-tools";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 
 /**
  * 获取视频缩略图
@@ -9,7 +9,7 @@ export async function onRequestGet({ env, params }: any) {
   const thumbFileId = params.key;
 
   if (!thumbFileId) {
-    return fail("Missing thumbnail file_id", 400);
+    return failV1("Missing thumbnail file_id", 400);
   }
 
   try {
@@ -17,7 +17,7 @@ export async function onRequestGet({ env, params }: any) {
     const filePath = await getTgFilePath(thumbFileId, env.TG_BOT_TOKEN);
 
     if (!filePath) {
-      return fail("Thumbnail not found", 404);
+      return failV1("Thumbnail not found", 404);
     }
 
     // 构建缩略图 URL
@@ -27,7 +27,7 @@ export async function onRequestGet({ env, params }: any) {
     const response = await fetch(thumbUrl);
 
     if (!response.ok) {
-      return fail("Failed to fetch thumbnail", 502);
+      return failV1("Failed to fetch thumbnail", 502);
     }
 
     // 返回图片，设置缓存
@@ -40,6 +40,6 @@ export async function onRequestGet({ env, params }: any) {
     });
   } catch (error: any) {
     console.error("[Thumbnail API] Error:", error);
-    return fail(`Error fetching thumbnail: ${error.message}`, 500);
+    return failV1(`Error fetching thumbnail: ${error.message}`, 500);
   }
 }

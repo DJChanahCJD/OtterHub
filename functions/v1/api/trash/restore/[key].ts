@@ -1,5 +1,5 @@
 
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 
 export async function onRequestPost({ env, params }: any) {
@@ -10,9 +10,9 @@ export async function onRequestPost({ env, params }: any) {
     // 使用统一的 DBAdapter 处理还原逻辑
     await db.restoreFromTrash(trashKey);
 
-    return ok(trashKey, 'File restored successfully');
+    return okV1(trashKey, 'File restored successfully');
   } catch (error: any) {
     console.error('Restore file error:', error);
-    return fail(`Failed to restore file: ${error.message}`, 500);
+    return failV1(`Failed to restore file: ${error.message}`, 500);
   }
 }

@@ -1,5 +1,5 @@
 // functions/api/upload/by-url.ts
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 import { FileMetadata, FileTag } from "@shared/types";
 import { proxyGet } from "@utils/proxy";
@@ -14,18 +14,18 @@ export async function onRequestPost(context: any) {
         const { url, fileName, isNsfw } = await request.json();
 
         if (!url) {
-            return fail('No URL provided', 400);
+            return failV1('No URL provided', 400);
         }
 
         // 使用重构后的代理请求，自动处理不同站点的防盗链
         const response = await proxyGet(url);
         
         if (!response.ok) {
-            return fail(`Failed to fetch remote file: Status ${response.status}`, response.status);
+            return failV1(`Failed to fetch remote file: Status ${response.status}`, response.status);
         }
 
         if (!response.body) {
-            return fail('Empty response body from remote URL', 502);
+            return failV1('Empty response body from remote URL', 502);
         }
 
         const finalFileName = (fileName || 'remote_file').substring(0, 100);
@@ -45,9 +45,9 @@ export async function onRequestPost(context: any) {
 
         // 使用流式上传，避免 Blob 在 Cloudflare Pages 上的兼容性问题及大文件内存压力
         const { key } = await dbAdapter.uploadStream(response.body, metadata);
-        return ok({ key, fileSize });
+        return okV1({ key, fileSize });
     } catch (error: any) {
         console.error('Remote upload error:', error);
-        return fail(`Failed to upload remote file: ${error.message}`, 500);
+        return failV1(`Failed to upload remote file: ${error.message}`, 500);
     }
 }

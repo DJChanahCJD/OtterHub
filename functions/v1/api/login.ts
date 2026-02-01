@@ -1,12 +1,12 @@
 import { signJWT } from "@utils/auth";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 
 export async function onRequestPost({ request, env }: any) {
   try {
     const { password } = await request.json();
 
     if (!password || password !== env.PASSWORD) {
-      return fail("Unauthorized", 401);
+      return failV1("Unauthorized", 401);
     }
 
     // Use JWT_SECRET if available, otherwise fallback to PASSWORD
@@ -22,10 +22,10 @@ export async function onRequestPost({ request, env }: any) {
       "Secure"
     ].join("; ");
 
-    return ok(true, "Login successful", 200, {
+    return okV1(true, "Login successful", 200, {
       "Set-Cookie": cookie,
     });
   } catch (e) {
-    return fail("Invalid request", 400);
+    return failV1("Invalid request", 400);
   }
 }

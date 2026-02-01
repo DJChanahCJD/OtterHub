@@ -1,5 +1,5 @@
 import { BaseAdapter } from "./base-adapter";
-import { ok, fail, encodeContentDisposition } from "../common";
+import { okV1, failV1, encodeContentDisposition } from "../common";
 import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 
 import {
@@ -179,7 +179,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
       const { metadata } = await this.getFileMetadataWithValue(key);
       if (!metadata) {
-        return fail(`Metadata not found for key: ${key}`, 404);
+        return failV1(`Metadata not found for key: ${key}`, 404);
       }
       const headers = new Headers();
       headers.set("Content-Type", contentType);
@@ -221,7 +221,7 @@ export class TGAdapterV2 extends BaseAdapter {
         headers,
       });
     } catch (error) {
-      return fail(`File not found for key: ${key}`, 404);
+      return failV1(`File not found for key: ${key}`, 404);
     }
   }
 
@@ -234,10 +234,10 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
     if (!metadata) {
-      return fail(`Metadata not found for key: ${key}`, 404);
+      return failV1(`Metadata not found for key: ${key}`, 404);
     }
     if (!metadata.chunkInfo) {
-      return fail("Invalid metadata: not a chunked file", 400);
+      return failV1("Invalid metadata: not a chunked file", 400);
     }
 
 
@@ -249,14 +249,14 @@ export class TGAdapterV2 extends BaseAdapter {
       }
     } catch (e) {
       console.error(`[TGAdapterV2] Failed to parse chunks for ${key}:`, e);
-      return fail("Failed to parse chunks metadata", 500);
+      return failV1("Failed to parse chunks metadata", 500);
     }
 
     // 使用通用工具函数验证分片完整性
     const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
     if (!validation.valid) {
       console.error(`[getMergedFile] ${validation.reason}`);
-      return fail(validation.reason || "Invalid metadata", 425);
+      return failV1(validation.reason || "Invalid metadata", 425);
     }
 
     // 使用通用工具函数排序并计算总大小

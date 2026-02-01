@@ -1,5 +1,5 @@
 import { BaseAdapter } from "./base-adapter";
-import { fail, encodeContentDisposition } from "../common";
+import { failV1, encodeContentDisposition } from "../common";
 import {
   getUniqueFileId,
   buildKeyId,
@@ -140,7 +140,7 @@ export class R2AdapterV2 extends BaseAdapter {
       const object = await this.env[this.bucketName].get(r2Key);
       if (!object) {
         console.error(`[getSingleFile] File not found in R2: ${r2Key}`);
-        return fail(`File not found for key: ${key}`, 404);
+        return failV1(`File not found for key: ${key}`, 404);
       }
 
       const headers = new Headers();
@@ -165,7 +165,7 @@ export class R2AdapterV2 extends BaseAdapter {
         });
 
         if (!partial) {
-          return fail("Failed to read file range", 500);
+          return failV1("Failed to read file range", 500);
         }
 
         headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
@@ -179,7 +179,7 @@ export class R2AdapterV2 extends BaseAdapter {
       const { metadata } = await this.getFileMetadataWithValue(key);  //  这里如果是trash, 则用trash的key，如果非trash，即用原Key，即都是key
       if (!metadata) {
         console.error(`[getSingleFile] No metadata found for key: ${key}`);
-        return fail("Metadata not found", 404);
+        return failV1("Metadata not found", 404);
       }
       headers.set(
         "Content-Disposition",
@@ -189,7 +189,7 @@ export class R2AdapterV2 extends BaseAdapter {
       return new Response(object.body, { status: 200, headers });
     } catch (error) {
       console.error(`[getSingleFile] Error:`, error);
-      return fail(`Failed to read file: ${error}`, 500);
+      return failV1(`Failed to read file: ${error}`, 500);
     }
   }
 
@@ -199,7 +199,7 @@ export class R2AdapterV2 extends BaseAdapter {
       
       if (!metadata) {
         console.error(`[getMergedFile] No metadata found for key: ${key}`);
-        return fail("Metadata not found", 404);
+        return failV1("Metadata not found", 404);
       }
 
       // 解析 chunks
@@ -210,14 +210,14 @@ export class R2AdapterV2 extends BaseAdapter {
         }
       } catch (e) {
         console.error(`[getMergedFile] Failed to parse chunks for ${key}:`, e);
-        return fail("Failed to parse chunks metadata", 500);
+        return failV1("Failed to parse chunks metadata", 500);
       }
 
       // 使用通用工具函数验证分片完整性
       const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
       if (!validation.valid) {
         console.error(`[getMergedFile] ${validation.reason}`);
-        return fail(validation.reason || "Invalid metadata", 425);
+        return failV1(validation.reason || "Invalid metadata", 425);
       }
 
       // 使用通用工具函数排序并计算总大小
@@ -259,7 +259,7 @@ export class R2AdapterV2 extends BaseAdapter {
       });
     } catch (error) {
       console.error(`[getMergedFile] Error:`, error);
-      return fail(`Failed to read merged file: ${error}`, 500);
+      return failV1(`Failed to read merged file: ${error}`, 500);
     }
   }
 

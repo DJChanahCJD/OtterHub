@@ -1,4 +1,4 @@
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { CF } from "@utils/types";
 
 /**
@@ -10,9 +10,9 @@ export async function onRequestGet({ env }: any) {
     const kv = env[CF.KV_NAME];
     const settingsStr = await kv.get(CF.SETTINGS_KEY);
     const settings = settingsStr ? JSON.parse(settingsStr) : {};
-    return ok(settings);
+    return okV1(settings);
   } catch (error: any) {
-    return fail("获取设置失败: " + error.message);
+    return failV1("获取设置失败: " + error.message);
   }
 }
 
@@ -31,8 +31,8 @@ export async function onRequestPost({ request, env }: any) {
     };
     
     await kv.put(CF.SETTINGS_KEY, JSON.stringify(mergedSettings));
-    return ok(mergedSettings, "设置已更新");
+    return okV1(mergedSettings, "设置已更新");
   } catch (error: any) {
-    return fail("保存设置失败: " + error.message);
+    return failV1("保存设置失败: " + error.message);
   }
 }

@@ -1,6 +1,6 @@
 
 import { deleteCache, deleteFileCache } from "@utils/cache";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 import { API_VERSION } from "@utils/types";
 
@@ -12,7 +12,7 @@ export async function onRequestPost({ env, params, request }: any) {
     // 硬删除
     const { isDeleted } = await db.delete(key);
     if (!isDeleted) {
-      return fail('Failed to delete file', 404);
+      return failV1('Failed to delete file', 404);
     }
 
     // 删除缓存
@@ -20,9 +20,9 @@ export async function onRequestPost({ env, params, request }: any) {
     await deleteCache(request);
     await deleteFileCache(url.origin, key, API_VERSION.V1);
 
-    return ok(key, 'File permanently deleted');
+    return okV1(key, 'File permanently deleted');
   } catch (error: any) {
     console.error('Delete file error:', error);
-    return fail(`Failed to delete file: ${error.message}`, 500);
+    return failV1(`Failed to delete file: ${error.message}`, 500);
   }
 }

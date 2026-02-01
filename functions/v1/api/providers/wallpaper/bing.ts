@@ -1,4 +1,4 @@
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { UnifiedWallpaper } from "@shared/types";
 
 const PEAPIX_COUNTRIES = ["au", "br", "ca", "cn", "de", "fr", "in", "it", "jp", "es", "gb", "us"];
@@ -60,7 +60,7 @@ export async function onRequestGet(context: any) {
     }
 
     if (wallpapers.length === 0) {
-      return fail("获取壁纸失败：所有数据源均不可用");
+      return failV1("获取壁纸失败：所有数据源均不可用");
     }
 
     // 根据 rawUrl 去重
@@ -68,9 +68,9 @@ export async function onRequestGet(context: any) {
       new Map(wallpapers.map(w => [w.rawUrl, w])).values()
     );
 
-    return ok(uniqueWallpapers);
+    return okV1(uniqueWallpapers);
   } catch (err) {
     console.error("Fetch wallpaper error:", err);
-    return fail("获取壁纸失败");
+    return failV1("获取壁纸失败");
   }
 }

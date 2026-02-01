@@ -1,11 +1,11 @@
-import { request } from "../utils";
+import { request } from "@/lib/utils";
 import { API_URL } from ".";
 
 /**
  * 登录
  */
 export function login(password: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/v1/api/login`, {
+  return request<boolean>(`${API_URL}/api/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +18,7 @@ export function login(password: string): Promise<boolean> {
  * 登出
  */
 export function logout(): Promise<boolean> {
-  return request<boolean>(`${API_URL}/v1/api/logout`, {
+  return request<boolean>(`${API_URL}/api/logout`, {
     method: "POST",
   });
 }

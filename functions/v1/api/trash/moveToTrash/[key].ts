@@ -1,6 +1,6 @@
 
 import { deleteCache, deleteFileCache } from "@utils/cache";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 import { API_VERSION } from "@utils/types";
 
@@ -17,9 +17,9 @@ export async function onRequestPost({ env, params, request }: any) {
     await deleteCache(request);
     await deleteFileCache(url.origin, key, API_VERSION.V1);
 
-    return ok(key, 'File moved to trash');
+    return okV1(key, 'File moved to trash');
   } catch (error: any) {
     console.error('Move to trash error:', error);
-    return fail(`Failed to move file to trash: ${error.message}`, 500);
+    return failV1(`Failed to move file to trash: ${error.message}`, 500);
   }
 }

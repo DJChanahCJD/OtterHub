@@ -1,5 +1,5 @@
 // functions/api/providers/wallpaper/proxy.ts
-import { fail } from "@utils/common";
+import { failV1 } from "@utils/common";
 import { proxyGet } from "@utils/proxy";
 
 /**
@@ -14,7 +14,7 @@ export async function onRequestGet(context: any) {
     const targetUrl = url.searchParams.get("url");
 
     if (!targetUrl) {
-      return fail("URL parameter is required", 400);
+      return failV1("URL parameter is required", 400);
     }
 
     // 发起代理请求，使用重构后的统一代理
@@ -36,6 +36,6 @@ export async function onRequestGet(context: any) {
     return response;
   } catch (e: any) {
     console.error("Wallpaper proxy error:", e);
-    return fail(`Wallpaper proxy error: ${e.message || "Unknown error"}`, 500);
+    return failV1(`Wallpaper proxy error: ${e.message || "Unknown error"}`, 500);
   }
 }

@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { proxyGet, handleStreamResponse } from '@utils/proxy';
 import type { Env } from '../types/hono';
-import { ok, fail } from '@utils/common';
 import { authMiddleware } from '../middleware/auth';
+import { fail } from '@utils/response';
 
 export const proxyRoutes = new Hono<{ Bindings: Env }>();
 
@@ -36,7 +36,7 @@ proxyRoutes.get(
       return handleStreamResponse(response);
     } catch (e: any) {
       console.error("Proxy error:", e);
-      return c.json(fail(`Proxy error: ${e.message || "Unknown error"}`), 500);
+      return fail(c, `Proxy error: ${e.message || "Unknown error"}`, 500);
     }
   }
 );

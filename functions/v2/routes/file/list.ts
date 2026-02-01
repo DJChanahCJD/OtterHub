@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileType } from '@shared/types';
 import type { Env } from '../../types/hono';
+import { fail } from '@utils/response';
 
 export const listRoutes = new Hono<{ Bindings: Env }>();
 
@@ -21,7 +22,7 @@ listRoutes.get(
     const kv = c.env.oh_file_url; 
 
     if (limit < 1) {
-      return c.json({ success: false, message: 'Invalid limit parameter' }, 400);
+      return fail(c, 'Invalid limit parameter', 400);
     }
 
     const options = {
@@ -42,7 +43,7 @@ listRoutes.get(
       });
     } catch (err) {
       console.error("[KV:list:v2] error:", err);
-      return c.json({ success: false, message: 'Failed to fetch files' }, 500);
+      return fail(c, 'Failed to fetch files');
     }
   }
 );

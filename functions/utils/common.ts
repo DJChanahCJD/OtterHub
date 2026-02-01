@@ -4,11 +4,10 @@ import { ApiResponse } from "@shared/types";
 // 判断是否为开发环境
 export function isDev(env: any): boolean {
   const isDev = !env?.TG_BOT_TOKEN;
-  // console.log("isDev:", isDev);
   return isDev;
 }
 
-function json(body: any, status: number, headers?: HeadersInit): Response {
+function jsonV1(body: any, status: number, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...headers, "Content-Type": "application/json" },
@@ -33,13 +32,13 @@ export function encodeContentDisposition(fileName: string, inline = true): strin
  * @param message 提示消息
  * @param status HTTP状态码，默认为200
  */
-export function ok<T>(data?: T, message?: string, status = 200, headers?: HeadersInit): Response {
+export function okV1<T>(data?: T, message?: string, status = 200, headers?: HeadersInit): Response {
   const response: ApiResponse<T> = {
     success: true,
     data,
     message,
   };
-  return json(response, status, headers);
+  return jsonV1(response, status, headers);
 }
 
 /**
@@ -47,11 +46,11 @@ export function ok<T>(data?: T, message?: string, status = 200, headers?: Header
  * @param message 错误信息
  * @param status HTTP状态码，默认为500
  */
-export function fail(message: string, status = 500, headers?: HeadersInit): Response {
+export function failV1(message: string, status = 500, headers?: HeadersInit): Response {
   const response: ApiResponse<null> = {
     success: false,
     data: null,
     message,
   };
-  return json(response, status, headers);
+  return jsonV1(response, status, headers);
 }

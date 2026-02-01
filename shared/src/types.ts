@@ -70,7 +70,7 @@ export enum FileTag {
 export const chunkPrefix = 'chunk_';
 export type ChunkInfo = {
   total: number;          // 总分片数
-  uploadedIndices?: number[]; // 已上传的分片索引
+  uploadedIndices: number[]; // 已上传的分片索引
 }
 
 export type Chunk = {

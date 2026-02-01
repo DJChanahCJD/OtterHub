@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileMetadata, FileTag } from '@shared/types';
-import { ok, fail } from '@utils/common';
+import { okV1, failV1 } from '@utils/common';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
+import { fail, ok } from '@utils/response';
 
 export const urlUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -25,11 +26,11 @@ urlUploadRoutes.post(
     try {
       const response = await proxyGet(url);
       if (!response.ok) {
-        return c.json(fail(`Failed to fetch remote file: Status ${response.status}`), response.status as any);
+        return fail(c, `Failed to fetch remote file: Status ${response.status}`, response.status as any);
       }
 
       if (!response.body) {
-        return c.json(fail('Empty response body from remote URL'), 502);
+        return fail(c, 'Empty response body from remote URL', 502);
       }
 
       const finalFileName = (fileName || 'remote_file').substring(0, 100);
@@ -45,10 +46,10 @@ urlUploadRoutes.post(
       };
 
       const { key } = await dbAdapter.uploadStream(response.body, metadata);
-      return c.json(ok({ key, fileSize }));
+      return ok(c, { key, fileSize });
     } catch (error: any) {
       console.error('Remote upload error:', error);
-      return c.json(fail(`Failed to upload remote file: ${error.message}`), 500);
+      return fail(c, `Failed to upload remote file: ${error.message}`, 500);
     }
   }
 );

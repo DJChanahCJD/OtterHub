@@ -2,7 +2,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { signJWT } from '@utils/auth';
+import { okV1, failV1 } from '@utils/common';
 import type { Env } from '../types/hono';
+import { fail, ok } from '@utils/response';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
 
@@ -11,7 +13,7 @@ authRoutes.post(
   zValidator(
     'json',
     z.object({
-      password: z.string(),
+      password: z.string().min(1, 'Password required'),
     })
   ),
   async (c) => {
@@ -19,7 +21,7 @@ authRoutes.post(
     const env = c.env;
 
     if (!password || password !== env.PASSWORD) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return fail(c, 'Unauthorized', 401);
     }
 
     const secret = env.JWT_SECRET || env.PASSWORD || 'secret';
@@ -36,12 +38,7 @@ authRoutes.post(
     ].join("; ");
 
     c.header('Set-Cookie', cookie);
-
-    return c.json({ 
-        success: true, 
-        message: 'Login successful',
-        data: { token }
-    });
+    return ok(c, { token }, 'Login successful', 200);
   }
 );
 
@@ -56,5 +53,5 @@ authRoutes.post('/logout', (c) => {
   ].join("; ");
   
   c.header('Set-Cookie', cookie);
-  return c.json({ success: true, message: 'Logout successful' });
+  return ok(c, null, 'Logout successful', 200);
 });

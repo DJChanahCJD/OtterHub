@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '@utils/common';
 import type { Env } from '../../types/hono';
+import { ok, fail } from '@utils/response';
 
 export const unsplashRoutes = new Hono<{ Bindings: Env }>();
 
@@ -26,7 +26,7 @@ unsplashRoutes.get(
     const accessKey = q.apiKey;
 
     if (!accessKey) {
-      return c.json(fail("Unsplash Access Key is required"), 400);
+      return fail(c, "Unsplash Access Key is required", 400);
     }
 
     const searchTerm = q.q || q.query;
@@ -66,10 +66,10 @@ unsplashRoutes.get(
         source: "unsplash",
       }));
 
-      return c.json(ok(unifiedData));
+      return ok(c, unifiedData);
     } catch (error: any) {
       console.error("Unsplash provider error:", error);
-      return c.json(fail(error.message), 500);
+      return fail(c, error.message, 500);
     }
   }
 );

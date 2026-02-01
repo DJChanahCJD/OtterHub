@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '@utils/common';
 import { getWallpaperProxyUrl } from '@utils/proxy';
 import type { Env } from '../../types/hono';
+import { ok, fail } from '@utils/response';
 
 export const wallhavenRoutes = new Hono<{ Bindings: Env }>();
 
@@ -61,10 +61,10 @@ wallhavenRoutes.get(
         source: "wallhaven",
       }));
 
-      return c.json(ok(unifiedData));
+      return ok(c, unifiedData);
     } catch (error: any) {
       console.error("Wallhaven provider error:", error);
-      return c.json(fail(error.message), 500);
+      return fail(c, error.message, 500);
     }
   }
 );

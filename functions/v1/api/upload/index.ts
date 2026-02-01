@@ -1,4 +1,4 @@
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 import { FileMetadata, FileTag } from "@shared/types";
 
@@ -12,7 +12,7 @@ export async function onRequestPost(context: any) {
 
         const uploadFile = formData.get('file');
         if (!uploadFile) {
-            return fail('No file uploaded', 400);
+            return failV1('No file uploaded', 400);
         }
 
         const fileName = uploadFile.name.substring(0, 100);  //  不超过100个字符 
@@ -34,9 +34,9 @@ export async function onRequestPost(context: any) {
 
         // console.log('Uploading file:', fileName, fileSize);
         const { key } = await dbAdapter.uploadFile(uploadFile, metadata);
-        return ok(key);
+        return okV1(key);
     } catch (error: any) {
         console.error('Upload error:', error);
-        return fail(`Failed to upload file: ${error.message}`, 500);
+        return failV1(`Failed to upload file: ${error.message}`, 500);
     }
 }

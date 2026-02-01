@@ -1,11 +1,11 @@
-import { request } from "../utils";
+import { request } from "@/lib/utils";
 import { API_URL } from ".";
 
 /**
  * 获取云端同步设置
  */
 export function getSettings(): Promise<any> {
-  return request<any>(`${API_URL}/v1/api/settings`);
+  return request<any>(`${API_URL}/api/settings`);
 }
 
 /**
@@ -13,7 +13,7 @@ export function getSettings(): Promise<any> {
  * @param settings 部分或全部设置项
  */
 export function updateSettings(settings: any): Promise<any> {
-  return request<any>(`${API_URL}/v1/api/settings`, {
+  return request<any>(`${API_URL}/api/settings`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
-import { ok, fail } from '@utils/common';
+import { okV1, failV1 } from '@utils/common';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../types/hono';
 import { authMiddleware } from '../middleware/auth';
 import { API_VERSION } from '@utils/types';
+import { fail, ok } from '@utils/response';
 
 export const trashRoutes = new Hono<{ Bindings: Env }>();
 
@@ -19,7 +20,7 @@ trashRoutes.get('/:key', async (c) => {
     return await db.get(trashKey, c.req.raw);
   } catch (error: any) {
     console.error('Fetch trash file error:', error);
-    return c.json(fail(`Failed to fetch trash file: ${error.message}`), 500);
+    return fail(c, `Failed to fetch trash file: ${error.message}`, 500);
   }
 });
 
@@ -35,10 +36,10 @@ trashRoutes.post('/:key/move', async (c) => {
     await deleteCache(c.req.raw);
     await deleteFileCache(url.origin, key, API_VERSION.V2);
 
-    return c.json(ok(key, 'File moved to trash'));
+    return ok(c, key, 'File moved to trash');
   } catch (error: any) {
     console.error('Move to trash error:', error);
-    return c.json(fail(`Failed to move file to trash: ${error.message}`), 500);
+    return fail(c, `Failed to move file to trash: ${error.message}`, 500);
   }
 });
 
@@ -49,9 +50,9 @@ trashRoutes.post('/:key/restore', async (c) => {
     const db = DBAdapterFactory.getAdapter(c.env);
     await db.restoreFromTrash(trashKey);
 
-    return c.json(ok(trashKey, 'File restored successfully'));
+    return ok(c, trashKey, 'File restored successfully');
   } catch (error: any) {
     console.error('Restore file error:', error);
-    return c.json(fail(`Failed to restore file: ${error.message}`), 500);
+    return fail(c, `Failed to restore file: ${error.message}`, 500);
   }
 });

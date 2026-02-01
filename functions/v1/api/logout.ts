@@ -1,7 +1,7 @@
-import { ok } from "@utils/common";
+import { okV1 } from "@utils/common";
 
 export async function onRequest() {
-  return ok(true, "Logout successful", 200, {
+  return okV1(true, "Logout successful", 200, {
     "Set-Cookie": [
       "auth=",
       "Path=/",

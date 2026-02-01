@@ -1,4 +1,4 @@
-import { fail } from "@utils/common";
+import { failV1 } from "@utils/common";
 import { proxyGet, handleStreamResponse } from "@utils/proxy";
 
 /**
@@ -16,7 +16,7 @@ export async function onRequestGet(context: any) {
     targetUrl = url.searchParams.get("url");
 
     if (!targetUrl) {
-      return fail("URL parameter is required", 400);
+      return failV1("URL parameter is required", 400);
     }
 
     // 从查询参数中获取自定义 headers（可选）
@@ -35,6 +35,6 @@ export async function onRequestGet(context: any) {
     return handleStreamResponse(response);
   } catch (e: any) {
     console.error("Proxy error:", e);
-    return fail(`Proxy error: ${e.message || "Unknown error"}`, 500);
+    return failV1(`Proxy error: ${e.message || "Unknown error"}`, 500);
   }
 }

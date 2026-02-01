@@ -1,5 +1,5 @@
 import { FileType, chunkPrefix, FileMetadata } from "@shared/types";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { DBAdapterFactory } from "@utils/db-adapter";
 import { getUniqueFileId, buildKeyId, getFileExt } from "@utils/file";
 import { CF, MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from "@utils/types";
@@ -19,7 +19,7 @@ export async function onRequestGet(context: any): Promise<Response> {
   const totalChunks = parseInt(params.get("totalChunks"), 10);
 
   if (fileSize > MAX_FILE_SIZE || totalChunks > MAX_CHUNK_NUM) {
-    return fail("File size exceeds the limit", 400);
+    return failV1("File size exceeds the limit", 400);
   }
 
   const fileId = getUniqueFileId();
@@ -38,7 +38,7 @@ export async function onRequestGet(context: any): Promise<Response> {
 
   await env[CF.KV_NAME].put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
 
-  return ok(key);
+  return okV1(key);
 }
 
 // 上传分片
@@ -57,9 +57,9 @@ export async function onRequestPost(context: any): Promise<Response> {
   try {
     const db = DBAdapterFactory.getAdapter(env);
     const { chunkIndex: uploadedChunkIndex } = await db.uploadChunk(key, chunkIndex, chunk, waitUntil);
-    return ok(uploadedChunkIndex);
+    return okV1(uploadedChunkIndex);
   } catch (error: any) {
     console.error(`Upload chunk error: ${error.message}`);
-    return fail(error.message, 400);
+    return failV1(error.message, 400);
   }
 }

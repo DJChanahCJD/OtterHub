@@ -4,7 +4,7 @@ import { setToStorage, STORAGE_KEYS } from "../local-storage";
 import { ViewMode, ImageLoadMode } from "../types";
 import { FileType } from "@shared/types";
 
-import { updateSettings } from "../api/settings";
+import { updateSettings } from "@/lib/api";
 
 interface FileUIState {
   viewMode: ViewMode;

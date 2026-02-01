@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getFromCache, putToCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
+import { fail } from '@utils/response';
 
 export const rawRoutes = new Hono<{ Bindings: Env }>();
 
@@ -11,7 +12,7 @@ rawRoutes.get('/:key', async (c) => {
 
   try {
     const item = await db.getFileMetadataWithValue?.(key);
-    if (!item) return c.json({ success: false, message: "File not found" }, 404);
+    if (!item) return fail(c, "File not found", 404);
 
     // Range 请求：明确不缓存
     if (c.req.header('Range')) {
@@ -27,6 +28,6 @@ rawRoutes.get('/:key', async (c) => {
     return resp;
   } catch (error: any) {
     console.error('Fetch raw file error:', error);
-    return c.json({ success: false, message: error.message }, 500);
+    return fail(c, error.message);
   }
 });

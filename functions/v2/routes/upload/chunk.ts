@@ -2,11 +2,12 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { FileType, FileMetadata, chunkPrefix } from '@shared/types';
-import { ok, fail } from '@utils/common';
+import { okV1, failV1 } from '@utils/common';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
 import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from '@utils/types';
 import type { Env } from '../../types/hono';
+import { fail, ok } from '@utils/response';
 
 export const chunkUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -26,7 +27,7 @@ chunkUploadRoutes.get(
     const { fileType, fileName, fileSize, totalChunks } = c.req.valid('query');
 
     if (fileSize > MAX_FILE_SIZE || totalChunks > MAX_CHUNK_NUM) {
-      return c.json(fail("File size exceeds the limit"), 400);
+      return fail(c, "File size exceeds the limit", 400);
     }
 
     const fileId = getUniqueFileId();
@@ -46,7 +47,7 @@ chunkUploadRoutes.get(
     const kv = c.env.oh_file_url;
     await kv.put(key, "", { metadata, expirationTtl: TEMP_CHUNK_TTL });
 
-    return c.json(ok(key));
+    return ok(c, key);
   }
 );
 
@@ -61,16 +62,16 @@ chunkUploadRoutes.post(
       const chunk = formData.get("chunkFile") as File;
 
       if (!key || isNaN(chunkIndex) || !chunk) {
-        return c.json(fail("Missing required parameters"), 400);
+        return fail(c, "Missing required parameters", 400);
       }
 
       const db = DBAdapterFactory.getAdapter(c.env);
       const { chunkIndex: uploadedChunkIndex } = await db.uploadChunk(key, chunkIndex, chunk, c.executionCtx.waitUntil.bind(c.executionCtx));
       
-      return c.json(ok(uploadedChunkIndex));
+      return ok(c, uploadedChunkIndex);
     } catch (error: any) {
       console.error(`Upload chunk error: ${error.message}`);
-      return c.json(fail(error.message), 400);
+      return fail(c, error.message, 400);
     }
   }
 );

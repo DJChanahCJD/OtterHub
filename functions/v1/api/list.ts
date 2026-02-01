@@ -1,6 +1,6 @@
 // functions/api/list.ts
 import { CF } from "@utils/types";
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { FileType } from "@shared/types";
 
 const DEFAULT_LIMIT = 50; //  默认 list 返回数量
@@ -17,7 +17,7 @@ export async function onRequestGet({ request, env }: any) {
     const limit = rawLimit ? Number(rawLimit) : DEFAULT_LIMIT;
 
     if (!Number.isInteger(limit) || limit < 1) {
-      return fail("Invalid limit parameter", 400);
+      return failV1("Invalid limit parameter", 400);
     }
 
     const options = {
@@ -31,13 +31,13 @@ export async function onRequestGet({ request, env }: any) {
     const { keys, list_complete, cursor: nextCursor } =
       await env[CF.KV_NAME].list(options);
 
-    return ok({
+    return okV1({
       keys,
       list_complete,
       cursor: nextCursor,
     });
   } catch (err) {
     console.error("[KV:list] error:", err);
-    return fail("Failed to fetch files", 500);
+    return failV1("Failed to fetch files", 500);
   }
 }

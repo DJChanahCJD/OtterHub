@@ -4,6 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { FileMetadata } from '@shared/types';
 import { authMiddleware } from '../../middleware/auth';
 import type { Env } from '../../types/hono';
+import { fail, ok } from '@utils/response';
 
 export const metaRoutes = new Hono<{ Bindings: Env }>();
 
@@ -27,7 +28,7 @@ metaRoutes.patch(
       const metadata = value.metadata as FileMetadata;
 
       if (!metadata) {
-        return c.json({ success: false, message: `File metadata not found for key: ${key}` }, 404);
+        return fail(c, `File metadata not found for key: ${key}`, 404);
       }
 
       if (fileName !== undefined) metadata.fileName = fileName;
@@ -35,10 +36,10 @@ metaRoutes.patch(
 
       await kv.put(key, "", { metadata });
 
-      return c.json({ success: true, data: { metadata } });
+      return ok(c, metadata);
     } catch (e: any) {
       console.error('Update metadata error:', e);
-      return c.json({ success: false, message: `Failed to update metadata: ${e.message}` }, 500);
+      return fail(c, `Failed to update metadata: ${e.message}`);
     }
   }
 );

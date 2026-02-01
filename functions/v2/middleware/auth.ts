@@ -1,10 +1,11 @@
 import { createMiddleware } from 'hono/factory';
 import { verifyJWT } from '@utils/auth';
 import type { Env } from '../types/hono';
+import { fail } from '@utils/response';
 
 const PUBLIC_PATHS = [
   /^\/$/,
-  /^\/login/,
+  /^\/auth\/login/,
   /^\/_next\//,
   /\.(ico|png|svg|jpg|jpeg|css|js|webmanifest|json|woff|woff2|ttf|eot)$/,
 ];
@@ -22,7 +23,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next
 
 
   if (!authCookie) {
-    return c.json({ success: false, message: 'Unauthorized' }, 401);
+    return fail(c, 'Unauthorized', 401);
   }
 
   try {
@@ -30,6 +31,6 @@ export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next
     await verifyJWT(authCookie, secret);
     await next();
   } catch (e) {
-    return c.json({ success: false, message: 'Unauthorized' }, 401);
+    return fail(c, 'Unauthorized', 401);
   }
 });

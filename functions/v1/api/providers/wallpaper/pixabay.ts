@@ -1,4 +1,4 @@
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { UnifiedWallpaper } from "@shared/types";
 
 const baseUrl = "https://pixabay.com/api/";
@@ -12,7 +12,7 @@ export async function onRequestGet(context: any) {
     // 优先从查询参数获取 API Key，否则从环境变量获取
     const apiKey = url.searchParams.get("apiKey") || env.PIXABAY_API_KEY;
     if (!apiKey) {
-      return fail("Pixabay API Key is required", 400);
+      return failV1("Pixabay API Key is required", 400);
     }
 
     // 随机页码逻辑：如果未指定 page，则随机 1-20 页
@@ -54,9 +54,9 @@ export async function onRequestGet(context: any) {
       };
     });
 
-    return ok(unifiedData, `获取成功`);
+    return okV1(unifiedData, `获取成功`);
   } catch (error: any) {
     console.error("Pixabay provider error:", error);
-    return fail(error.message, 500);
+    return failV1(error.message, 500);
   }
 }

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { UnifiedWallpaper } from '@shared/types';
-import { ok, fail } from '@utils/common';
+import { fail, ok } from '@utils/response';
 import type { Env } from '../../types/hono';
 
 export const pixabayRoutes = new Hono<{ Bindings: Env }>();
@@ -24,7 +24,7 @@ pixabayRoutes.get(
     const apiKey = query.apiKey;
 
     if (!apiKey) {
-      return c.json(fail("Pixabay API Key is required"), 400);
+      return fail(c, "Pixabay API Key is required", 400);
     }
 
     const page = query.page || Math.floor(Math.random() * 20 + 1).toString();
@@ -50,10 +50,10 @@ pixabayRoutes.get(
         source: "pixabay",
       }));
 
-      return c.json(ok(unifiedData));
+      return ok(c, unifiedData);
     } catch (error: any) {
       console.error("Pixabay provider error:", error);
-      return c.json(fail(error.message), 500);
+      return fail(c, error.message, 500);
     }
   }
 );

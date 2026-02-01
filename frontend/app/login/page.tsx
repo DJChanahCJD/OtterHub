@@ -25,7 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema as any),  // TODO: 处理 zod 版本问题（当前根目录和frontend目录zod版本不一致）
     defaultValues: {
       password: "",
     },

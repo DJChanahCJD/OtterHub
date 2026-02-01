@@ -5,7 +5,7 @@ import {
   TRASH_EXPIRATION_TTL,
   ViewMode,
 } from "../types";
-import { getFileList } from "../api";
+import { getFileList } from "@/lib/api";
 import { STORAGE_KEYS, setToStorage } from "../local-storage";
 import { getFileTypeFromKey } from "../utils/file";
 import { useFileUIStore } from "./ui";

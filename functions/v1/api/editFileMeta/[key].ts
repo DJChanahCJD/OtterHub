@@ -1,5 +1,5 @@
 import { FileMetadata } from "@shared/types";
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { CF } from "@utils/types";
 
 // 更新文件元数据
@@ -17,7 +17,7 @@ export async function onRequestPatch(context: any) {
 
     // 如果记录不存在
     if (!metadata)
-      return fail(`File metadata not found for key: ${params.key}`, 404);
+      return failV1(`File metadata not found for key: ${params.key}`, 404);
 
     // 更新 fileName
     if (fileName !== undefined) {
@@ -34,9 +34,9 @@ export async function onRequestPatch(context: any) {
 
     console.log("Updated metadata:", metadata);
 
-    return ok({ metadata });
+    return okV1({ metadata });
   } catch (error) {
     console.error("Error updating metadata:", error);
-    return fail("Invalid request body", 400);
+    return failV1("Invalid request body", 400);
   }
 }

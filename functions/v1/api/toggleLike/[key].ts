@@ -1,4 +1,4 @@
-import { fail, ok } from "@utils/common";
+import { failV1, okV1 } from "@utils/common";
 import { CF } from "@utils/types";
 import { FileMetadata } from "@shared/types";
 
@@ -13,15 +13,15 @@ export async function onRequestPost(context: any) {
 
     // 如果记录不存在
     if (!metadata)
-      return fail(`File metadata not found for key: ${params.key}`, 404);
+      return failV1(`File metadata not found for key: ${params.key}`, 404);
 
     // 切换 liked 状态
     metadata.liked = !metadata.liked;
     await env[CF.KV_NAME].put(params.key, "", { metadata });
 
     console.log("Updated metadata:", metadata);
-    return ok({ liked: metadata.liked });
+    return okV1({ liked: metadata.liked });
   } catch (e: any) {
-    return fail(`Failed to toggle like: ${e.message}`, 500);
+    return failV1(`Failed to toggle like: ${e.message}`, 500);
   }
 }

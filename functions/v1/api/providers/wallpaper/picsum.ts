@@ -1,4 +1,4 @@
-import { ok, fail } from "@utils/common";
+import { okV1, failV1 } from "@utils/common";
 import { UnifiedWallpaper } from "@shared/types";
 
 const baseUrl = "https://picsum.photos/v2/list";
@@ -51,9 +51,9 @@ export async function onRequestGet(context: any) {
       };
     });
 
-    return ok(unifiedData, `获取成功`);
+    return okV1(unifiedData, `获取成功`);
   } catch (error: any) {
     console.error("Picsum provider error:", error);
-    return fail(error.message, 500);
+    return failV1(error.message, 500);
   }
 }
