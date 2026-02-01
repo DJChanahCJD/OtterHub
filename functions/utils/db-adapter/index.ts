@@ -52,7 +52,7 @@ export class DBAdapterFactory {
 
     // 检查缓存中是否已有实例
     if (this.adapterInstances.has(type)) {
-      console.log(`DBAdapter hit: ${type}`);
+      // console.log(`DBAdapter hit: ${type}`);
       return this.adapterInstances.get(type)!;
     }
 
