@@ -85,35 +85,25 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 ### 本地开发
 
-#### 开发模式（推荐）
+1. **安装后端依赖**
+   ```bash
+   npm install
+   ```
 
-1. **启动后端** (`127.0.0.1:8080`)
+2. **安装前端依赖**
+   ```bash
+   cd frontend && npm install
+   ```
 
-```bash
-npm install
-npm run start:backend
-```
-
-2. **启动前端** (`127.0.0.1:3000`)
-
-```bash
-cd frontend && npm install
-npm run dev
-```
+3. **启动项目**
+   ```bash
+   cd ..
+   npm run dev
+   ```
 
 > [!TIP]
 > 开发环境下密码为`123456`，且采用本地 R2 存储，可以直接上传文件，方便调试。
 > 修改 functions 代码后，可运行 `npm run ci-test` 快速测试文件上传和下载功能是否正常。
-
-#### 预览模式
-
-如需预览打包后的前端资源，可在根目录执行：
-
-```bash
-npm start
-```
-
-> 该命令会先打包前端，然后启动后端（前端无热更新）
 
 ---
 
@@ -123,7 +113,7 @@ npm start
 
 Fork 本项目，然后在 Cloudflare Dashboard 创建 Pages 项目：
 
-- **构建命令**: `npm run build:frontend`
+- **构建命令**: `npm run build`
 - **构建输出目录**: `frontend/out`
 
 ### 2. 配置环境变量

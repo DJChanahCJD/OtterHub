@@ -29,6 +29,6 @@ jobs:
       - name: Install root dependencies
         run: npm install
       - name: Build frontend
-        run: npm run build:frontend
+        run: npm run build
       - name: Run CI tests
         run: npm run ci-test
