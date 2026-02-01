@@ -18,6 +18,25 @@ export function ok<T>(
   return c.json(res, status)
 }
 
+export function okResponse<T>(
+  data?: T,
+  message?: string,
+  status: ContentfulStatusCode = 200
+) {
+  const res: ApiResponse<T> = {
+    success: true,
+    data,
+    message,
+  }
+
+  return new Response(JSON.stringify(res), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 export function fail(
   c: Context,
   message: string,
@@ -30,4 +49,22 @@ export function fail(
   }
 
   return c.json(res, status)
+}
+
+export function failResponse(
+  message: string,
+  status: ContentfulStatusCode = 500
+) {
+  const res: ApiResponse<null> = {
+    success: false,
+    data: null,
+    message,
+  }
+
+  return new Response(JSON.stringify(res), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 }
