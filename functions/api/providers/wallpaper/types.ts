@@ -39,16 +39,6 @@ export type PicsumConfig = {
   grayscale?: boolean | string;
 };
 
-export type LoliconConfig = {
-  r18?: number | string;
-  num?: number | string;
-  tag?: string | string[];
-  size?: string | string[];
-  proxy?: string;
-  excludeAI?: boolean | string;
-  aspectRatio?: string;
-};
-
 export type UnsplashConfig = {
   accessKey: string;
   query?: string;

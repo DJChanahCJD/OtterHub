@@ -1,7 +1,7 @@
 // shared/src/types.ts
 
 // === 全局设置相关类型 ===
-export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing" | "picsum" | "lolicon" | "unsplash";
+export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing" | "picsum" | "unsplash";
 
 export type UnifiedWallpaper = {
     id: string | number;
