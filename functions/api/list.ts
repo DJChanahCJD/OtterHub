@@ -1,6 +1,7 @@
 // functions/api/list.ts
-import { CF, FileType } from "../utils/types";
+import { CF } from "../utils/types";
 import { ok, fail } from "../utils/common";
+import { FileType } from "@shared/types";
 
 const DEFAULT_LIMIT = 50; //  默认 list 返回数量
 const MAX_LIMIT = 1000;   //  最大 list 返回数量

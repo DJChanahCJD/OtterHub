@@ -1,5 +1,5 @@
 import { ok, fail } from "../../../utils/common";
-import { UnifiedWallpaper } from "./types";
+import { UnifiedWallpaper } from "@shared/types";
 
 const baseUrl = "https://picsum.photos/v2/list";
 

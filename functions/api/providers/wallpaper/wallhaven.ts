@@ -1,6 +1,6 @@
 import { ok, fail } from "../../../utils/common";
 import { getWallpaperProxyUrl } from "../../../utils/proxy";
-import { UnifiedWallpaper } from "./types";
+import { UnifiedWallpaper } from "@shared/types";
 
 const baseUrl = "https://wallhaven.cc/api/v1/search";
 

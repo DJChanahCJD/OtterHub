@@ -1,5 +1,6 @@
+import { FileMetadata } from "@shared/types";
 import { fail, ok } from "../../utils/common";
-import { CF, FileMetadata } from "../../utils/types";
+import { CF } from "../../utils/types";
 
 // 更新文件元数据
 // 支持更新 fileName、tags 等字段

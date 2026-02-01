@@ -1,5 +1,6 @@
 import { fail, ok } from "../../utils/common";
-import { CF, FileMetadata } from "../../utils/types";
+import { CF } from "../../utils/types";
+import { FileMetadata } from "@shared/types";
 
 // 修改文件名
 export async function onRequestPost(context: any) {

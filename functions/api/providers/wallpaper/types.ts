@@ -2,7 +2,6 @@
  * 壁纸 API 配置
  */
 
-
 // https://pixabay.com/api/
 export type PixabayConfig = {
   key: string;

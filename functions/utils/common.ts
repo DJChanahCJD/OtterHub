@@ -1,5 +1,5 @@
 // utils/common.ts
-import { ApiResponse } from "./types";
+import { ApiResponse } from "@shared/types";
 
 // 判断是否为开发环境
 export function isDev(env: any): boolean {
