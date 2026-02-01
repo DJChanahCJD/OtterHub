@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   ITEMS_PER_PAGE: `${projectName}_items_per_page`,
   FAB_POSITION: `${projectName}_fab_position`,
   WALLPAPER_SETTINGS: `${projectName}_wallpaper_settings`,
+  SETTINGS_ACTIVE_TAB: `${projectName}_settings_active_tab`,
 } as const;
 
 /**

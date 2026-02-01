@@ -5,8 +5,9 @@ import { WallpaperTab } from "./wallpaper-tab/WallpaperTab";
 import { GeneralTab } from "./general-tab/GeneralTab";
 import { LayoutGrid, Image as ImageIcon, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getFromStorage, setToStorage, STORAGE_KEYS } from "@/lib/local-storage";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -14,12 +15,21 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState("wallpaper");
-
   const menuItems = [
     { id: "general", label: "常规设置", icon: Settings, color: "text-slate-500" },
     { id: "wallpaper", label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
   ];
+
+  // 默认使用第一个 tab 的 id
+  const [activeTab, setActiveTab] = useState(() => 
+    getFromStorage(STORAGE_KEYS.SETTINGS_ACTIVE_TAB, menuItems[0].id)
+  );
+
+  // 当 tab 改变时持久化到 localStorage
+  const handleTabChange = (id: string) => {
+    setActiveTab(id);
+    setToStorage(STORAGE_KEYS.SETTINGS_ACTIVE_TAB, id);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,7 +53,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <Tooltip key={item.id}>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setActiveTab(item.id)}
+                      onClick={() => handleTabChange(item.id)}
                       className={cn(
                         "flex items-center rounded-xl text-xs md:text-sm font-semibold transition-all group relative overflow-hidden shrink-0",
                         "gap-2 md:gap-0 lg:gap-3",
