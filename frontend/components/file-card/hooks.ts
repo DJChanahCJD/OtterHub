@@ -23,6 +23,7 @@ export function useFileCardActions(file: FileItem) {
 
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -50,6 +51,10 @@ export function useFileCardActions(file: FileItem) {
     const url = getFileUrl(file.name);
     navigator.clipboard.writeText(url);
     toast.success("文件链接复制成功~");
+  };
+  
+  const handleShare = () => {
+    setShowShare(true);
   };
 
   const handleDownload = () => {
@@ -144,6 +149,7 @@ export function useFileCardActions(file: FileItem) {
     isIncompleteUpload,
     showDetail,
     showEdit,
+    showShare,
     isResuming,
     safeMode,
     imageLoadMode,
@@ -152,9 +158,11 @@ export function useFileCardActions(file: FileItem) {
     // Actions
     setShowDetail,
     setShowEdit,
+    setShowShare,
     handleSelect,
     handleDelete,
     handleCopyLink,
+    handleShare,
     handleDownload,
     handleView,
     handleEdit,

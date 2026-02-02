@@ -9,6 +9,7 @@ import { cn, formatFileSize } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
+import { ShareDialog } from "../file/share-dialog";
 
 interface FileCardGridProps {
   file: FileItem;
@@ -74,6 +75,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
             onToggleLike={handleToggleLike}
             onCopyLink={handleCopyLink}
             onShowDetail={() => setShowDetail(true)}
+            onShare={actions.handleShare}
             isLiked={file.metadata?.liked || false}
           />
         </div>
@@ -147,6 +149,12 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         open={showEdit}
         onOpenChange={setShowEdit}
         onSuccess={handleEditSuccess}
+      />
+      <ShareDialog
+        open={actions.showShare}
+        onOpenChange={actions.setShowShare}
+        fileKey={file.name}
+        fileName={file.metadata.fileName}
       />
     </>
   );

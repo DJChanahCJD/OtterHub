@@ -85,24 +85,20 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 ### 本地开发
 
-1. **安装后端依赖**
+1. **安装依赖**
    ```bash
+   # 在根目录运行，自动安装所有 Workspaces 依赖
    npm install
    ```
 
-2. **安装前端依赖**
+2. **启动项目**
    ```bash
-   cd frontend && npm install
-   ```
-
-3. **启动项目**
-   ```bash
-   cd ..
    npm run dev
    ```
 
-4. **访问网站**
-   - 打开 `http://localhost:3000` 即可开始使用
+3. **访问网站**
+   - 前端：`http://localhost:3000`
+   - 后端：`http://localhost:8080` (由 Wrangler 代理)
 
 > [!TIP]
 > 开发环境下密码为`123456`，且采用本地 R2 存储，可以直接上传文件，方便调试。
@@ -145,14 +141,14 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 > 以大文件分片上传流程为例
 
 1. **初始化上传**
-   - 前端发送 `GET /api/upload/chunk` 请求
+   - 前端发送 `GET /upload/chunk` 请求
    - 携带文件类型、名称、大小和总分片数
    - 后端创建最终 KV，返回唯一文件 key
 
 2. **分片上传**
 
    - 前端将文件分片（每片 ≤ 20MB）
-   - 携带 key 逐个发送 `POST /api/upload/chunk`
+   - 携带 key 逐个发送 `POST /upload/chunk`
    - 后端将分片暂存到临时 KV（TTL = 1 小时，value ≤ 25MB）
 
 3. **异步上传到 Telegram**
@@ -288,25 +284,25 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 
 ```
 OtterHub/
-├── frontend/
-├── functions/         # Cloudflare Pages Functions
-│   ├── api/
-│   │   ├── upload/   # 文件上传（普通+分片）
-│   │   ├── list.ts
-│   │   ├── delete/[key].ts
-│   │   ├── editFileMeta/[key].ts
-│   │   ├── _middleware.ts    # 认证中间件
-│   │   ├── ...
-│   ├── file/[key].ts  # 文件获取（支持 Range 请求）
-│   ├── utils/
-│   │   ├── db-adapter/  # 存储适配器（抽象层）
-│   │   │   ├── base-adapter.ts    # 适配器基类
-│   │   │   ├── tg-adapter.ts    # Telegram 适配器
-│   │   │   ├── r2-adapter.ts     # R2 适配器
-│   │   ├── ...
-│   └── _middleware.ts    # 全局中间件（CORS）
-├── public/           # 静态资源
-├── package.json
+├── frontend/           # Next.js Frontend
+│   ├── lib/
+│   │   ├── api/        # Hono RPC Client (Type-safe)
+│   │   │   ├── client.ts # RPC Client Instance
+│   │   │   └── ...
+│   └── ...
+├── functions/          # Cloudflare Pages Functions (Hono Backend)
+│   ├── routes/         # 业务路由模块
+│   │   ├── file/       # 文件操作
+│   │   ├── upload/     # 上传逻辑
+│   │   ├── wallpaper/  # 壁纸服务
+│   │   └── ...
+│   ├── middleware/     # 中间件 (Auth, CORS)
+│   ├── utils/          # 工具库 (DB Adapters, Proxy)
+│   ├── app.ts          # Hono App 定义 & AppType 导出
+│   └── [[path]].ts     # Pages Functions 入口
+├── shared/             # 前后端共享类型/工具 (Workspaces)
+├── public/             # 静态资源
+├── package.json        # Monorepo 配置
 └── README.md
 ```
 
@@ -354,10 +350,11 @@ OtterHub/
 - [x] 随机壁纸
   - 多壁纸源（Wallhaven、Bing、Pixabay 等）
 - [x] 全面重构为 Hono 后端（鉴权更灵活，可移植性更好）
-- [ ] 临时分享文件（无论是否 Private 都可以访问）
-  - [] KV实现, 一次性 / 有效期 URL （允许用户选择）
-  - [] key: link:<uuid>
-  - [] value: file_key
+- [x] 前端迁移至 Hono RPC (End-to-end Type Safety)
+- [x] 临时分享文件（无论是否 Private 都可以访问）
+  - [x] KV实现, 一次性 / 有效期 URL （允许用户选择）
+  - [x] key: `shared:<uuid>`
+  - [x] value: `<file_key>`
 - [ ] 文件类型定制
   - [ ] 音频：音频播放列表（歌曲 / 播客场景）
     - 前端维护一个 playlist（基于当前筛选结果）

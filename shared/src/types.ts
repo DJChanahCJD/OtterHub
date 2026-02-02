@@ -1,4 +1,3 @@
-// shared/src/types.ts
 
 // === 全局设置相关类型 ===
 export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing" | "picsum" | "unsplash";
@@ -92,4 +91,21 @@ export type ListFilesResponse = {
   list_complete: boolean;
   cursor?: string;
   cacheStatus?: string | null;
+}
+
+// TODO: 分享相关类型（非前后端共享，待迁移）
+export interface ShareItem {
+  token: string;
+  fileKey: string;
+  fileName: string;
+  fileSize: number;
+  oneTime?: boolean;
+  createdAt: number;
+  expiresAt?: number;
+}
+
+export interface CreateShareRequest {
+  fileKey: string;
+  expireIn?: number;
+  oneTime?: boolean;
 }

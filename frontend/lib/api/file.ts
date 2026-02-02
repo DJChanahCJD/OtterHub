@@ -1,71 +1,112 @@
-import { request } from "@/lib/utils";
-import { API_URL } from ".";
+import { client } from "./client";
+import { API_URL } from "./config";
 import { FileType, ListFilesResponse } from "@shared/types";
 import { ListFilesRequest } from "@/lib/types";
 
 /**
  * 上传文件
  */
-export function uploadFile(file: File, nsfw?: boolean): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  if (nsfw) {
-    formData.append("nsfw", "true");
+export async function uploadFile(file: File, nsfw?: boolean): Promise<string> {
+  const res = await client.upload.$post({
+    form: {
+      file: file,
+      nsfw: nsfw ? "true" : "false",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
   }
 
-  return request<string>(`${API_URL}/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 }
 
 /**
  * 初始化分片上传
  */
-export function uploadChunkInit(
+export async function uploadChunkInit(
   fileType: FileType,
   fileName: string,
   fileSize: number,
   totalChunks: number
 ): Promise<string> {
-  const query = new URLSearchParams({
-    fileType: fileType,
-    fileName: fileName,
-    fileSize: fileSize.toString(),
-    totalChunks: totalChunks.toString(),
-  }).toString();
-  return request<string>(`${API_URL}/upload/chunk/init?${query}`, {
-    method: "GET",
+  const res = await client.upload.chunk.init.$get({
+    query: {
+      fileType,
+      fileName,
+      fileSize: fileSize.toString(),
+      totalChunks: totalChunks.toString(),
+    },
   });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 }
 
 /**
  * 上传分片
  */
-export function uploadChunk(
+export async function uploadChunk(
   key: string,
   chunkIndex: number,
   chunkFile: File | Blob,
 ): Promise<string> {
-  const formData = new FormData();
-  formData.append("key", key);
-  formData.append("chunkIndex", chunkIndex.toString());
-  formData.append("chunkFile", chunkFile);
-
-  return request<string>(`${API_URL}/upload/chunk`, {
-    method: "POST",
-    body: formData,
+  const res = await client.upload.chunk.$post({
+    form: {
+      key,
+      chunkIndex: chunkIndex.toString(),
+      chunkFile: chunkFile,
+    },
   });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data.toString();
 }
 
 /**
  * 获取文件列表
  */
-export function getFileList(
+export async function getFileList(
   params?: ListFilesRequest
 ): Promise<ListFilesResponse> {
-  const query = new URLSearchParams(params).toString();
-  return request<ListFilesResponse>(`${API_URL}/file/list?${query}`);
+  const query: Record<string, string> = {};
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined) query[k] = String(v);
+    });
+  }
+
+  const res = await client.file.list.$get({
+    query: query,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 }
 
 /**
@@ -85,51 +126,86 @@ export function getTrashFileUrl(key: string): string {
 /**
  * 彻底删除文件
  */
-export function deleteFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/file/${key}`, {
-    method: "DELETE",
+export async function deleteFile(key: string): Promise<boolean> {
+  const res = await client.file[":key"].$delete({
+    param: { key },
   });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
 
 /**
  * 移动文件到回收站
  */
-export function moveToTrash(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/trash/${key}/move`, {
-    method: "POST",
+export async function moveToTrash(key: string): Promise<boolean> {
+  const res = await client.trash[":key"].move.$post({
+    param: { key },
   });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
 
 /**
  * 从回收站恢复文件
  */
-export function restoreFile(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/trash/${key}/restore`, {
-    method: "POST",
+export async function restoreFile(key: string): Promise<boolean> {
+  const res = await client.trash[":key"].restore.$post({
+    param: { key },
   });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
 
 /**
  * 切换收藏状态
  */
-export function toggleLike(key: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/file/${key}/toggle-like`, {
-    method: "POST",
+export async function toggleLike(key: string): Promise<boolean> {
+  const res = await client.file[":key"]["toggle-like"].$post({
+    param: { key },
   });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
 
 /**
  * 编辑文件元数据
  */
-export function editMetadata(
+export async function editMetadata(
   key: string,
   updates: { fileName?: string; tags?: string[] }
 ): Promise<{ metadata: any }> {
-  return request<{ metadata: any }>(`${API_URL}/file/${key}/meta`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(updates),
+  const res = await client.file[":key"].meta.$patch({
+    param: { key },
+    json: updates,
   });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return { metadata: data.data };
 }

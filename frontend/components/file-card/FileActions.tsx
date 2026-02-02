@@ -7,6 +7,7 @@ import {
   Edit,
   Info,
   Link,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ interface FileActionsProps {
   onToggleLike: () => void;
   onCopyLink: () => void;
   onShowDetail: () => void;
+  onShare: () => void;
   isLiked: boolean;
 }
 
@@ -35,6 +37,7 @@ export function FileActions({
   onToggleLike,
   onCopyLink,
   onShowDetail,
+  onShare,
   isLiked,
 }: FileActionsProps) {
   const IconColor = "text-foreground/80";
@@ -82,6 +85,15 @@ export function FileActions({
           >
             <Eye className={`h-4 w-4 mr-2 ${IconColor}`} />
             View
+          </DropdownMenuItem>
+
+          {/* 分享 */}
+          <DropdownMenuItem
+            onClick={onShare}
+            className="text-foreground hover:bg-secondary/50"
+          >
+            <Share2 className={`h-4 w-4 mr-2 ${IconColor}`} />
+            Share
           </DropdownMenuItem>
 
           {/* 复制链接 */}

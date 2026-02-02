@@ -74,3 +74,8 @@ export function getContentTypeByExt(ext: string): string {
   // ---------- 兜底 ----------
   return 'application/octet-stream';
 }
+
+export function getFileTypeByName(fileName: string): string {
+  const ext = getFileExt(fileName);
+  return getContentTypeByExt(ext);
+}

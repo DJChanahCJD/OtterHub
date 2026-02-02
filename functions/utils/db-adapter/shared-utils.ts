@@ -141,7 +141,6 @@ export async function streamToBlob(
   return new Blob(chunks);
 }
 
-
 /**
  * 解析原来的存储 Key（如果是回收站文件，则移除前缀）
  */

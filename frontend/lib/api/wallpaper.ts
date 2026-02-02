@@ -1,5 +1,4 @@
-import { request } from "@/lib/utils";
-import { API_URL } from ".";
+import { client } from "./client";
 import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
 
 /**
@@ -8,16 +7,29 @@ import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
  * @param params 查询参数
  * @returns 统一的壁纸列表
  */
-export function getWallpapers(
-  source: WallpaperSourceId, 
+export async function getWallpapers(
+  source: WallpaperSourceId,
   params: Record<string, any>
 ): Promise<UnifiedWallpaper[]> {
-  const searchParams = new URLSearchParams();
+  const query: Record<string, string> = {};
   Object.entries(params).forEach(([k, v]) => {
-    if (v) searchParams.append(k, String(v));
+    if (v) query[k] = String(v);
   });
 
-  return request<UnifiedWallpaper[]>(`${API_URL}/wallpaper/${source}?${searchParams.toString()}`);
+  const res = await client.wallpaper[":source"].$get({
+    param: { source },
+    query: query,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 }
 
 /**
@@ -27,18 +39,26 @@ export function getWallpapers(
  * @param isNsfw 是否为 NSFW
  * @returns 上传结果
  */
-export function uploadByUrl(
-  url: string, 
-  fileName: string, 
+export async function uploadByUrl(
+  url: string,
+  fileName: string,
   isNsfw: boolean = false
 ): Promise<any> {
-  return request<any>(`${API_URL}/upload/by-url`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const res = await client.upload["by-url"].$post({
+    json: {
       url,
       fileName,
       isNsfw,
-    }),
+    },
   });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 }
