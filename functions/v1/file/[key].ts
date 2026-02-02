@@ -16,7 +16,7 @@ export async function onRequestGet({ env, params, request }: any) {
   if (!item) return failV1("File not found", 404);
 
   // Check for private tag
-  const isPrivate = item.metadata.tags?.includes(FileTag.Private);
+  const isPrivate = item.metadata?.tags?.includes(FileTag.Private);
 
   if (isPrivate) {
     const cookie = request.headers.get("Cookie");
