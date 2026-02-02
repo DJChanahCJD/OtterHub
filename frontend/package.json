@@ -66,13 +66,16 @@
     "zod": "3.25.76",
     "zustand": "5.0.9"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.30.2"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/streamsaver": "^2.0.5",
-    "baseline-browser-mapping": "latest",
+    "baseline-browser-mapping": "^2.9.19",
     "lightningcss": "^1.29.1",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
