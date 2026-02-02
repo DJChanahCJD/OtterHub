@@ -78,7 +78,7 @@ export class TGAdapter extends BaseAdapter {
     if (fileType === FileType.Video) {
       const thumbFileId = getVideoThumbId(result.data);
       if (thumbFileId) {
-        metadata.thumbUrl = `/api/thumb/${thumbFileId}`;
+        metadata.thumbUrl = `/file/${thumbFileId}/thumb`;
       }
     }
 
