@@ -1,24 +1,31 @@
-import { request } from "@/lib/utils";
-import { API_URL } from ".";
+import { client } from "./client";
 
 /**
  * 登录
  */
-export function login(password: string): Promise<boolean> {
-  return request<boolean>(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
+export async function login(password: string): Promise<boolean> {
+  const res = await client.auth.login.$post({
+    json: { password },
   });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
 
 /**
  * 登出
  */
-export function logout(): Promise<boolean> {
-  return request<boolean>(`${API_URL}/auth/logout`, {
-    method: "POST",
-  });
+export async function logout(): Promise<boolean> {
+  const res = await client.auth.logout.$post();
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.success;
 }
