@@ -18,12 +18,12 @@ export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next
   }
 
   const cookie = c.req.header('Cookie');
-  const authCookie = cookie?.match(/auth=([^;]+)/)?.[1];
+  const authCookie = cookie?.match(/(?:^|;\s*)auth=([^;]+)/)?.[1];
   const env = c.env;
 
 
   if (!authCookie) {
-    return fail(c, 'Unauthorized', 401);
+    return fail(c, `Unauthorized, cookie: ${cookie}`, 401);
   }
 
   try {

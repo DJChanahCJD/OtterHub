@@ -27,6 +27,7 @@ authRoutes.post(
     const secret = env.JWT_SECRET || env.PASSWORD || 'secret';
     const token = await signJWT(secret);
 
+    const isSecure = c.req.url.startsWith("https");
     // Set Cookie
     const cookie = [
       `auth=${token}`,
@@ -34,8 +35,10 @@ authRoutes.post(
       "HttpOnly",
       "SameSite=Lax",
       "Max-Age=86400",
-      "Secure"
-    ].join("; ");
+      isSecure ? "Secure" : "",
+    ]
+      .filter(Boolean)
+      .join("; ");
 
     c.header('Set-Cookie', cookie);
     return ok(c, { token }, 'Login successful', 200);
@@ -43,15 +46,19 @@ authRoutes.post(
 );
 
 authRoutes.post('/logout', (c) => {
-  const cookie = [
-    "auth=",
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    "Max-Age=0",
-    "Secure"
-  ].join("; ");
+    const isSecure = c.req.url.startsWith("https");
+    const cookie = [
+      "auth=",
+      "Path=/",
+      "HttpOnly",
+      "SameSite=Lax",
+      "Max-Age=0",
+      isSecure ? "Secure" : "",
+    ]
+      .filter(Boolean)
+      .join("; ");
   
   c.header('Set-Cookie', cookie);
   return ok(c, null, 'Logout successful', 200);
 });
+

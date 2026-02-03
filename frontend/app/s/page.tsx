@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { client } from '@/lib/api/client';
+import { shareApi } from '@/lib/api/share';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileIcon, Loader2, Clock, AlertCircle, CalendarClock } from 'lucide-react';
@@ -25,22 +25,10 @@ function ShareContent() {
 
     const fetchMeta = async () => {
       try {
-        const res = await client.share[':token'].meta.$get({
-          param: { token },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            setMeta(data.data);
-          } else {
-            setError(data.message || 'File not found');
-          }
-        } else {
-          setError('Link expired or invalid');
-        }
-      } catch (err) {
-        setError('Failed to load file info');
+        const data = await shareApi.getMeta(token);
+        setMeta(data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load file info');
       } finally {
         setLoading(false);
       }
@@ -53,7 +41,8 @@ function ShareContent() {
     if (!token) return;
     setDownloading(true);
     try {
-      const downloadUrl = `${client.share[':token'].raw.$url({ param: { token } }).toString()}`;
+      const downloadUrl = shareApi.getDownloadUrl(token);
+      console.log("downloadUrl", downloadUrl);
       
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -119,7 +108,7 @@ function ShareContent() {
             {meta.mimeType?.startsWith('image/') && token && !meta.oneTime && (
               <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted/50">
                 <img 
-                  src={client.share[':token'].raw.$url({ param: { token } }).toString()} 
+                  src={shareApi.getDownloadUrl(token)} 
                   alt={meta.fileName}
                   className="h-full w-full object-contain"
                 />

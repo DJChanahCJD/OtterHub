@@ -1,4 +1,5 @@
 import { client } from "@/lib/api/client";
+import { API_URL } from "@/lib/api/config";
 import { ShareItem, CreateShareRequest } from "@shared/types";
 
 export const shareApi = {
@@ -72,5 +73,35 @@ export const shareApi = {
     const result = await res.json();
     // @ts-ignore
     return result.success === true;
+  },
+
+  /**
+   * 获取分享元数据
+   */
+  getMeta: async (token: string) => {
+    const res = await client.share[':token'].meta.$get({
+      param: { token },
+    });
+
+    if (!res.ok) {
+      throw new Error('Link expired or invalid');
+    }
+
+    const result = await res.json();
+    // @ts-ignore
+    if (!result.success) {
+      // @ts-ignore
+      throw new Error(result.message || 'File not found');
+    }
+    // @ts-ignore
+    return result.data;
+  },
+
+  /**
+   * 获取下载链接
+   */
+  getDownloadUrl: (token: string) => {
+    console.log(`${API_URL}/share/${token}/raw`);
+    return `${API_URL}/share/${token}/raw`;
   }
 };
