@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { FileType } from '@shared/types';
 import type { Env } from '../../types/hono';
 import { fail } from '@utils/response';
-import { authMiddleware } from 'v2/middleware/auth';
+import { authMiddleware } from 'middleware/auth';
 
 export const listRoutes = new Hono<{ Bindings: Env }>();
 
@@ -44,7 +44,7 @@ listRoutes.get(
         }
       });
     } catch (err) {
-      console.error("[KV:list:v2] error:", err);
+      console.error("[KV:list] error:", err);
       return fail(c, 'Failed to fetch files');
     }
   }

@@ -1,5 +1,6 @@
 import { BaseAdapter } from "./base-adapter";
-import { okV1, failV1, encodeContentDisposition } from "../common";
+import { failResponse } from "@utils/response";
+import { encodeContentDisposition } from "../common";
 import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
 
 import {
@@ -23,10 +24,10 @@ import {
   getTgFile,
   processGifFile,
 } from "./tg-tools";
-import { MAX_CHUNK_SIZE } from "utils/types";
+import { MAX_CHUNK_SIZE } from "types";
 
-// Telegram存储适配器实现（新版本：优化分片上传）
-export class TGAdapterV2 extends BaseAdapter {
+// Telegram存储适配器实现
+export class TGAdapter extends BaseAdapter {
   constructor(env: any, kvName: string) {
     super(env, kvName);
   }
@@ -77,7 +78,7 @@ export class TGAdapterV2 extends BaseAdapter {
     if (fileType === FileType.Video) {
       const thumbFileId = getVideoThumbId(result.data);
       if (thumbFileId) {
-        metadata.thumbUrl = `/api/thumb/${thumbFileId}`;
+        metadata.thumbUrl = `/file/${thumbFileId}/thumb`;
       }
     }
 
@@ -179,7 +180,7 @@ export class TGAdapterV2 extends BaseAdapter {
 
       const { metadata } = await this.getFileMetadataWithValue(key);
       if (!metadata) {
-        return failV1(`Metadata not found for key: ${key}`, 404);
+        return failResponse(`Metadata not found for key: ${key}`, 404);
       }
       const headers = new Headers();
       headers.set("Content-Type", contentType);
@@ -221,7 +222,7 @@ export class TGAdapterV2 extends BaseAdapter {
         headers,
       });
     } catch (error) {
-      return failV1(`File not found for key: ${key}`, 404);
+      return failResponse(`File not found for key: ${key}`, 404);
     }
   }
 
@@ -234,10 +235,10 @@ export class TGAdapterV2 extends BaseAdapter {
 
     const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
     if (!metadata) {
-      return failV1(`Metadata not found for key: ${key}`, 404);
+      return failResponse(`Metadata not found for key: ${key}`, 404);
     }
     if (!metadata.chunkInfo) {
-      return failV1("Invalid metadata: not a chunked file", 400);
+      return failResponse("Invalid metadata: not a chunked file", 400);
     }
 
 
@@ -248,15 +249,15 @@ export class TGAdapterV2 extends BaseAdapter {
         chunks = JSON.parse(value);
       }
     } catch (e) {
-      console.error(`[TGAdapterV2] Failed to parse chunks for ${key}:`, e);
-      return failV1("Failed to parse chunks metadata", 500);
+      console.error(`[TGAdapter] Failed to parse chunks for ${key}:`, e);
+      return failResponse("Failed to parse chunks metadata", 500);
     }
 
     // 使用通用工具函数验证分片完整性
     const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
     if (!validation.valid) {
       console.error(`[getMergedFile] ${validation.reason}`);
-      return failV1(validation.reason || "Invalid metadata", 425);
+      return failResponse(validation.reason || "Invalid metadata", 425);
     }
 
     // 使用通用工具函数排序并计算总大小

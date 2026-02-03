@@ -4,7 +4,6 @@ import { authMiddleware } from '../../middleware/auth';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
-import { API_VERSION } from '@utils/types';
 import { fail, ok } from '@utils/response';
 
 export const actionRoutes = new Hono<{ Bindings: Env }>();
@@ -54,7 +53,7 @@ actionRoutes.delete(
 
       const url = new URL(c.req.url);
       await deleteCache(c.req.raw);
-      await deleteFileCache(url.origin, key, API_VERSION.V2);
+      await deleteFileCache(url.origin, key);
 
       return ok(c, { key }, 'File permanently deleted');
     } catch (error: any) {

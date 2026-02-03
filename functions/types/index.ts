@@ -7,11 +7,6 @@ export enum CF {
   SETTINGS_KEY = 'oh_settings', //  单独放一个用于存储设置数据的key
 }
 
-export enum API_VERSION {
-  V1 = 'v1',
-  V2 = 'v2',
-}
-
 // == 常量
 // 临时分片超时时间（秒）
 export const TEMP_CHUNK_TTL = 3600; // 1小时
