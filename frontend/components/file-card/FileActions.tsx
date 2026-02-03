@@ -80,7 +80,10 @@ export function FileActions({
         >
           {/* 查看 */}
           <DropdownMenuItem
-            onClick={onView}
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Eye className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -89,7 +92,10 @@ export function FileActions({
 
           {/* 分享 */}
           <DropdownMenuItem
-            onClick={onShare}
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Share2 className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -98,7 +104,10 @@ export function FileActions({
 
           {/* 复制链接 */}
           <DropdownMenuItem
-            onClick={onCopyLink}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopyLink();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Link className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -107,7 +116,10 @@ export function FileActions({
 
           {/* 编辑 */}
           <DropdownMenuItem
-            onClick={onEdit}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Edit className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -116,7 +128,10 @@ export function FileActions({
 
           {/* 下载 */}
           <DropdownMenuItem
-            onClick={onDownload}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Download className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -125,7 +140,10 @@ export function FileActions({
 
           {/* 详情 */}
           <DropdownMenuItem
-            onClick={onShowDetail}
+            onClick={(e) => {
+              e.stopPropagation();
+              onShowDetail();
+            }}
             className="text-foreground hover:bg-secondary/50"
           >
             <Info className={`h-4 w-4 mr-2 ${IconColor}`} />
@@ -134,7 +152,10 @@ export function FileActions({
 
           {/* 删除 */}
           <DropdownMenuItem
-            onClick={onDelete}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             className="text-red-400 hover:bg-red-500/10"
           >
             <Trash2 className={`h-4 w-4 mr-2 ${IconColor}`} />
