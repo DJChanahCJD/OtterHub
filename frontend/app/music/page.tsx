@@ -1,103 +1,58 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { MusicHeader } from '@/components/music/MusicHeader';
-import { SongCard } from '@/components/music/SongCard';
-import { PlaylistPanel } from '@/components/music/PlaylistPanel';
-import { LyricsPanel } from '@/components/music/LyricsPanel';
-import { GlobalPlayer } from '@/components/music/GlobalPlayer';
+import { useEffect, useState, useRef } from 'react';
 import { useMusicStore } from '@/stores/music-store';
 import { useAudioPlayer } from '@/hooks/use-audio-player';
-import { musicApi, MusicSource, MusicTrack } from '@/lib/music-api';
+import { musicApi, MusicTrack } from '@/lib/music-api';
 import { toast } from 'sonner';
 
-export default  function MusicPage() {
-  const { playlist, addToPlaylist, setPlaylist } = useMusicStore();
-  const [searchResults, setSearchResults] = useState<MusicTrack[]>([]);
-  const [currentQuery, setCurrentQuery] = useState('');
-  const [currentSource, setCurrentSource] = useState<MusicSource>('netease');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+import { MusicLayout } from '@/components/music/MusicLayout';
+import { MusicSidebar } from '@/components/music/MusicSidebar';
+import { MusicSearchView } from '@/components/music/MusicSearchView';
+import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
+import { GlobalPlayer } from '@/components/music/GlobalPlayer';
 
+export default function MusicPage() {
+  // Store
+  const { 
+    queue, 
+    currentIndex, 
+    playContext, 
+    setCurrentIndex,
+    favorites,
+    playlists,
+    removeFromFavorites,
+    removeFromUserPlaylist,
+    addToQueue
+  } = useMusicStore();
+
+  // Local View State
+  const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist">("search");
+  const [activePlaylistId, setActivePlaylistId] = useState<string>();
   const [quality, setQuality] = useState("320");
 
-  // Cast playlist to any because MusicTrack might not match FileItem exactly, 
-  // but we only need the array length/index for the hook logic.
-  const { state, controls, audioRef } = useAudioPlayer(playlist as any[]);
-  
-  const currentTrack = playlist[state.currentTrackIndex];
+  // Audio Player Hook
+  // We pass the queue to the hook. The hook manages audio element.
+  const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
+  const currentTrack = queue[state.currentTrackIndex];
 
-  const handleSearchRequest = async (query: string, source: MusicSource) => {
-      setCurrentQuery(query);
-      setCurrentSource(source);
-      setCurrentPage(1);
-      setHasMore(true);
-      setSearchResults([]);
-      
-      try {
-          const results = await musicApi.search(query, source, 1);
-          setSearchResults(results);
-          if (results.length < 20) setHasMore(false); // Assuming 20 is default
-      } catch (e) {
-          toast.error("搜索失败");
-      }
-  };
-  
-  const handleLoadMore = async () => {
-      if (!hasMore || isLoadingMore) return;
-      setIsLoadingMore(true);
-      const nextPage = currentPage + 1;
-      try {
-          const newResults = await musicApi.search(currentQuery, currentSource, nextPage);
-          if (newResults.length > 0) {
-              setSearchResults(prev => [...prev, ...newResults]);
-              setCurrentPage(nextPage);
-              if (newResults.length < 20) setHasMore(false);
-          } else {
-              setHasMore(false);
-          }
-      } catch (e) {
-          toast.error("加载更多失败");
-      } finally {
-          setIsLoadingMore(false);
-      }
-  };
-
-  // Handle Play Request (from PlaylistPanel)
-  const handlePlay = (track: MusicTrack, list: MusicTrack[]) => {
-    // If playing from a list (search results or favorites), we should update the current playlist?
-    // User requirement: "Front-end maintains a playlist (based on current filter results)"
-    // If I click a song in Search Results, should the WHOLE search result list become the playlist?
-    // Usually yes.
-    
-    // Check if we are just switching track in current playlist
-    const indexInCurrent = playlist.findIndex(t => t.id === track.id);
-    const listIsSame = list.length === playlist.length && list[0]?.id === playlist[0]?.id; // Rough check
-
-    if (listIsSame && indexInCurrent !== -1) {
-      controls.playTrack(indexInCurrent);
-    } else {
-      // Replace playlist
-      setPlaylist(list);
-      // We need to wait for playlist update to reflect in hook?
-      // Zustand updates are sync usually.
-      // But useAudioPlayer depends on playlist.
-      // We need to find the new index.
-      const newIndex = list.findIndex(t => t.id === track.id);
-      // We might need a small timeout or useEffect to play the new index after playlist update.
-      // Actually, if we setPlaylist, the component re-renders.
-      // But controls.playTrack might refer to old playlist if captured in closure?
-      // useAudioPlayer uses `audioFiles` from props in `playTrack`? 
-      // No, `playTrack` uses `audioFiles.length`.
-      // It sets `setCurrentTrackIndex(index)`.
-      
-      // So:
-      setTimeout(() => controls.playTrack(newIndex), 0);
+  // Sync Store -> Hook
+  // When store.currentIndex changes (e.g. playContext called), sync hook
+  useEffect(() => {
+    if (currentIndex !== state.currentTrackIndex) {
+      controls.playTrack(currentIndex);
     }
-  };
+  }, [currentIndex]);
 
-  // Sync Audio Source
+  // Sync Hook -> Store
+  // When hook changes track (next/prev/auto), sync store
+  useEffect(() => {
+    if (state.currentTrackIndex !== currentIndex) {
+      setCurrentIndex(state.currentTrackIndex);
+    }
+  }, [state.currentTrackIndex]);
+
+  // Load Audio Source
   useEffect(() => {
     if (!currentTrack || !audioRef.current) return;
 
@@ -105,77 +60,119 @@ export default  function MusicPage() {
       try {
         const url = await musicApi.getUrl(currentTrack.id, currentTrack.source, parseInt(quality));
         if (url && audioRef.current) {
-            // Only update if src changed (simple check)
-            if (audioRef.current.src !== url) {
-                audioRef.current.src = url;
-                if (state.isPlaying) {
-                    audioRef.current.play().catch(e => {
-                        console.error("Auto-play failed:", e);
-                        // Interact to play might be needed
-                    });
-                }
+          if (audioRef.current.src !== url) {
+            audioRef.current.src = url;
+            if (state.isPlaying) {
+              audioRef.current.play().catch(console.error);
             }
+          }
         } else {
-            toast.error("无法获取播放链接");
-            // 自动下一首
-            controls.next();
+          toast.error("无法获取播放链接");
+          controls.next();
         }
       } catch (e) {
         console.error(e);
+        controls.next();
       }
     };
-
     loadSrc();
-  }, [currentTrack?.id, quality]); // Depend on ID, not object ref
+  }, [currentTrack?.id, quality]);
+
+  // Handlers
+  const handlePlayContext = (track: MusicTrack, list: MusicTrack[]) => {
+    // Find index of track in list
+    const index = list.findIndex(t => t.id === track.id);
+    if (index === -1) return;
+
+    // Check if we are already playing this context
+    // Simple check: same length and same first item ID
+    const isSameContext = queue.length === list.length && queue[0]?.id === list[0]?.id;
+
+    if (isSameContext) {
+      controls.playTrack(index);
+    } else {
+      playContext(list, index);
+      // Hook sync will happen via useEffect
+    }
+  };
+
+  const handlePlayInPlaylist = (track: MusicTrack, index: number) => {
+    // For playlist views, we already know the list and index
+    const list = currentView === 'favorites' 
+      ? favorites 
+      : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
+    
+    playContext(list, index);
+  };
+
+  // Render Content
+  const renderContent = () => {
+    return (
+      <div className="h-full w-full relative">
+        {/* Search View (Hidden to preserve state) */}
+        <div className={currentView === 'search' ? 'h-full w-full' : 'hidden'}>
+          <MusicSearchView 
+            onPlay={handlePlayContext} 
+            currentTrackId={currentTrack?.id}
+            isPlaying={state.isPlaying}
+          />
+        </div>
+
+        {/* Favorites View */}
+        {currentView === 'favorites' && (
+          <MusicPlaylistView 
+            title="我的收藏"
+            description="我喜欢的音乐"
+            tracks={favorites}
+            onPlay={handlePlayInPlaylist}
+            onRemove={(t) => removeFromFavorites(t.id)}
+            currentTrackId={currentTrack?.id}
+            isPlaying={state.isPlaying}
+          />
+        )}
+
+        {/* User Playlist View */}
+        {currentView === 'playlist' && activePlaylistId && (
+          <MusicPlaylistView 
+            title={playlists.find(p => p.id === activePlaylistId)?.name || "歌单"}
+            description={`创建于 ${new Date(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0).toLocaleDateString()}`}
+            tracks={playlists.find(p => p.id === activePlaylistId)?.tracks || []}
+            onPlay={handlePlayInPlaylist}
+            onRemove={(t) => removeFromUserPlaylist(activePlaylistId, t.id)}
+            currentTrackId={currentTrack?.id}
+            isPlaying={state.isPlaying}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden font-sans">
-      {/* Hidden Audio Element */}
+    <>
       <audio ref={audioRef} className="hidden" />
-
-      {/* Header */}
-      <div className="flex-none">
-        <MusicHeader 
-          onSearch={handleSearchRequest} 
-          loading={isLoadingMore && currentPage === 1}
-          searchResults={searchResults}
-          onPlay={handlePlay}
-          onLoadMore={handleLoadMore}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-        />
-      </div>
-
-      {/* Main Content (3 Columns) */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[300px_1fr_350px] divide-y md:divide-y-0 md:divide-x">
-        {/* Left: Song Card */}
-        <div className="h-full overflow-hidden">
-            <SongCard track={currentTrack || null} />
-        </div>
-
-        {/* Middle: Playlist */}
-        <div className="h-full overflow-hidden">
-            <PlaylistPanel 
-                onPlay={handlePlay}
-                currentTrackId={currentTrack?.id}
-            />
-        </div>
-
-        {/* Right: Lyrics */}
-        <div className="h-full overflow-hidden bg-muted/5">
-            <LyricsPanel track={currentTrack || null} currentTime={state.currentTime} />
-        </div>
-      </div>
-
-      {/* Footer: Global Player */}
-      <div className="flex-none">
-        <GlobalPlayer 
+      <MusicLayout
+        sidebar={
+          <MusicSidebar 
+            currentView={currentView}
+            currentPlaylistId={activePlaylistId}
+            onViewChange={(v, pid) => {
+              setCurrentView(v);
+              if (pid) setActivePlaylistId(pid);
+            }}
+          />
+        }
+        player={
+          <GlobalPlayer 
             state={state} 
-            controls={controls} 
-            onQualityChange={setQuality}
+            controls={controls}
             quality={quality}
-        />
-      </div>
-    </div>
+            onQualityChange={setQuality}
+            currentTrack={currentTrack}
+          />
+        }
+      >
+        {renderContent()}
+      </MusicLayout>
+    </>
   );
 }

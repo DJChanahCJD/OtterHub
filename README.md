@@ -335,6 +335,8 @@ OtterHub/
 - [x] 预览与展示
   - [x] 图片瀑布流（支持 GIF）
   - [x] 视频缩略图（Telegram thumbnail）
+    - [] 分片上传的能否也有缩略图？
+    - [] 分片文件加载时显示进度条？
   - [x] 图片加载策略（默认 / 省流 / 无图）
 
 - [x] 安全与体验
@@ -359,6 +361,7 @@ OtterHub/
   - [ ] 音频：音频播放列表（歌曲 / 播客场景）
     - 前端维护一个 playlist（基于当前筛选结果）
     - <audio> + Media Session API（锁屏控制）
+    - 差不多播放完这一首时，能否提前缓存下一首？
   - [ ] 视频：在线播放支持 `video.js`
   - [ ] 文档：预览支持
     - [ ] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`

@@ -52,7 +52,9 @@ export interface SongLyric {
   tlyric?: string;
 }
 
-const API_BASE = 'https://music-api.gdstudio.xyz/api.php';
+import { API_URL } from './api/config';
+
+const API_BASE = `${API_URL}/music`;
 
 export const musicApi = {
   /**
