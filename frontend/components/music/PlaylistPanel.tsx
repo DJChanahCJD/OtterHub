@@ -5,35 +5,25 @@ import { MusicTrack } from "@/lib/music-api";
 import { useMusicStore } from "@/stores/music-store";
 import {
   Play,
-  Plus,
   Trash2,
   ListMusic,
   Heart,
-  Search as SearchIcon,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PlaylistPanelProps {
-  searchResults: MusicTrack[];
   onPlay: (track: MusicTrack, list: MusicTrack[]) => void;
   currentTrackId?: string;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
 }
 
 export function PlaylistPanel({
-  searchResults,
   onPlay,
   currentTrackId,
-  onLoadMore,
-  hasMore,
-  isLoadingMore,
 }: PlaylistPanelProps) {
   const {
     playlist,
     favorites,
-    addToPlaylist,
     removeFromPlaylist,
     removeFromFavorites,
     clearPlaylist,
@@ -46,7 +36,7 @@ export function PlaylistPanel({
     index,
   }: {
     track: MusicTrack;
-    listType: "search" | "playlist" | "favorite";
+    listType: "playlist" | "favorite";
     index: number;
   }) => {
     const isPlaying = track.id === currentTrackId;
@@ -69,8 +59,7 @@ export function PlaylistPanel({
         <div
           className="flex-1 min-w-0 cursor-pointer"
           onClick={() => {
-            if (listType === "search") onPlay(track, searchResults);
-            else if (listType === "favorite") onPlay(track, favorites);
+            if (listType === "favorite") onPlay(track, favorites);
             else onPlay(track, playlist);
           }}
         >
@@ -85,20 +74,6 @@ export function PlaylistPanel({
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {listType === "search" && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToPlaylist(track);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-
           {listType === "playlist" && (
             <Button
               size="icon"
@@ -135,11 +110,7 @@ export function PlaylistPanel({
     <div className="h-full flex flex-col bg-background/50 border-x">
       <Tabs defaultValue="playlist" className="flex-1 flex flex-col min-h-0">
         <div className="px-4 pt-4 pb-2">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="search">
-              <SearchIcon className="h-4 w-4 mr-2" />
-              搜索结果
-            </TabsTrigger>
+          <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="playlist">
               <ListMusic className="h-4 w-4 mr-2" />
               播放列表
@@ -151,41 +122,7 @@ export function PlaylistPanel({
           </TabsList>
         </div>
 
-        {/* 搜索结果 */}
-        <TabsContent
-          value="search"
-          className="flex-1 min-h-0 m-0 flex flex-col"
-        >
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="px-4 py-2 text-xs text-muted-foreground flex justify-between items-center border-b">
-              <span>共 {searchResults.length} 条结果</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-xs"
-                onClick={() => setPlaylist(searchResults)}
-                disabled={searchResults.length === 0}
-              >
-                全部播放
-              </Button>
-            </div>
-
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-2 space-y-1 pb-10">
-                {searchResults.map((track, i) => (
-                  <TrackItem
-                    key={`${track.id}-${i}`}
-                    track={track}
-                    listType="search"
-                    index={i}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </TabsContent>
-
-        {/* 播放列表（✅ 修复滚动） */}
+        {/* 播放列表 */}
         <TabsContent
           value="playlist"
           className="flex-1 min-h-0 m-0 flex flex-col"
@@ -196,11 +133,12 @@ export function PlaylistPanel({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 text-xs text-destructive hover:text-destructive"
+                className="h-6 text-xs text-destructive"
                 onClick={clearPlaylist}
+                title="清空播放列表"
                 disabled={playlist.length === 0}
               >
-                清空列表
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
 
@@ -232,9 +170,10 @@ export function PlaylistPanel({
                 size="sm"
                 className="h-6 text-xs"
                 onClick={() => setPlaylist(favorites)}
+                title="将收藏加入播放列表"
                 disabled={favorites.length === 0}
               >
-                全部播放
+                <PlayCircle className="h-4 w-4 mr-2" />
               </Button>
             </div>
 

@@ -117,8 +117,8 @@ export default  function MusicPage() {
             }
         } else {
             toast.error("无法获取播放链接");
-            // Auto skip?
-            // controls.next();
+            // 自动下一首
+            controls.next();
         }
       } catch (e) {
         console.error(e);
@@ -135,7 +135,15 @@ export default  function MusicPage() {
 
       {/* Header */}
       <div className="flex-none">
-        <MusicHeader onSearch={handleSearchRequest} loading={isLoadingMore && currentPage === 1} />
+        <MusicHeader 
+          onSearch={handleSearchRequest} 
+          loading={isLoadingMore && currentPage === 1}
+          searchResults={searchResults}
+          onPlay={handlePlay}
+          onLoadMore={handleLoadMore}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+        />
       </div>
 
       {/* Main Content (3 Columns) */}
@@ -148,12 +156,8 @@ export default  function MusicPage() {
         {/* Middle: Playlist */}
         <div className="h-full overflow-hidden">
             <PlaylistPanel 
-                searchResults={searchResults} 
                 onPlay={handlePlay}
                 currentTrackId={currentTrack?.id}
-                onLoadMore={handleLoadMore}
-                hasMore={hasMore}
-                isLoadingMore={isLoadingMore}
             />
         </div>
 

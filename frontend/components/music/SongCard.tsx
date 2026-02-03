@@ -96,17 +96,21 @@ export function SongCard({ track }: SongCardProps) {
           "h-12 w-12 p-0 rounded-full transition-all hover:scale-110",
           isFav
             ? "text-red-500 bg-red-500/10 hover:bg-red-500/20"
-            : "text-muted-foreground hover:bg-muted"
+            : "text-muted-foreground hover:bg-muted",
         )}
         onClick={() =>
-          isFav
-            ? removeFromFavorites(track.id)
-            : addToFavorites(track)
+          isFav ? removeFromFavorites(track.id) : addToFavorites(track)
         }
       >
-        <Heart className={cn("h-6 w-6", isFav && "fill-current")} />
+        <Heart
+          className={cn(
+            "h-6 w-6 transition-colors",
+            isFav
+              ? "text-pink-400 fill-pink-400"
+              : "text-foreground/80 hover:text-pink-300",
+          )}
+        />
       </Button>
-
       <div className="text-xs text-muted-foreground">
         Powered by GD音乐台 (music.gdstudio.xyz)
       </div>
