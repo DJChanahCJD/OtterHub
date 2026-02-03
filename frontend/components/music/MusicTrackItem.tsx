@@ -1,7 +1,8 @@
 import { MusicTrack } from "@/lib/music-api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Heart, Plus, ListPlus, ListMusic } from "lucide-react";
+import { Play, Pause, Heart, Plus, ListPlus, ListMusic, Download } from "lucide-react";
+import { downloadMusicTrack } from "@/lib/utils/download";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -143,6 +144,19 @@ export function MusicTrackItem({
                     />
                 </Button>
                 )}
+
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        downloadMusicTrack(track);
+                    }}
+                    title="下载"
+                    >
+                    <Download className="h-4 w-4" />
+                </Button>
 
                 {!hideAddToQueue && (
                 <Button

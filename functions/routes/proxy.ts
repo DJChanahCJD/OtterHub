@@ -17,10 +17,11 @@ proxyRoutes.get(
     z.object({
       url: z.string().url(),
       headers: z.string().optional(),
+      filename: z.string().optional(),
     })
   ),
   async (c) => {
-    const { url: targetUrl, headers: headersParam } = c.req.valid('query');
+    const { url: targetUrl, headers: headersParam, filename } = c.req.valid('query');
     let customHeaders: Record<string, string> | undefined;
 
     if (headersParam) {
@@ -33,6 +34,26 @@ proxyRoutes.get(
 
     try {
       const response = await proxyGet(targetUrl, customHeaders);
+      
+      // If filename is provided, force download
+      if (filename) {
+        const streamResponse = handleStreamResponse(response);
+        const newHeaders = new Headers(streamResponse.headers);
+        
+        // Use RFC 5987 for non-ASCII filenames
+        const encodedFilename = encodeURIComponent(filename);
+        newHeaders.set(
+          'Content-Disposition', 
+          `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`
+        );
+        
+        return new Response(streamResponse.body, {
+          status: streamResponse.status,
+          statusText: streamResponse.statusText,
+          headers: newHeaders,
+        });
+      }
+
       return handleStreamResponse(response);
     } catch (e: any) {
       console.error("Proxy error:", e);

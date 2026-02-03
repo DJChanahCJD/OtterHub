@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MusicTrackItem } from "./MusicTrackItem";
+import { downloadMusicTrack } from "@/lib/utils/download";
 
 interface MusicTrackListProps {
   tracks: MusicTrack[];
@@ -77,20 +78,9 @@ export function MusicTrackList({
     toast.info(`开始准备下载 ${selectedTracks.length} 首歌曲...`);
     
     for (const track of selectedTracks) {
-      try {
-        const url = await musicApi.getUrl(track.id, track.source);
-        if (url) {
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${track.name} - ${track.artist.join(',')}.mp3`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          await new Promise(r => setTimeout(r, 500));
-        }
-      } catch (e) {
-        console.error(`Failed to download ${track.name}`, e);
-      }
+      await downloadMusicTrack(track);
+      // Small delay to avoid browser blocking multiple downloads
+      await new Promise(r => setTimeout(r, 1000));
     }
     setIsSelectionMode(false);
     setSelectedIds(new Set());

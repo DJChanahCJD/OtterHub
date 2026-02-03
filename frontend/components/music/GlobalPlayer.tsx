@@ -25,6 +25,7 @@ import {
   AudioPlayerState,
   AudioPlayerControls,
 } from "@/hooks/use-audio-player";
+import { downloadMusicTrack } from "@/lib/utils/download";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -137,16 +138,7 @@ export function GlobalPlayer({
 
   const handleDownload = async () => {
     if (!currentTrack) return;
-    try {
-      const url = await musicApi.getUrl(currentTrack.id, currentTrack.source);
-      if (url) {
-        window.open(url, "_blank");
-      } else {
-        toast.error("无法获取下载链接");
-      }
-    } catch (e) {
-      toast.error("下载失败");
-    }
+    downloadMusicTrack(currentTrack);
   };
 
   const VolumeIcon = () => {
