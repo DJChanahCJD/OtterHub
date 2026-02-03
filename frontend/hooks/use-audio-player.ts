@@ -28,7 +28,8 @@ export interface AudioPlayerControls {
   next: () => void
   previous: () => void
   seek: (value: number[]) => void
-  setVolume: (value: number[]) => void
+  setVolume: (value: number) => void
+  setVolumeValue: (value: number[]) => void
   toggleRepeat: () => void
   toggleShuffle: () => void
   toggleMute: () => void
@@ -119,6 +120,10 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     setVolume((v) => (v === 0 ? 0.7 : 0))
   }
 
+  const setVolumeValue = (value: number[]) => {
+    setVolume(value[0])
+  }
+
   /* ---------- DOM 同步 ---------- */
 
   // 同步音量
@@ -203,6 +208,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       previous,
       seek,
       setVolume,
+      setVolumeValue,
       toggleRepeat: () => setIsRepeat((v) => !v),
       toggleShuffle: () => setIsShuffle((v) => !v),
       toggleMute,

@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, Menu, X, Trash2 } from "lucide-react";
+import { LogOut, Settings, Menu, X, Trash2, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { logout } from "@/lib/api";
@@ -120,6 +120,13 @@ export function FloatingActionButton() {
       className: "bg-sky-400/90 text-white hover:bg-sky-500 shadow-sky-400/20",
     },
     {
+      id: "music",
+      icon: <Music className="h-5 w-5" />,
+      label: "音乐播放器",
+      onClick: () => window.open('/music', '_blank'),
+      className: "bg-pink-400/90 text-white hover:bg-pink-500 shadow-pink-400/20",
+    },
+    {
       id: "trash",
       icon: <Trash2 className="h-5 w-5" />,
       label: "回收站",
@@ -151,7 +158,7 @@ export function FloatingActionButton() {
         <div className="relative">
           {actions.map((action, index) => {
             // 计算弧形位置 (180度到270度，即从左侧到上方)
-            const radius = 80; // 稍微减小半径使结构更紧凑
+            const radius = 100;
             const totalActions = actions.length;
             const angle = 180 + (index * (90 / (totalActions - 1)));
             const radian = (angle * Math.PI) / 180;

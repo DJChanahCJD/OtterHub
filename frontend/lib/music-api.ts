@@ -1,140 +1,121 @@
-import { MusicSource, MusicTrack, SearchOptions, LyricResponse } from "./types";
+export type MusicSource =
+  | 'netease' //  🌟
+  | 'tencent'
+  | 'kugou'
+  | 'kuwo' //  🌟
+  | 'bilibili'
+  | 'migu'
+  | 'qq'
+  | 'fivesing'
+  | 'tk'
+  | 'wy'
+  | 'kg'
+  | 'kw'
+  | 'mg'
+  | 'qi'
+  | 'lizhi'
+  | 'qingting'
+  | 'ximalaya'
+  | 'kg'
+  // Common sources mentioned in doc: netease, tencent, tidal, spotify, ytmusic, qobuz, joox, deezer, migu, kugou, kuwo, ximalaya, apple
+  | 'tidal' | 'spotify' | 'ytmusic' | 'qobuz' | 'joox' | 'deezer' | 'apple';
 
-const API_BASE_URL = "https://music-api.gdstudio.xyz/api.php";
+export interface MusicTrack {
+  id: string;
+  name: string;
+  artist: string[];
+  album: string;
+  pic_id: string;
+  url_id: string;
+  lyric_id: string;
+  source: MusicSource;
+}
 
-export const FREE_MUSIC_URL = "https://music.gdstudio.org/";
+export interface SearchResult {
+  code: number;
+  data: MusicTrack[];
+  error?: string;
+}
 
-// GD Studio 音乐 API 集成类
-export class MusicApi {
-  // 搜索音乐
-  static async search(keyword: string, options?: SearchOptions): Promise<MusicTrack[]> {
+export interface SongUrl {
+  url: string;
+  br: number;
+  size: number;
+}
+
+export interface SongPic {
+  url: string;
+}
+
+export interface SongLyric {
+  lyric: string;
+  tlyric?: string;
+}
+
+const API_BASE = 'https://music-api.gdstudio.xyz/api.php';
+
+export const musicApi = {
+  /**
+   * 搜索音乐
+   */
+  async search(query: string, source: MusicSource = 'netease', page: number = 1, count: number = 20): Promise<MusicTrack[]> {
     try {
-      const params = new URLSearchParams({
-        types: "search",
-        source: options?.source || MusicSource.Netease,
-        name: keyword,
-        count: String(options?.count || 20),
-        pages: String(options?.pages || 1),
-      });
-
-      const response = await fetch(`${API_BASE_URL}?${params}`);
-      const data = await response.json();
-
-      if (!data || !Array.isArray(data)) {
-        return [];
-      }
-
-      return data.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        artist: Array.isArray(item.artist) ? item.artist.join(", ") : item.artist || "",
-        album: item.album || "",
-        duration: undefined,
-        source: item.source || MusicSource.Netease,
-        coverUrl: undefined,
-        lyricId: item.lyric_id,
-        picId: item.pic_id,
-        isLocal: false,
-      }));
-    } catch (error) {
-      console.error("搜索音乐失败:", error);
+      const res = await fetch(`${API_BASE}?types=search&source=${source}&name=${encodeURIComponent(query)}&count=${count}&pages=${page}`);
+      const json = await res.json();
+      // The API returns a JSON array directly for search results based on the doc example?
+      // Doc says: "返回：id...name...artist..."
+      // Usually these PHP APIs return a JSON array or object. Let's assume Array based on common MetingAPI behavior.
+      return Array.isArray(json) ? json : [];
+    } catch (e) {
+      console.error('Search failed', e);
       return [];
     }
-  }
+  },
 
-  // 获取歌曲播放 URL
-  static async getTrackUrl(id: string, source: MusicSource = MusicSource.Netease, bitrate: number = 320): Promise<string | null> {
+  /**
+   * 获取音乐链接
+   */
+  async getUrl(id: string, source: MusicSource, br: number = 320): Promise<string | null> {
     try {
-      const params = new URLSearchParams({
-        types: "url",
-        source,
-        id,
-        br: String(bitrate),
-      });
-
-      const response = await fetch(`${API_BASE_URL}?${params}`);
-      const data = await response.json();
-
-      return data?.url || null;
-    } catch (error) {
-      console.error("获取歌曲 URL 失败:", error);
+      const res = await fetch(`${API_BASE}?types=url&source=${source}&id=${id}&br=${br}`);
+      const json = await res.json();
+      return json.url || null;
+    } catch (e) {
+      console.error('Get URL failed', e);
       return null;
     }
-  }
+  },
 
-  // 获取专辑封面
-  static async getCoverUrl(picId: string, source: MusicSource = MusicSource.Netease, size: number = 500): Promise<string | null> {
+  /**
+   * 获取封面图
+   */
+  async getPic(id: string, source: MusicSource, size: 300 | 500 = 300): Promise<string | null> {
     try {
-      const params = new URLSearchParams({
-        types: "pic",
-        source,
-        id: picId,
-        size: String(size),
-      });
-
-      const response = await fetch(`${API_BASE_URL}?${params}`);
-      const data = await response.json();
-
-      return data?.url || null;
-    } catch (error) {
-      console.error("获取专辑封面失败:", error);
+      // id param for pic is pic_id
+      const res = await fetch(`${API_BASE}?types=pic&source=${source}&id=${id}&size=${size}`);
+      const json = await res.json();
+      return json.url || null;
+    } catch (e) {
+      console.error('Get Pic failed', e);
       return null;
     }
-  }
+  },
 
-  // 获取歌词
-  static async getLyric(lyricId: string, source: MusicSource = MusicSource.Netease): Promise<LyricResponse | null> {
+  /**
+   * 获取歌词
+   */
+  async getLyric(id: string, source: MusicSource): Promise<SongLyric | null> {
     try {
-      const params = new URLSearchParams({
-        types: "lyric",
-        source,
-        id: lyricId,
-      });
-
-      const response = await fetch(`${API_BASE_URL}?${params}`);
-      const data = await response.json();
-
+      // id param for lyric is lyric_id
+      const res = await fetch(`${API_BASE}?types=lyric&source=${source}&id=${id}`);
+      const json = await res.json();
       return {
-        lyric: data?.lyric || "",
-        tlyric: data?.tlyric,
+        lyric: json.lyric || '',
+        tlyric: json.tlyric || ''
       };
-    } catch (error) {
-      console.error("获取歌词失败:", error);
+    } catch (e) {
+      console.error('Get Lyric failed', e);
       return null;
     }
   }
-
-  // 下载音乐文件（返回 Blob）
-  static async downloadTrack(url: string): Promise<Blob | null> {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        return null;
-      }
-      return await response.blob();
-    } catch (error) {
-      console.error("下载音乐失败:", error);
-      return null;
-    }
-  }
-
-  // 解析 LRC 格式歌词
-  static parseLRC(lrc: string): Array<{ time: number; text: string }> {
-    const lines = lrc.split("\n");
-    const result: Array<{ time: number; text: string }> = [];
-
-    for (const line of lines) {
-      const match = line.match(/\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/);
-      if (match) {
-        const minutes = parseInt(match[1], 10);
-        const seconds = parseInt(match[2], 10);
-        const milliseconds = match[3] ? parseInt(match[3].padEnd(3, "0"), 10) : 0;
-        const text = match[4].trim();
-        const time = minutes * 60 + seconds + milliseconds / 1000;
-        result.push({ time, text });
-      }
-    }
-
-    return result.sort((a, b) => a.time - b.time);
-  }
-}
+};
