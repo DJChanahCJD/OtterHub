@@ -24,6 +24,15 @@ interface MusicState {
   addToUserPlaylist: (playlistId: string, track: MusicTrack) => void;
   removeFromUserPlaylist: (playlistId: string, trackId: string) => void;
 
+  // --- Playback State (Persisted) ---
+  volume: number;
+  isRepeat: boolean;
+  isShuffle: boolean;
+  
+  setVolume: (volume: number) => void;
+  toggleRepeat: () => void;
+  toggleShuffle: () => void;
+
   // --- Playback (Queue) ---
   queue: MusicTrack[];
   currentIndex: number;
@@ -83,6 +92,14 @@ export const useMusicStore = create<MusicState>()(
         )
       })),
 
+      volume: 0.7,
+      isRepeat: false,
+      isShuffle: false,
+      
+      setVolume: (volume) => set({ volume }),
+      toggleRepeat: () => set((state) => ({ isRepeat: !state.isRepeat })),
+      toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
+
       queue: [],
       currentIndex: 0,
 
@@ -107,7 +124,12 @@ export const useMusicStore = create<MusicState>()(
       name: 'music-storage',
       partialize: (state) => ({ 
         favorites: state.favorites,
-        playlists: state.playlists 
+        playlists: state.playlists,
+        queue: state.queue,
+        currentIndex: state.currentIndex,
+        volume: state.volume,
+        isRepeat: state.isRepeat,
+        isShuffle: state.isShuffle
       }),
     }
   )

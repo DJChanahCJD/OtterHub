@@ -1,16 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { FileItem } from "@shared/types"
+import { useMusicStore } from "@/stores/music-store"
+import { musicApi } from "@/lib/music-api"
 
 /**
  * 音频播放器 Hook
  */
-
-enum PlayMode {
-  Sequence = 'sequence',
-  SingleLoop = 'singleLoop',
-  ListLoop = 'listLoop',
-  Shuffle = 'shuffle'
-}
 
 export interface AudioPlayerState {
   currentTrackIndex: number
@@ -36,15 +31,23 @@ export interface AudioPlayerControls {
 }
 
 export function useAudioPlayer(audioFiles: FileItem[]) {
-  /* ---------- 播放状态 ---------- */
+  /* ---------- 状态管理 (Store) ---------- */
+  const {
+    volume,
+    isRepeat,
+    isShuffle,
+    setVolume,
+    toggleRepeat,
+    toggleShuffle,
+    queue,
+    currentIndex: currentTrackIndex,
+    setCurrentIndex: setCurrentTrackIndex
+  } = useMusicStore()
 
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
+  /* ---------- 播放状态 (Local) ---------- */
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(0.7)
-  const [isRepeat, setIsRepeat] = useState(false)
-  const [isShuffle, setIsShuffle] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const currentFile = audioFiles[currentTrackIndex]
@@ -53,8 +56,6 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
 
   /**
    * 计算下一首索引
-   * - shuffle 时避免连续重复
-   * - 非 shuffle 时循环播放
    */
   const getNextIndex = useCallback(
     (from: number) => {
@@ -73,13 +74,18 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     [audioFiles.length, isShuffle],
   )
 
+  const getPrevIndex = useCallback(
+    (from: number) => {
+      if (audioFiles.length === 0) return 0
+      if (isShuffle) return getNextIndex(from)
+      return (from - 1 + audioFiles.length) % audioFiles.length
+    },
+    [audioFiles.length, isShuffle, getNextIndex]
+  )
+
   /* ---------- 播放控制（唯一入口） ---------- */
 
-  /**
-   * 播放指定索引的音频
-   * - 统一入口，避免多处直接操作 audio
-   */
-  const playTrack = (index: number) => {
+  const playTrack = useCallback((index: number) => {
     if (!audioRef.current || audioFiles.length === 0) return
 
     setCurrentTrackIndex(index)
@@ -87,42 +93,79 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
 
     // 切歌时重置时间，防止残留
     audioRef.current.currentTime = 0
-  }
+  }, [audioFiles.length, setCurrentTrackIndex])
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     setIsPlaying((v) => !v)
-  }
+  }, [])
 
-  const next = () => {
+  const next = useCallback(() => {
     playTrack(getNextIndex(currentTrackIndex))
-  }
+  }, [playTrack, getNextIndex, currentTrackIndex])
 
-  const previous = () => {
-    const audio = audioRef.current
-    if (!audio) return
+  const previous = useCallback(() => {
+    if (!audioRef.current) return
+    playTrack(getPrevIndex(currentTrackIndex))
+  }, [playTrack, getPrevIndex, currentTrackIndex])
 
-    const prevIndex =
-      (currentTrackIndex - 1 + audioFiles.length) % audioFiles.length
-    playTrack(prevIndex)
-  }
-
-  const seek = (value: number[]) => {
+  const seek = useCallback((value: number[]) => {
     if (!audioRef.current) return
 
     audioRef.current.currentTime = value[0]
     setCurrentTime(value[0])
-  }
+  }, [])
 
   /* ---------- 音量控制 ---------- */
 
-  const toggleMute = () => {
-    // volume = 0 视为 mute，避免双状态源
-    setVolume((v) => (v === 0 ? 0.7 : 0))
-  }
+  const toggleMute = useCallback(() => {
+    setVolume(volume === 0 ? 0.7 : 0)
+  }, [volume, setVolume])
 
-  const setVolumeValue = (value: number[]) => {
+  const setVolumeValue = useCallback((value: number[]) => {
     setVolume(value[0])
-  }
+  }, [setVolume])
+
+  /* ---------- Media Session API ---------- */
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentFile) return;
+
+    // 更新元数据
+    const metadata: MediaMetadataInit = {
+      title: currentFile.name,
+      artist: 'artist' in currentFile ? (currentFile as any).artist.join('/') : 'Unknown',
+      album: 'album' in currentFile ? (currentFile as any).album : '',
+      artwork: 'pic_id' in currentFile ? [
+         // 我们暂时无法直接获取图片 URL，除非 store 里存了。
+         // 这里可以先留空，或者在 fetch cover 后更新
+         // 如果有 picUrl 更好
+      ] : []
+    };
+    navigator.mediaSession.metadata = new MediaMetadata(metadata);
+
+    // 绑定事件
+    navigator.mediaSession.setActionHandler('play', () => {
+       setIsPlaying(true);
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+       setIsPlaying(false);
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', previous);
+    navigator.mediaSession.setActionHandler('nexttrack', next);
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime && details.fastSeek === false) {
+           seek([details.seekTime]);
+        }
+    });
+
+    return () => {
+       navigator.mediaSession.setActionHandler('play', null);
+       navigator.mediaSession.setActionHandler('pause', null);
+       navigator.mediaSession.setActionHandler('previoustrack', null);
+       navigator.mediaSession.setActionHandler('nexttrack', null);
+       navigator.mediaSession.setActionHandler('seekto', null);
+    };
+  }, [currentFile, next, previous, seek]);
+
 
   /* ---------- DOM 同步 ---------- */
 
@@ -138,10 +181,12 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     if (!audio) return
 
     if (isPlaying) {
-      audio.play().catch(() => {
-        // 浏览器策略可能拒绝自动播放，保持状态即可
-        setIsPlaying(false)
-      })
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          setIsPlaying(false)
+        })
+      }
     } else {
       audio.pause()
     }
@@ -159,7 +204,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
         audio.currentTime = 0
         audio.play()
       } else {
-        playTrack(getNextIndex(currentTrackIndex))
+        next()
       }
     }
 
@@ -172,7 +217,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       audio.removeEventListener("durationchange", onDurationChange)
       audio.removeEventListener("ended", onEnded)
     }
-  }, [currentTrackIndex, isRepeat, getNextIndex])
+  }, [currentTrackIndex, isRepeat, next])
 
   /* ---------- 边界处理 ---------- */
 
@@ -187,7 +232,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       setCurrentTrackIndex(0)
       setIsPlaying(false)
     }
-  }, [audioFiles.length, currentTrackIndex])
+  }, [audioFiles.length, currentTrackIndex, setCurrentTrackIndex])
 
   /* ---------- 对外暴露 ---------- */
 
@@ -209,8 +254,8 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       seek,
       setVolume,
       setVolumeValue,
-      toggleRepeat: () => setIsRepeat((v) => !v),
-      toggleShuffle: () => setIsShuffle((v) => !v),
+      toggleRepeat,
+      toggleShuffle,
       toggleMute,
     },
     audioRef,
