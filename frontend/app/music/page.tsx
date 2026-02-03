@@ -80,6 +80,12 @@ export default function MusicPage() {
 
   // Handlers
   const handlePlayContext = (track: MusicTrack, list: MusicTrack[]) => {
+    // Toggle play if same track
+    if (currentTrack?.id === track.id) {
+      controls.togglePlay();
+      return;
+    }
+
     // Find index of track in list
     const index = list.findIndex(t => t.id === track.id);
     if (index === -1) return;
@@ -97,6 +103,12 @@ export default function MusicPage() {
   };
 
   const handlePlayInPlaylist = (track: MusicTrack, index: number) => {
+    // Toggle play if same track
+    if (currentTrack?.id === track.id) {
+      controls.togglePlay();
+      return;
+    }
+
     // For playlist views, we already know the list and index
     const list = currentView === 'favorites' 
       ? favorites 

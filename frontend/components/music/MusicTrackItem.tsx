@@ -1,10 +1,11 @@
 import { MusicTrack } from "@/lib/music-api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Play, Heart, Plus, ListPlus, ListMusic } from "lucide-react";
+import { Play, Pause, Heart, Plus, ListPlus, ListMusic } from "lucide-react";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 
 interface MusicTrackItemProps {
@@ -14,6 +15,7 @@ interface MusicTrackItemProps {
   isPlaying?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
+  showCheckbox?: boolean;
   onPlay: () => void;
   // Optional overrides or disabling default actions
   hideLike?: boolean;
@@ -31,6 +33,7 @@ export function MusicTrackItem({
   isPlaying,
   isSelected,
   onSelect,
+  showCheckbox,
   onPlay,
   hideLike,
   hideAddToQueue,
@@ -43,27 +46,35 @@ export function MusicTrackItem({
 
   return (
     <div
-      onClick={onSelect}
+      onClick={showCheckbox ? onSelect : undefined}
       className={cn(
         "group flex items-center gap-3 p-2 rounded-md cursor-pointer border transition-all",
-        isSelected 
+        isSelected && showCheckbox
           ? "bg-primary/10 border-primary/20" 
           : "border-transparent hover:bg-muted",
         className
       )}
     >
-      <div className="w-8 flex justify-center text-muted-foreground">
-          {isCurrent && isPlaying ? (
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-              </span>
+      <div className="w-8 flex justify-center text-muted-foreground shrink-0">
+          {showCheckbox ? (
+            <Checkbox 
+              checked={isSelected} 
+              onCheckedChange={() => onSelect?.()}
+              onClick={(e) => e.stopPropagation()}
+            />
           ) : (
-              <span className="text-xs font-mono opacity-50">{index + 1}</span>
+            isCurrent && isPlaying ? (
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                </span>
+            ) : (
+                <span className="text-xs font-mono opacity-50">{index + 1}</span>
+            )
           )}
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0" onClick={!showCheckbox ? onSelect : undefined}>
         <div className={cn("text-sm font-medium truncate", isCurrent && "text-primary")}>
           {track.name}
         </div>
@@ -73,18 +84,24 @@ export function MusicTrackItem({
       </div>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-         <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPlay();
-            }}
-            title="播放"
-          >
-            <Play className="h-4 w-4" />
-         </Button>
+         {!showCheckbox && (
+           <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlay();
+              }}
+              title={isCurrent && isPlaying ? "暂停" : "播放"}
+            >
+              {isCurrent && isPlaying ? (
+                <Pause className="h-4 w-4 fill-current" />
+              ) : (
+                <Play className="h-4 w-4 fill-current" />
+              )}
+           </Button>
+         )}
          
          {!hideLike && (
            <Button
