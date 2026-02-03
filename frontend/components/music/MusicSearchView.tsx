@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Loader2, Plus, Heart, Play, ListPlus, ListMusic, ListChecks, CheckSquare, Square, Download, Trash2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { MusicTrack, MusicSource, musicApi } from "@/lib/music-api";
-import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MusicTrackItem } from "./MusicTrackItem";
+import { MusicTrackList } from "./MusicTrackList";
 
 interface MusicSearchViewProps {
   onPlay: (track: MusicTrack, list: MusicTrack[]) => void;
@@ -33,11 +30,6 @@ export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSear
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Selection State
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { addToQueue, addToFavorites, playlists, addToUserPlaylist, createPlaylist } = useMusicStore();
-
   const handleSearch = async (isNew = true) => {
     if (!query.trim()) return;
     
@@ -45,8 +37,6 @@ export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSear
       setLoading(true);
       setPage(1);
       setResults([]);
-      setIsSelectionMode(false);
-      setSelectedIds(new Set());
     } else {
       setIsLoadingMore(true);
     }
@@ -69,55 +59,6 @@ export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSear
       setLoading(false);
       setIsLoadingMore(false);
     }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === results.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(results.map(t => t.id)));
-    }
-  };
-
-  const handleBatch = (fn: (t: MusicTrack) => void, tip: string) => {
-    const tracks = results.filter(t => selectedIds.has(t.id));
-    tracks.forEach(fn);
-    toast.success(`${tip} ${tracks.length} 首`);
-    setIsSelectionMode(false);
-    setSelectedIds(new Set());
-  };
-
-  const handleBatchDownload = async () => {
-    const selectedTracks = results.filter(t => selectedIds.has(t.id));
-    toast.info(`开始准备下载 ${selectedTracks.length} 首歌曲...`);
-    
-    for (const track of selectedTracks) {
-      try {
-        const url = await musicApi.getUrl(track.id, track.source);
-        if (url) {
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${track.name} - ${track.artist.join(',')}.mp3`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          // Small delay to prevent browser blocking
-          await new Promise(r => setTimeout(r, 500));
-        }
-      } catch (e) {
-        console.error(`Failed to download ${track.name}`, e);
-      }
-    }
-    setIsSelectionMode(false);
-    setSelectedIds(new Set());
   };
 
   return (
@@ -148,127 +89,21 @@ export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSear
           <Button onClick={() => handleSearch(true)} disabled={loading}>
             {loading ? <Loader2 className="animate-spin" /> : <Search />}
           </Button>
-          <Button
-             variant={isSelectionMode ? "secondary" : "outline"}
-             size="icon"
-             onClick={() => {
-               setIsSelectionMode(!isSelectionMode);
-               setSelectedIds(new Set());
-             }}
-             title="批量操作"
-             disabled={results.length === 0}
-          >
-             <ListChecks className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
-      {/* Toolbar / Stats */}
-      {results.length > 0 && (
-        <>
-          {!isSelectionMode ? (
-            <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/5 text-xs">
-              <div className="flex items-center gap-2">
-                 <span className="text-muted-foreground">共 {results.length} 条结果</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between px-6 py-2 border-b bg-muted/20 animate-in slide-in-from-top-2">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={toggleSelectAll} title={selectedIds.size === results.length ? "取消全选" : "全选"}>
-                  {selectedIds.size === results.length ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-                </Button>
-                <span className="text-xs text-muted-foreground">已选 {selectedIds.size} 首</span>
-              </div>
-              <div className="flex items-center gap-2">
-                 <Button size="sm" variant="secondary" onClick={() => handleBatch(addToQueue, "已添加")} disabled={selectedIds.size === 0}>
-                   <Plus className="w-3 h-3 mr-1" /> 加入队列
-                 </Button>
-                 <Button size="sm" variant="secondary" onClick={() => handleBatch(addToFavorites, "已收藏")} disabled={selectedIds.size === 0}>
-                   <Heart className="w-3 h-3 mr-1" /> 收藏
-                 </Button>
-                 <Button size="sm" variant="secondary" onClick={handleBatchDownload} disabled={selectedIds.size === 0}>
-                   <Download className="w-3 h-3 mr-1" /> 下载
-                 </Button>
-    
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button size="sm" variant="secondary" title="添加到歌单" disabled={selectedIds.size === 0}>
-                        <ListPlus className="w-3 h-3 mr-1" /> 加入歌单
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="end" className="w-48 p-1">
-                       <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
-                       {playlists.map(p => (
-                         <div 
-                            key={p.id} 
-                            className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                            onClick={() => handleBatch((t) => addToUserPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
-                         >
-                            <ListMusic className="mr-2 h-4 w-4 opacity-50" />
-                            <span className="truncate">{p.name}</span>
-                         </div>
-                       ))}
-                       <div className="border-t my-1" />
-                       <div 
-                          className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
-                          onClick={() => {
-                            const name = window.prompt("请输入新歌单名称");
-                            if (name) {
-                              createPlaylist(name);
-                              toast.success("已创建歌单");
-                            }
-                          }}
-                       >
-                          <Plus className="mr-2 h-4 w-4" /> 新建歌单
-                       </div>
-                    </PopoverContent>
-                  </Popover>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
       {/* Results List */}
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-          <div className="p-2 space-y-1">
-            {results.map((track, i) => (
-              <MusicTrackItem
-                key={`${track.id}-${i}`}
-                track={track}
-                index={i}
-                isCurrent={track.id === currentTrackId}
-                isPlaying={isPlaying}
-                showCheckbox={isSelectionMode}
-                isSelected={selectedIds.has(track.id)}
-                onSelect={() => toggleSelect(track.id)}
-                onPlay={() => onPlay(track, results)}
-              />
-            ))}
-          
-          {results.length > 0 && (
-            <div className="p-4">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => handleSearch(false)}
-                disabled={!hasMore || isLoadingMore}
-              >
-                {isLoadingMore ? <Loader2 className="animate-spin mr-2" /> : hasMore ? "加载更多" : "没有更多了"}
-              </Button>
-            </div>
-          )}
-          
-          {results.length === 0 && !loading && (
-            <div className="py-20 text-center text-muted-foreground">
-                <Search className="h-10 w-10 mx-auto mb-4 opacity-20" />
-                <p>输入关键词开始搜索</p>
-            </div>
-          )}
-        </div>
-        </ScrollArea>
+        <MusicTrackList 
+          tracks={results}
+          onPlay={(track) => onPlay(track, results)}
+          currentTrackId={currentTrackId}
+          isPlaying={isPlaying}
+          loading={isLoadingMore || loading}
+          hasMore={hasMore}
+          onLoadMore={() => handleSearch(false)}
+          emptyMessage={loading ? "搜索中..." : "输入关键词开始搜索"}
+        />
       </div>
     </div>
   );

@@ -8,7 +8,8 @@ import {
   Search, 
   Heart,
   Music2,
-  Trash2
+  Trash2,
+  SquarePlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -100,7 +101,7 @@ export function MusicSidebar({
           <NavItem 
             active={currentView === "favorites"} 
             icon={Heart} 
-            label="我的收藏" 
+            label="我的喜欢" 
             onClick={() => onViewChange("favorites")} 
           />
         </div>
@@ -112,7 +113,7 @@ export function MusicSidebar({
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-transparent hover:text-primary" title="新建歌单">
-                <Plus className="h-4 w-4" />
+                <SquarePlus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>

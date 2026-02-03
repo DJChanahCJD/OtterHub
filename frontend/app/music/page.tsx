@@ -133,8 +133,7 @@ export default function MusicPage() {
         {/* Favorites View */}
         {currentView === 'favorites' && (
           <MusicPlaylistView 
-            title="我的收藏"
-            description="我喜欢的音乐"
+            title="我的喜欢"
             tracks={favorites}
             onPlay={handlePlayInPlaylist}
             onRemove={(t) => removeFromFavorites(t.id)}

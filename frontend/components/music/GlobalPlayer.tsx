@@ -19,6 +19,7 @@ import {
   Music2,
   ListPlus,
   Trash2,
+  ListVideo,
 } from "lucide-react";
 import {
   AudioPlayerState,
@@ -127,10 +128,10 @@ export function GlobalPlayer({
     if (!currentTrack) return;
     if (isFavorite(currentTrack.id)) {
       removeFromFavorites(currentTrack.id);
-      toast.success("已取消收藏");
+      toast.success("已取消喜欢");
     } else {
       addToFavorites(currentTrack);
-      toast.success("已收藏");
+      toast.success("已喜欢");
     }
   };
 
@@ -225,7 +226,7 @@ export function GlobalPlayer({
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
                   onClick={handleToggleFavorite}
-                  title="收藏"
+                  title="喜欢"
                 >
                   <Heart
                     className={cn(
@@ -310,7 +311,7 @@ export function GlobalPlayer({
                 className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
                 title="播放列表"
               >
-                <ListMusic className="h-4 w-4" />
+                <ListVideo className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -319,7 +320,7 @@ export function GlobalPlayer({
               className="w-80 p-0 h-96 flex flex-col"
             >
               <div className="p-3 border-b text-sm font-medium flex justify-between items-center">
-                <span>播放队列 ({queue.length})</span>
+                <span>播放列表 ({queue.length})</span>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -391,7 +392,7 @@ export function GlobalPlayer({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
-                title="收藏到歌单"
+                title="加入歌单"
                 disabled={!currentTrack}
               >
                 <ListPlus className="h-4 w-4" />

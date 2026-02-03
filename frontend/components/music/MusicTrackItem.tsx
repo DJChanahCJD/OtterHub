@@ -41,21 +41,23 @@ export function MusicTrackItem({
   customActions,
   className,
 }: MusicTrackItemProps) {
-  const { addToFavorites, addToQueue, playlists, addToUserPlaylist, createPlaylist } = useMusicStore();
+  const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToUserPlaylist, createPlaylist } = useMusicStore();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   return (
     <div
       onClick={showCheckbox ? onSelect : undefined}
+      onDoubleClick={!showCheckbox ? onPlay : undefined}
       className={cn(
-        "group flex items-center gap-3 p-2 rounded-md cursor-pointer border transition-all",
+        "group grid grid-cols-[3rem_1.5fr_1fr_8rem] gap-2 items-center px-4 py-2 rounded-md cursor-pointer transition-colors text-sm",
         isSelected && showCheckbox
-          ? "bg-primary/10 border-primary/20" 
-          : "border-transparent hover:bg-muted",
+          ? "bg-primary/10" 
+          : "hover:bg-muted/50",
         className
       )}
     >
-      <div className="w-8 flex justify-center text-muted-foreground shrink-0">
+      {/* Column 1: Index / Checkbox / Play State */}
+      <div className="flex justify-center shrink-0">
           {showCheckbox ? (
             <Checkbox 
               checked={isSelected} 
@@ -63,127 +65,151 @@ export function MusicTrackItem({
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            isCurrent && isPlaying ? (
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                </span>
-            ) : (
-                <span className="text-xs font-mono opacity-50">{index + 1}</span>
-            )
+            <div className="relative w-4 h-4 flex items-center justify-center">
+                {/* Playing State */}
+                {isCurrent && isPlaying ? (
+                   <>
+                     <span className="group-hover:hidden relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                     </span>
+                     <Pause 
+                        className="hidden group-hover:block h-4 w-4 fill-primary text-primary cursor-pointer" 
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           onPlay();
+                        }}
+                     />
+                   </>
+                ) : (
+                   <>
+                      <span className={cn("group-hover:hidden font-mono text-muted-foreground opacity-70", isCurrent && "text-primary opacity-100")}>
+                        {index + 1}
+                      </span>
+                      <Play 
+                        className="hidden group-hover:block h-4 w-4 fill-foreground text-foreground opacity-70 hover:opacity-100 cursor-pointer" 
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           onPlay();
+                        }}
+                      />
+                   </>
+                )}
+            </div>
           )}
       </div>
 
-      <div className="flex-1 min-w-0" onClick={!showCheckbox ? onSelect : undefined}>
-        <div className={cn("text-sm font-medium truncate", isCurrent && "text-primary")}>
+      {/* Column 2: Title & Artist */}
+      <div className="min-w-0 pr-4">
+        <div className={cn("font-medium truncate", isCurrent && "text-primary")}>
           {track.name}
         </div>
         <div className="text-xs text-muted-foreground truncate">
-          {track.artist.join(" / ")} · {track.album}
+          {track.artist.join(" / ")}
         </div>
       </div>
 
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Column 3: Album */}
+      <div className="min-w-0 text-muted-foreground truncate hidden md:block" title={track.album}>
+        {track.album}
+      </div>
+
+      {/* Column 4: Actions */}
+      <div className="flex items-center justify-end gap-1">
          {!showCheckbox && (
-           <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPlay();
-              }}
-              title={isCurrent && isPlaying ? "暂停" : "播放"}
-            >
-              {isCurrent && isPlaying ? (
-                <Pause className="h-4 w-4 fill-current" />
-              ) : (
-                <Play className="h-4 w-4 fill-current" />
-              )}
-           </Button>
-         )}
-         
-         {!hideLike && (
-           <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToFavorites(track);
-                toast.success("已收藏");
-              }}
-              title="收藏"
-            >
-              <Heart className="h-4 w-4" />
-           </Button>
-         )}
-
-         {!hideAddToQueue && (
-           <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToQueue(track);
-                toast.success("已加入播放队列");
-              }}
-              title="添加到播放队列"
-            >
-              <Plus className="h-4 w-4" />
-           </Button>
-         )}
-
-         {!hideAddToPlaylist && (
-           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  title="添加到歌单"
-                >
-                  <ListPlus className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="left" align="center" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
-              {playlists.map(p => (
-                <div 
-                    key={p.id} 
-                    className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                    onClick={() => {
-                      addToUserPlaylist(p.id, track);
-                      toast.success(`已添加到歌单「${p.name}」`);
-                      setIsPopoverOpen(false);
+            <>
+                {!hideLike && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isFavorite(track.id)) {
+                          removeFromFavorites(track.id);
+                          toast.success("已取消喜欢");
+                        } else {
+                          addToFavorites(track);
+                          toast.success("已喜欢");
+                        }
                     }}
-                >
-                    <ListMusic className="mr-2 h-4 w-4 opacity-50" />
-                    <span className="truncate">{p.name}</span>
-                </div>
-              ))}
-              <div className="border-t my-1" />
-              <div 
-                  className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
-                  onClick={() => {
-                    const name = window.prompt("请输入新歌单名称");
-                    if (name) {
-                      createPlaylist(name);
-                      toast.success("已创建歌单");
-                    }
-                  }}
-              >
-                  <Plus className="mr-2 h-4 w-4" /> 新建歌单
-              </div>
-            </PopoverContent>
-           </Popover>
-         )}
+                    title={isFavorite(track.id) ? "取消喜欢" : "喜欢"}
+                    >
+                    <Heart 
+                      className={cn(
+                        "h-4 w-4",
+                        isFavorite(track.id) && "fill-primary text-primary"
+                      )} 
+                    />
+                </Button>
+                )}
 
-         {customActions}
+                {!hideAddToQueue && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        addToQueue(track);
+                        toast.success("已加入播放列表");
+                    }}
+                    title="添加到播放列表"
+                    >
+                    <Plus className="h-4 w-4" />
+                </Button>
+                )}
+
+                {!hideAddToPlaylist && (
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <PopoverTrigger asChild>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                        title="添加到歌单"
+                        >
+                        <ListPlus className="h-4 w-4" />
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="left" align="center" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
+                    {playlists.map(p => (
+                        <div 
+                            key={p.id} 
+                            className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                            addToUserPlaylist(p.id, track);
+                            toast.success(`已添加到歌单「${p.name}」`);
+                            setIsPopoverOpen(false);
+                            }}
+                        >
+                            <ListMusic className="mr-2 h-4 w-4 opacity-50" />
+                            <span className="truncate">{p.name}</span>
+                        </div>
+                    ))}
+                    <div className="border-t my-1" />
+                    <div 
+                        className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
+                        onClick={() => {
+                            const name = window.prompt("请输入新歌单名称");
+                            if (name) {
+                            createPlaylist(name);
+                            toast.success("已创建歌单");
+                            }
+                        }}
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> 新建歌单
+                    </div>
+                    </PopoverContent>
+                </Popover>
+                )}
+                {customActions}
+            </>
+         )}
       </div>
     </div>
   );
