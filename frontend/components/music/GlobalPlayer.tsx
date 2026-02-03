@@ -18,6 +18,7 @@ import {
   Plus,
   Music2,
   ListPlus,
+  Trash2,
 } from "lucide-react";
 import {
   AudioPlayerState,
@@ -69,7 +70,6 @@ export function GlobalPlayer({
     setVolumeValue,
     toggleRepeat,
     toggleShuffle,
-    toggleMute,
     playTrack,
   } = controls;
 
@@ -154,6 +154,32 @@ export function GlobalPlayer({
     return <Volume2 className="h-5 w-5" />;
   };
 
+  const handleToggleMode = () => {
+    if (isRepeat) {
+      // Current: Single Loop -> Next: Shuffle
+      toggleRepeat();
+      if (!isShuffle) toggleShuffle();
+    } else if (isShuffle) {
+      // Current: Shuffle -> Next: List Loop
+      toggleShuffle();
+    } else {
+      // Current: List Loop -> Next: Single Loop
+      toggleRepeat();
+    }
+  };
+
+  const ModeIcon = () => {
+    if (isRepeat) return <Repeat1 className="h-4 w-4" />;
+    if (isShuffle) return <Shuffle className="h-4 w-4" />;
+    return <Repeat className="h-4 w-4" />;
+  };
+
+  const getModeTitle = () => {
+    if (isRepeat) return "单曲循环";
+    if (isShuffle) return "随机播放";
+    return "列表循环";
+  };
+
   return (
     <div className="relative flex flex-col w-full bg-background/95 backdrop-blur border-t z-50 shadow-[0_-1px_10px_rgba(0,0,0,0.05)] pt-1">
       {/* 1. Top Progress Bar */}
@@ -197,8 +223,9 @@ export function GlobalPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground"
+                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
                   onClick={handleToggleFavorite}
+                  title="收藏"
                 >
                   <Heart
                     className={cn(
@@ -211,7 +238,7 @@ export function GlobalPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground"
+                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
                   onClick={handleDownload}
                   title="下载"
                 >
@@ -234,21 +261,19 @@ export function GlobalPlayer({
           <Button
             variant="ghost"
             size="icon"
-            className={cn(
-              "text-muted-foreground hover:text-foreground h-8 w-8",
-              isShuffle && "text-primary hover:text-primary",
-            )}
-            onClick={toggleShuffle}
-            title={isShuffle ? "随机播放" : "顺序播放"}
+            className="text-muted-foreground hover:bg-transparent hover:text-foreground h-8 w-8"
+            onClick={handleToggleMode}
+            title={getModeTitle()}
           >
-            <Shuffle className="h-4 w-4" />
+            <ModeIcon />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10"
+            className="h-10 w-10 hover:bg-transparent hover:text-primary"
             onClick={previous}
+            title="上一首"
           >
             <SkipBack className="h-5 w-5 fill-current" />
           </Button>
@@ -257,38 +282,23 @@ export function GlobalPlayer({
             size="icon"
             className="h-12 w-12 rounded-full shadow-lg hover:scale-105 transition-transform"
             onClick={togglePlay}
+            title={isPlaying ? "暂停" : "播放"}
           >
             {isPlaying ? (
               <Pause className="h-6 w-6 fill-current" />
             ) : (
-              <Play className="h-6 w-6 fill-current ml-1" />
+              <Play className="h-6 w-6 fill-current" />
             )}
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10"
+            className="h-10 w-10 hover:bg-transparent hover:text-primary"
             onClick={next}
+            title="下一首"
           >
             <SkipForward className="h-5 w-5 fill-current" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "text-muted-foreground hover:text-foreground h-8 w-8",
-              isRepeat && "text-primary hover:text-primary",
-            )}
-            onClick={toggleRepeat}
-            title={isRepeat ? "单曲循环" : "列表循环"}
-          >
-            {isRepeat ? (
-              <Repeat1 className="h-4 w-4" />
-            ) : (
-              <Repeat className="h-4 w-4" />
-            )}
           </Button>
 
           {/* Queue Button (Desktop Only? Or replace togglePlaylist logic) */}
@@ -297,7 +307,7 @@ export function GlobalPlayer({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground ml-2"
+                className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
                 title="播放列表"
               >
                 <ListMusic className="h-4 w-4" />
@@ -312,43 +322,49 @@ export function GlobalPlayer({
                 <span>播放队列 ({queue.length})</span>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs text-muted-foreground"
+                  size="icon"
+                  className="h-6 text-muted-foreground hover:bg-transparent hover:text-destructive"
+                  onClick={handleToggleFavorite}
+                  title="清空列表"
                 >
-                  清空
+                  <Trash2 className={cn("h-4 w-4")} />
                 </Button>
               </div>
-              <ScrollArea className="flex-1">
-                <div className="p-1">
-                  {queue.map((track, i) => (
-                    <div
-                      key={`${track.id}-${i}`}
-                      className={cn(
-                        "flex items-center gap-2 p-2 rounded text-sm cursor-pointer hover:bg-muted/50",
-                        i === currentIndex && "bg-muted/50 text-primary",
-                      )}
-                      onClick={() => playTrack(i)}
-                    >
-                      {i === currentIndex && isPlaying ? (
-                        <div className="w-4 h-4 flex items-center justify-center">
-                          <span className="animate-spin text-primary">💿</span>
+              <div className="flex-1 min-h-0">
+                <ScrollArea className="h-full">
+                  <div className="p-1">
+                    {queue.map((track, i) => (
+                      <div
+                        key={`${track.id}-${i}`}
+                        className={cn(
+                          "flex items-center gap-2 p-2 rounded text-sm cursor-pointer hover:bg-muted/50",
+                          i === currentIndex && "bg-muted/50 text-primary",
+                        )}
+                        onClick={() => playTrack(i)}
+                      >
+                        {i === currentIndex && isPlaying ? (
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <span className="animate-spin text-primary">
+                              💿
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="w-4 text-center text-xs text-muted-foreground font-mono">
+                            {i + 1}
+                          </span>
+                        )}
+                        <div className="flex-1 min-w-0 truncate">
+                          <span className="font-medium">{track.name}</span>
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            {" "}
+                            - {track.artist.join("/")}
+                          </span>
                         </div>
-                      ) : (
-                        <span className="w-4 text-center text-xs text-muted-foreground font-mono">
-                          {i + 1}
-                        </span>
-                      )}
-                      <div className="flex-1 min-w-0 truncate">
-                        <span className="font-medium">{track.name}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          {" "}
-                          - {track.artist.join("/")}
-                        </span>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
             </PopoverContent>
           </Popover>
         </div>
@@ -374,7 +390,7 @@ export function GlobalPlayer({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
+                className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
                 title="收藏到歌单"
                 disabled={!currentTrack}
               >
@@ -392,7 +408,7 @@ export function GlobalPlayer({
                   onClick={() => {
                     if (currentTrack) {
                       addToUserPlaylist(p.id, currentTrack);
-                      toast.success("已添加到歌单");
+                      toast.success(`已添加到歌单「${p.name}」`);
                     }
                   }}
                 >
@@ -422,8 +438,7 @@ export function GlobalPlayer({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={toggleMute}
+                className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
               >
                 <VolumeIcon />
               </Button>

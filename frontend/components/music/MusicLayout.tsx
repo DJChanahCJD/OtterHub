@@ -7,7 +7,8 @@ import {
 import { 
   Sheet, 
   SheetContent, 
-  SheetTrigger 
+  SheetTrigger,
+  SheetTitle
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,9 @@ export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-80">
+            <div className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+            </div>
             {sidebar}
           </SheetContent>
         </Sheet>

@@ -1,8 +1,8 @@
 import { MusicTrack } from "@/lib/music-api";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Play, Trash2, Clock, Music } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Play, Trash2, Music } from "lucide-react";
+import { MusicTrackItem } from "./MusicTrackItem";
 
 interface MusicPlaylistViewProps {
   title: string;
@@ -67,78 +67,34 @@ export function MusicPlaylistView({
 
       {/* List */}
       <div className="flex-1 min-h-0 bg-background/50">
-        <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 px-6 py-2 border-b text-xs text-muted-foreground font-medium uppercase tracking-wider sticky top-0 bg-background z-10">
-          <div className="w-8 text-center">#</div>
-          <div>标题</div>
-          <div>专辑</div>
-          <div className="w-12 text-center"><Clock className="h-3 w-3 mx-auto" /></div>
-        </div>
         <ScrollArea className="h-full">
-          <div className="pb-20">
-            {tracks.map((track, i) => {
-              const isCurrent = track.id === currentTrackId;
-              
-              return (
-                <div 
-                  key={`${track.id}-${i}`}
-                  className={cn(
-                    "group grid grid-cols-[auto_1fr_1fr_auto] gap-4 px-6 py-2.5 items-center hover:bg-muted/50 transition-colors cursor-default text-sm",
-                    isCurrent && "bg-muted/50 text-primary"
-                  )}
-                  onDoubleClick={() => onPlay(track, i)}
-                >
-                  <div className="w-8 text-center flex justify-center items-center">
-                    {isCurrent && isPlaying ? (
-                       <div className="relative h-3 w-3">
-                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                         <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                       </div>
-                    ) : (
-                      <span className="group-hover:hidden font-mono text-muted-foreground">{i + 1}</span>
-                    )}
-                    <Play 
-                      className={cn(
-                        "h-3 w-3 fill-current hidden cursor-pointer", 
-                        !isCurrent && "group-hover:block",
-                        isCurrent && !isPlaying && "block"
-                      )} 
-                      onClick={() => onPlay(track, i)}
-                    />
-                  </div>
-                  
-                  <div className="min-w-0">
-                    <div className={cn("font-medium truncate", isCurrent ? "text-primary" : "text-foreground")}>
-                      {track.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate block md:hidden">
-                      {track.artist.join(", ")}
-                    </div>
-                  </div>
-                  
-                  <div className="text-muted-foreground truncate hidden md:block">
-                    {track.album}
-                  </div>
-                  
-                  <div className="w-12 text-center flex justify-center items-center">
-                    {onRemove ? (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemove(track);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground font-mono">--:--</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="pb-20 p-2 space-y-1">
+            {tracks.map((track, i) => (
+              <MusicTrackItem
+                key={`${track.id}-${i}`}
+                track={track}
+                index={i}
+                isCurrent={track.id === currentTrackId}
+                isPlaying={isPlaying}
+                onPlay={() => onPlay(track, i)}
+                customActions={onRemove && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:bg-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`确定从歌单「${title}」移除歌曲「${track.name}」吗？`)) {
+                        onRemove(track);
+                      }
+                    }}
+                    title="从歌单移除"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              />
+            ))}
           </div>
         </ScrollArea>
       </div>

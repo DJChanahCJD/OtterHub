@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMusicStore } from "@/stores/music-store";
 import { 
@@ -64,15 +64,23 @@ export function MusicSidebar({
     onClick: () => void;
     action?: React.ReactNode;
   }) => (
-    <Button
-      variant="ghost"
-      className={cn("w-full justify-start gap-2", active && "bg-primary")}
+    <div
+      role="button"
+      className={cn(
+        buttonVariants({ variant: "ghost" }),
+        "w-full justify-start gap-2 cursor-pointer group pr-1",
+        active && "bg-primary/80"
+      )}
       onClick={onClick}
     >
       <Icon className="h-4 w-4" />
       <span className="truncate flex-1 text-left">{label}</span>
-      {action}
-    </Button>
+      {action && (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          {action}
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -103,7 +111,7 @@ export function MusicSidebar({
           <h3 className="text-sm font-medium text-muted-foreground px-2">我的歌单</h3>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-transparent hover:text-primary" title="新建歌单">
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -129,30 +137,31 @@ export function MusicSidebar({
         <ScrollArea className="flex-1">
           <div className="px-2 space-y-1 pb-4">
             {playlists.map(playlist => (
-              <div key={playlist.id} className="group relative">
-                <NavItem 
-                  active={currentView === "playlist" && currentPlaylistId === playlist.id}
-                  icon={ListMusic}
-                  label={playlist.name}
-                  onClick={() => onViewChange("playlist", playlist.id)}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`确定删除歌单"${playlist.name}"吗？`)) {
-                      deletePlaylist(playlist.id);
-                      if (currentPlaylistId === playlist.id) {
-                        onViewChange("search");
+              <NavItem 
+                key={playlist.id}
+                active={currentView === "playlist" && currentPlaylistId === playlist.id}
+                icon={ListMusic}
+                label={playlist.name}
+                onClick={() => onViewChange("playlist", playlist.id)}
+                action={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="删除歌单"
+                    onClick={() => {
+                      if (confirm(`确定删除歌单「${playlist.name}」吗？`)) {
+                        deletePlaylist(playlist.id);
+                        if (currentPlaylistId === playlist.id) {
+                          onViewChange("search");
+                        }
                       }
-                    }
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                }
+              />
             ))}
             {playlists.length === 0 && (
               <div className="px-4 py-8 text-center text-xs text-muted-foreground border-dashed border rounded-md mx-2">

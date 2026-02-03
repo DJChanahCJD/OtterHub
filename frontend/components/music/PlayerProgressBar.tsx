@@ -31,7 +31,7 @@ export function PlayerProgressBar({
     <div
       ref={barRef}
       className={cn(
-        "group absolute -top-1 w-full h-0.75 hover:h-2 cursor-pointer select-none transition-all flex items-center z-10",
+        "group absolute -top-1 w-full h-1 hover:h-3 cursor-pointer select-none transition-all flex items-center z-10",
         className
       )}
       onMouseMove={(e) => {
