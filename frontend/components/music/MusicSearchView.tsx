@@ -6,6 +6,8 @@ import { Search, Loader2 } from "lucide-react";
 import { MusicTrack, MusicSource, musicApi } from "@/lib/music-api";
 import { toast } from "sonner";
 import { MusicTrackList } from "./MusicTrackList";
+import { useMusicStore } from "@/stores/music-store";
+import { useShallow } from "zustand/react/shallow";
 
 interface MusicSearchViewProps {
   onPlay: (track: MusicTrack, list: MusicTrack[]) => void;
@@ -21,9 +23,16 @@ const stableSources: Record<string, string> = {
 };
 
 export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSearchViewProps) {
+  // Store
+  const { source, setSource } = useMusicStore(
+    useShallow((state) => ({
+      source: state.searchSource,
+      setSource: state.setSearchSource,
+    }))
+  );
+
   // Search State
   const [query, setQuery] = useState("");
-  const [source, setSource] = useState<MusicSource>("netease");
   const [results, setResults] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);

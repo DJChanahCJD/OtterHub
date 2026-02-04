@@ -54,8 +54,6 @@ import { FullScreenPlayer } from "./FullScreenPlayer";
 interface GlobalPlayerProps {
   state: AudioPlayerState;
   controls: AudioPlayerControls;
-  onQualityChange: (quality: string) => void;
-  quality: string;
   currentTrack: MusicTrack | null;
   onTogglePlaylist?: () => void;
 }
@@ -63,8 +61,6 @@ interface GlobalPlayerProps {
 export function GlobalPlayer({
   state,
   controls,
-  onQualityChange,
-  quality,
   currentTrack,
   onTogglePlaylist,
 }: GlobalPlayerProps) {
@@ -91,6 +87,8 @@ export function GlobalPlayer({
     queue,
     currentIndex,
     clearQueue,
+    quality,
+    setQuality,
   } = useMusicStore(
     useShallow((state) => ({
       isFavorite: state.isFavorite,
@@ -102,6 +100,8 @@ export function GlobalPlayer({
       queue: state.queue,
       currentIndex: state.currentIndex,
       clearQueue: state.clearQueue,
+      quality: state.quality,
+      setQuality: state.setQuality,
     }))
   );
 
@@ -419,7 +419,7 @@ export function GlobalPlayer({
 
           {/* Right: Settings */}
           <div className="flex-1 flex items-center justify-end gap-3 text-xs">
-            <Select value={quality} onValueChange={onQualityChange}>
+            <Select value={quality} onValueChange={setQuality}>
               <SelectTrigger className="h-7 px-2 bg-transparent border-muted hover:bg-muted/20">
                 <SelectValue placeholder="音质" />
               </SelectTrigger>

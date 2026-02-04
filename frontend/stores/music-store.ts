@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MusicTrack } from '@/lib/music-api';
+import { MusicTrack, MusicSource } from '@/lib/music-api';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Playlist {
@@ -23,6 +23,12 @@ interface MusicState {
   deletePlaylist: (id: string) => void;
   addToUserPlaylist: (playlistId: string, track: MusicTrack) => void;
   removeFromUserPlaylist: (playlistId: string, trackId: string) => void;
+
+  // --- Settings (Persisted) ---
+  quality: string;
+  searchSource: MusicSource;
+  setQuality: (quality: string) => void;
+  setSearchSource: (source: MusicSource) => void;
 
   // --- Playback State (Persisted) ---
   volume: number;
@@ -92,6 +98,11 @@ export const useMusicStore = create<MusicState>()(
         )
       })),
 
+      quality: "320",
+      searchSource: "netease",
+      setQuality: (quality) => set({ quality }),
+      setSearchSource: (searchSource) => set({ searchSource }),
+
       volume: 0.7,
       isRepeat: false,
       isShuffle: false,
@@ -142,7 +153,9 @@ export const useMusicStore = create<MusicState>()(
         currentIndex: state.currentIndex,
         volume: state.volume,
         isRepeat: state.isRepeat,
-        isShuffle: state.isShuffle
+        isShuffle: state.isShuffle,
+        quality: state.quality,
+        searchSource: state.searchSource,
       }),
     }
   )

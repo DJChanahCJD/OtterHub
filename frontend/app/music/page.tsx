@@ -21,12 +21,12 @@ export default function MusicPage() {
     playlists,
     removeFromFavorites,
     removeFromUserPlaylist,
+    quality
   } = useMusicStore();
 
   // Local View State
   const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist">("search");
   const [activePlaylistId, setActivePlaylistId] = useState<string>();
-  const [quality, setQuality] = useState("320");
 
   // Audio Player Hook
   // We pass the queue to the hook. The hook manages audio element.
@@ -190,8 +190,6 @@ export default function MusicPage() {
           <GlobalPlayer 
             state={state} 
             controls={controls}
-            quality={quality}
-            onQualityChange={setQuality}
             currentTrack={currentTrack}
           />
         }
