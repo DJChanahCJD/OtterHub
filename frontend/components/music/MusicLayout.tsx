@@ -61,7 +61,7 @@ export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
       </div>
 
       {/* Player Bar */}
-      <div className="flex-none z-50 border-t bg-background/95 backdrop-blur">
+      <div className="flex-none z-50">
         {player}
       </div>
     </div>

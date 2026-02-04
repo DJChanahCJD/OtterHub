@@ -92,7 +92,7 @@ export const MusicSidebar = memo(function MusicSidebar({
   );
 
   return (
-    <div className={cn("flex flex-col h-full bg-muted/10 border-r", className)}>
+    <div className={cn("flex flex-col h-full bg-background/30 backdrop-blur-lg border-r border-border/40", className)}>
       <div className="p-4">
         <h2 className="text-lg font-semibold tracking-tight px-2 mb-2 flex items-center gap-2">
           <Music2 className="h-5 w-5" />

@@ -163,8 +163,8 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
                   className={cn(
                     "px-4 transition-all duration-300 ease-out",
                     isActive
-                      ? "text-primary scale-110 font-bold"
-                      : "text-muted-foreground/60 scale-95 blur-[0.5px]"
+                      ? "text-white text-lg font-semibold scale-105"
+                      : "text-muted-foreground/60 scale-100 blur-[0.5px]"
                   )}
                 >
                   <p className="text-lg md:text-xl leading-relaxed tracking-wide">

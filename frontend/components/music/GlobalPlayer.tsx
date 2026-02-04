@@ -212,7 +212,14 @@ export function GlobalPlayer({
       />
 
       {/* Bottom Player Bar */}
-      <div className="relative flex flex-col w-full bg-background/95 backdrop-blur border-t z-50 shadow-[0_-1px_10px_rgba(0,0,0,0.05)] pt-1">
+      <div
+        className={cn(
+          "relative flex flex-col w-full backdrop-blur-md border-t z-50 pt-1 transition-all duration-500",
+          isFullScreen
+            ? "bg-black/80 border-white/10 text-white dark"
+            : "bg-background/70 border-border",
+        )}
+      >
         {/* 1. Top Progress Bar */}
         <PlayerProgressBar
           currentTime={currentTime}
@@ -272,7 +279,7 @@ export function GlobalPlayer({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                    className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                     onClick={handleToggleFavorite}
                     title="喜欢"
                   >
@@ -287,7 +294,7 @@ export function GlobalPlayer({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                    className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                     onClick={handleDownload}
                     title="下载"
                   >
@@ -310,7 +317,7 @@ export function GlobalPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:bg-transparent hover:text-foreground h-8 w-8"
+              className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               onClick={handleToggleMode}
               title={getModeTitle()}
             >
@@ -320,7 +327,7 @@ export function GlobalPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 hover:bg-transparent hover:text-primary"
+              className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               onClick={previous}
               title="上一首"
             >
@@ -329,7 +336,7 @@ export function GlobalPlayer({
 
             <Button
               size="icon"
-              className="h-12 w-12 rounded-full shadow-lg hover:scale-105 transition-transform"
+              className="h-12 w-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={togglePlay}
               title={isPlaying ? "暂停" : "播放"}
             >
@@ -343,7 +350,7 @@ export function GlobalPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 hover:bg-transparent hover:text-primary"
+              className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               onClick={next}
               title="下一首"
             >
@@ -356,7 +363,7 @@ export function GlobalPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   title="播放列表"
                 >
                   <ListVideo className="h-4 w-4" />
@@ -439,7 +446,7 @@ export function GlobalPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                  className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   title="加入歌单"
                   disabled={!currentTrack}
                 >
@@ -487,7 +494,7 @@ export function GlobalPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 >
                   <VolumeIcon />
                 </Button>
