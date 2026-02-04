@@ -56,18 +56,6 @@ export function FullScreenPlayer({
         )}
       </div>
 
-      {/* Top Control (Down Arrow) */}
-      <div className="absolute top-4 left-4 z-50">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-black/20 hover:bg-black/40 text-white border-white/10"
-          onClick={onClose}
-        >
-          <ChevronDown className="h-6 w-6" />
-        </Button>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row p-8 pb-24 gap-8 overflow-hidden relative z-10">
         {/* Left: Big Album Art */}

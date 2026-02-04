@@ -42,7 +42,7 @@ export function MusicTrackItem({
   customActions,
   className,
 }: MusicTrackItemProps) {
-  const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToUserPlaylist, createPlaylist } = useMusicStore();
+  const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToPlaylist, createPlaylist } = useMusicStore();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   return (
@@ -196,7 +196,7 @@ export function MusicTrackItem({
                             key={p.id} 
                             className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
                             onClick={() => {
-                            addToUserPlaylist(p.id, track);
+                            addToPlaylist(p.id, track);
                             toast.success(`已添加到歌单「${p.name}」`);
                             setIsPopoverOpen(false);
                             }}

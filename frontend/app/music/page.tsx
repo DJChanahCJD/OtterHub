@@ -22,7 +22,7 @@ export default function MusicPage() {
     favorites,
     playlists,
     removeFromFavorites,
-    removeFromUserPlaylist,
+    removeFromPlaylist,
     quality,
     currentIndex,
     currentAudioTime: savedTime // Get saved time from store
@@ -171,7 +171,7 @@ export default function MusicPage() {
             description={`创建于 ${format(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0, 'yyyy-mm-dd')}`}
             tracks={playlists.find(p => p.id === activePlaylistId)?.tracks || []}
             onPlay={handlePlayInPlaylist}
-            onRemove={(t) => removeFromUserPlaylist(activePlaylistId, t.id)}
+            onRemove={(t) => removeFromPlaylist(activePlaylistId, t.id)}
             currentTrackId={currentTrack?.id}
             isPlaying={state.isPlaying}
           />

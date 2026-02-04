@@ -83,7 +83,7 @@ export function GlobalPlayer({
     addToFavorites,
     removeFromFavorites,
     playlists,
-    addToUserPlaylist,
+    addToPlaylist,
     createPlaylist,
     queue,
     currentIndex,
@@ -96,7 +96,7 @@ export function GlobalPlayer({
       addToFavorites: state.addToFavorites,
       removeFromFavorites: state.removeFromFavorites,
       playlists: state.playlists,
-      addToUserPlaylist: state.addToUserPlaylist,
+      addToPlaylist: state.addToPlaylist,
       createPlaylist: state.createPlaylist,
       queue: state.queue,
       currentIndex: state.currentIndex,
@@ -463,7 +463,7 @@ export function GlobalPlayer({
                     className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
                     onClick={() => {
                       if (currentTrack) {
-                        addToUserPlaylist(p.id, currentTrack);
+                        addToPlaylist(p.id, currentTrack);
                         toast.success(`已添加到歌单「${p.name}」`);
                       }
                     }}

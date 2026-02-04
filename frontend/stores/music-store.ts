@@ -22,8 +22,8 @@ interface MusicState {
 
   createPlaylist: (name: string) => void;
   deletePlaylist: (id: string) => void;
-  addToUserPlaylist: (playlistId: string, track: MusicTrack) => void;
-  removeFromUserPlaylist: (playlistId: string, trackId: string) => void;
+  addToPlaylist: (playlistId: string, track: MusicTrack) => void;
+  removeFromPlaylist: (playlistId: string, trackId: string) => void;
 
   // --- Settings (Persisted) ---
   quality: string;
@@ -86,14 +86,14 @@ export const useMusicStore = create<MusicState>()(
       deletePlaylist: (id) => set((state) => ({
         playlists: state.playlists.filter(p => p.id !== id)
       })),
-      addToUserPlaylist: (pid, track) => set((state) => ({
+      addToPlaylist: (pid, track) => set((state) => ({
         playlists: state.playlists.map(p =>
           p.id === pid
             ? { ...p, tracks: p.tracks.some(t => t.id === track.id) ? p.tracks : [...p.tracks, track] }
             : p
         )
       })),
-      removeFromUserPlaylist: (pid, tid) => set((state) => ({
+      removeFromPlaylist: (pid, tid) => set((state) => ({
         playlists: state.playlists.map(p =>
           p.id === pid
             ? { ...p, tracks: p.tracks.filter(t => t.id !== tid) }

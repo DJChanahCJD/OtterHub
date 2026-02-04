@@ -35,7 +35,7 @@ export function MusicTrackList({
 }: MusicTrackListProps) {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { addToQueue, addToFavorites, playlists, addToUserPlaylist, createPlaylist } = useMusicStore();
+  const { addToQueue, addToFavorites, playlists, addToPlaylist, createPlaylist } = useMusicStore();
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
@@ -159,7 +159,7 @@ export function MusicTrackList({
                                  <div 
                                     key={p.id} 
                                     className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                                    onClick={() => handleBatch((t) => addToUserPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
+                                    onClick={() => handleBatch((t) => addToPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
                                  >
                                     <ListMusic className="mr-2 h-4 w-4 opacity-50" />
                                     <span className="truncate">{p.name}</span>
