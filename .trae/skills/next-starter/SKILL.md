@@ -26,7 +26,7 @@ description: 快速初始化 Next.js + Shadcn UI + Tailwind CSS 项目骨架。�
 
 - **强制类型安全**: 必须在 `lib/types.ts` 中定义所有 API 响应类型，并配合 `ApiResponse<T>` 使用。
 - **请求封装**: 所有 API 调用必须通过 `lib/utils.ts` 中的 `request` 函数，以确保一致的错误处理（401 重定向）和业务状态检查。
-- **状态管理**: 优先使用 `lib/local-storage.ts` 处理持久化配置（如 UI 状态），避免直接操作 `window.localStorage`。
+- **状态管理**: 优先使用 Zustand 管理全局状态，避免直接操作 `window.localStorage`。
 - **主题约束**: 强制使用 `next-themes` 的 `ThemeProvider`，默认主题设为 `light`。
 - **构建优化**: `next.config.mjs` 默认开启 `output: 'export'`，适用于静态站点托管。
 - **目录规范**: 
