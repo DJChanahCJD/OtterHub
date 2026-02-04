@@ -42,3 +42,25 @@ settingsRoutes.post(
     }
   }
 );
+
+settingsRoutes.get('/music', async (c) => {
+  try {
+    const kv = c.env.oh_file_url;
+    const musicDataStr = await kv.get(CF.MUSIC_STORE_KEY);
+    const musicData = musicDataStr ? JSON.parse(musicDataStr) : {};
+    return ok(c, musicData);
+  } catch (error: any) {
+    return fail(c, "获取音乐数据失败: " + error.message, 500);
+  }
+});
+
+settingsRoutes.post('/music', async (c) => {
+  try {
+    const kv = c.env.oh_file_url;
+    const musicData = await c.req.json();
+    await kv.put(CF.MUSIC_STORE_KEY, JSON.stringify(musicData));
+    return ok(c, musicData, "音乐数据已同步");
+  } catch (error: any) {
+    return fail(c, "保存音乐数据失败: " + error.message, 500);
+  }
+});

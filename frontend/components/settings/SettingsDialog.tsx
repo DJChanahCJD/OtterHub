@@ -3,7 +3,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WallpaperTab } from "./wallpaper-tab/WallpaperTab";
 import { GeneralTab } from "./general-tab/GeneralTab";
-import { LayoutGrid, Image as ImageIcon, Settings, Share2 } from "lucide-react";
+import { SyncTab } from "./sync-tab/SyncTab";
+import { LayoutGrid, Image as ImageIcon, Settings, Share2, CloudSync } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const menuItems = [
     { id: "general", label: "常规设置", icon: Settings, color: "text-slate-500" },
+    { id: "sync", label: "云端同步", icon: CloudSync, color: "text-pink-500" },
     { id: "wallpaper", label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
     { id: "share", label: "分享管理", icon: Share2, color: "text-emerald-500" }
   ];
@@ -85,7 +87,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               {activeTab === "wallpaper" && <WallpaperTab />}
               {activeTab === "general" && <GeneralTab />}
               {activeTab === "share" && <ShareTab />}
-              {activeTab !== "wallpaper" && activeTab !== "general" && activeTab !== "share" && (
+              {activeTab === "sync" && <SyncTab />}
+              {activeTab !== "wallpaper" && activeTab !== "general" && activeTab !== "share" && activeTab !== "sync" && (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground/20">
                   <div className="p-8 rounded-full bg-muted/30 border border-dashed border-border/50 mb-4">
                     <LayoutGrid className="h-16 w-16" />

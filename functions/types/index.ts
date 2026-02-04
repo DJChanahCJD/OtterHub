@@ -5,6 +5,7 @@ export enum CF {
   KV_NAME = 'oh_file_url',
   R2_BUCKET = 'oh_file_r2',
   SETTINGS_KEY = 'oh_settings', //  单独放一个用于存储设置数据的key
+  MUSIC_STORE_KEY = 'oh_music_store', // 音乐数据存储 key
 }
 
 // == 常量
