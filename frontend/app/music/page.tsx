@@ -5,6 +5,7 @@ import { useMusicStore } from '@/stores/music-store';
 import { useAudioPlayer } from '@/hooks/use-audio-player';
 import { musicApi, MusicTrack } from '@/lib/music-api';
 import { toast } from 'sonner';
+import { format } from "date-fns";
 
 import { MusicLayout } from '@/components/music/MusicLayout';
 import { MusicSidebar } from '@/components/music/MusicSidebar';
@@ -158,7 +159,7 @@ export default function MusicPage() {
         {currentView === 'playlist' && activePlaylistId && (
           <MusicPlaylistView 
             title={playlists.find(p => p.id === activePlaylistId)?.name || "歌单"}
-            description={`创建于 ${new Date(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0).toLocaleDateString()}`}
+            description={`创建于 ${format(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0, 'yyyy-mm-dd')}`}
             tracks={playlists.find(p => p.id === activePlaylistId)?.tracks || []}
             onPlay={handlePlayInPlaylist}
             onRemove={(t) => removeFromUserPlaylist(activePlaylistId, t.id)}

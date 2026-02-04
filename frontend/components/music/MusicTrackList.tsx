@@ -108,7 +108,7 @@ export function MusicTrackList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 hover:bg-transparent hover:text-foreground"
                     onClick={() => {
                       setIsSelectionMode(true);
                       setSelectedIds(new Set());
@@ -198,7 +198,7 @@ export function MusicTrackList({
                     }}
                     title="退出批量操作"
                   >
-                    <ListCheck className="h-4 w-4" /> 完成
+                    完成
                   </Button>
               </>
             )}
