@@ -134,9 +134,8 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/80">
           {track.album && (
             <div className="flex items-center gap-1.5 group cursor-default">
-              专辑：
               <span className="hover:text-foreground transition-colors truncate max-w-[200px]">
-                {track.album}
+                专辑：{track.album}
               </span>
             </div>
           )}

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListChecks, Plus, Heart, Download, Trash2, ListPlus, ListMusic, Loader2, Search } from "lucide-react";
-import { MusicTrack, musicApi } from "@/lib/music-api";
+import { ListChecks, Plus, Heart, Download, Trash2, ListPlus, ListMusic, Loader2, Search, ListCheck } from "lucide-react";
+import { MusicTrack } from "@/lib/music-api";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -99,26 +99,24 @@ export function MusicTrackList({
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-         <div className="grid grid-cols-[3rem_1.5fr_1fr_8rem] gap-2 items-center px-4 py-2 text-sm text-muted-foreground">
+         <div className="grid grid-cols-[3rem_1.5fr_1fr_8rem] gap-2 items-center px-4 text-sm text-muted-foreground">
             {!isSelectionMode ? (
               <>
                  <div className="text-center">#</div>
                  <div>标题</div>
                  <div className="hidden md:block">专辑</div>
-                 <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => {
-                        setIsSelectionMode(true);
-                        setSelectedIds(new Set());
-                      }}
-                      title="批量操作"
-                    >
-                      <ListChecks className="h-4 w-4" />
-                    </Button>
-                 </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setIsSelectionMode(true);
+                      setSelectedIds(new Set());
+                    }}
+                    title="批量操作"
+                  >
+                    <ListChecks className="h-4 w-4" /> 操作
+                  </Button>
               </>
             ) : (
               <>
@@ -190,19 +188,18 @@ export function MusicTrackList({
                         )}
                      </div>
                  </div>
-                 <div className="flex justify-end">
-                    <Button
-                      variant="ghost" 
-                      size="sm"
-                      className="text-xs h-8"
-                      onClick={() => {
-                        setIsSelectionMode(false);
-                        setSelectedIds(new Set());
-                      }}
-                    >
-                      完成
-                    </Button>
-                 </div>
+                  <Button
+                    variant="ghost" 
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => {
+                      setIsSelectionMode(false);
+                      setSelectedIds(new Set());
+                    }}
+                    title="退出批量操作"
+                  >
+                    <ListCheck className="h-4 w-4" /> 完成
+                  </Button>
               </>
             )}
          </div>
