@@ -14,6 +14,7 @@ export interface AudioPlayerState {
   volume: number
   isRepeat: boolean
   isShuffle: boolean
+  isLoading: boolean
 }
 
 export interface AudioPlayerControls {
@@ -29,6 +30,7 @@ export interface AudioPlayerControls {
   toggleRepeat: () => void
   toggleShuffle: () => void
   toggleMute: () => void
+  setLoading: (loading: boolean) => void
 }
 
 export function useAudioPlayer(audioFiles: FileItem[]) {
@@ -50,6 +52,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
   const lastSaveTimeRef = useRef(0)
 
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -135,6 +138,11 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
   const setVolumeValue = useCallback(
     (value: number[]) => setVolume(value[0]),
     [setVolume],
+  )
+
+  const setLoading = useCallback(
+    (loading: boolean) => setIsLoading(loading),
+    []
   )
 
   /* ---------- Media Session ---------- */
@@ -226,6 +234,11 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     }
   }, [currentIndex, currentAudioTime]);
 
+  // Reset loading state when track changes
+  useEffect(() => {
+    setIsLoading(false);
+  }, [currentIndex]);
+
   /* ---------- Export ---------- */
 
   return {
@@ -237,6 +250,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       volume,
       isRepeat,
       isShuffle,
+      isLoading,
     },
     controls: {
       playTrack,
@@ -251,6 +265,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       toggleRepeat,
       toggleShuffle,
       toggleMute,
+      setLoading,
     },
     audioRef,
     currentFile,

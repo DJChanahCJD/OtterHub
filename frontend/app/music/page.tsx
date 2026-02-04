@@ -47,6 +47,9 @@ export default function MusicPage() {
     if (!currentTrack || !audioRef.current) return;
 
     const loadSrc = async () => {
+      // 开始加载，设置加载状态为 true
+      controls.setLoading(true);
+      
       // 立即暂停旧音频，防止切歌时播放上一首的残留内容
       audioRef.current?.pause();
       
@@ -87,6 +90,9 @@ export default function MusicPage() {
       } catch (e) {
         console.error(e);
         controls.next();
+      } finally {
+        // 加载完成，无论成功与否都设置加载状态为 false
+        controls.setLoading(false);
       }
     };
     

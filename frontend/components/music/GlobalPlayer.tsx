@@ -51,6 +51,7 @@ import { PlayerProgressBar } from "./PlayerProgressBar";
 import { useShallow } from "zustand/react/shallow";
 import { FullScreenPlayer } from "./FullScreenPlayer";
 import { musicApi } from "@/lib/music-api";
+import { Spinner } from "@/components/ui/spinner";
 
 interface GlobalPlayerProps {
   state: AudioPlayerState;
@@ -65,7 +66,7 @@ export function GlobalPlayer({
   currentTrack,
   onTogglePlaylist,
 }: GlobalPlayerProps) {
-  const { isPlaying, currentTime, duration, volume, isRepeat, isShuffle } =
+  const { isPlaying, currentTime, duration, volume, isRepeat, isShuffle, isLoading } =
     state;
   const {
     togglePlay,
@@ -339,8 +340,11 @@ export function GlobalPlayer({
               className="h-12 w-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={togglePlay}
               title={isPlaying ? "暂停" : "播放"}
+              disabled={isLoading}
             >
-              {isPlaying ? (
+              {isLoading ? (
+                <Spinner className="h-6 w-6" />
+              ) : isPlaying ? (
                 <Pause className="h-6 w-6 fill-current" />
               ) : (
                 <Play className="h-6 w-6 fill-current" />
