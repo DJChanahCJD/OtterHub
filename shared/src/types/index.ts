@@ -1,28 +1,17 @@
 
+export * from "./wallpaper";
+export * from "./music";
+
 // === 全局设置相关类型 ===
-export type WallpaperSourceId = "pixabay" | "wallhaven" | "bing" | "picsum" | "unsplash";
-
-export type UnifiedWallpaper = {
-    id: string | number;
-    previewUrl: string;
-    rawUrl: string;
-    source: WallpaperSourceId;
-}
-
-export interface WallpaperCloudConfig {
-  apiKey: string;
-}
+import { ImageLoadMode } from "..";
 
 export interface GeneralSettings {
   dataSaverThreshold: number; // MB
+  safeMode: boolean;
   nsfwDetection: boolean;
+  imageLoadMode: ImageLoadMode;
 }
 
-export interface AppSettings {
-  wallpaper?: Record<WallpaperSourceId, WallpaperCloudConfig>;
-  general?: GeneralSettings;
-  // 待补充...
-}
 
 // 文件类型
 export enum FileType {
@@ -109,3 +98,4 @@ export interface CreateShareRequest {
   expireIn?: number;
   oneTime?: boolean;
 }
+

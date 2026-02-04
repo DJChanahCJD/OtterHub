@@ -1,75 +1,38 @@
-import { client } from "./client";
+import { GeneralSettings, MusicStoreData } from "@shared/types";
 
-/**
- * 获取云端同步设置
- */
-export async function getSettings(): Promise<any> {
-  const res = await client.settings.$get();
+import { client } from './client';
+import { unwrap } from './config';
 
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+export function createSettingsApi<T>(key: string) {
+  const api = (client.settings as any)[key];
 
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return {
+    get(): Promise<T> {
+      return unwrap<T>(api.$get());
+    },
+
+    update(data: T): Promise<T> {
+      return unwrap<T>(
+        api.$post({
+          json: data,
+        })
+      );
+    },
+  };
 }
 
-/**
- * 获取云端音乐数据
- */
-export async function getMusicStoreData(): Promise<any> {
-  const res = await client.settings.music.$get();
+export const generalSettingsApi =
+  createSettingsApi<GeneralSettings>('general');
 
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
-}
+export const musicSettingsApi =
+  createSettingsApi<MusicStoreData>('music');
 
 /**
- * 同步音乐数据到云端
- * @param musicData 音乐数据
+ * wallpaper 没有强类型也可以这样
  */
-export async function syncMusicStoreData(musicData: any): Promise<any> {
-  const res = await client.settings.music.$post({
-    json: musicData,
-  });
+export const wallpaperSettingsApi =
+  createSettingsApi<Record<string, any>>('wallpaper');
 
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
-}
-
-/**
- * 更新云端同步设置
- * @param settings 部分或全部设置项
- */
-export async function updateSettings(settings: any): Promise<any> {
-  const res = await client.settings.$post({
-    json: settings,
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
-}
+// Wrappers for SyncTab compatibility
+export const getMusicStoreData = () => musicSettingsApi.get();
+export const syncMusicStoreData = (data: MusicStoreData) => musicSettingsApi.update(data);

@@ -1,6 +1,6 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { SortType, SortOrder } from "../types";
-import { STORAGE_KEYS, setToStorage } from "../local-storage";
 import { useMemo } from "react";
 import { useActiveItems } from "./data";
 
@@ -22,39 +22,48 @@ interface FileQueryState {
   resetFilters: () => void;
 }
 
-export const useFileQueryStore = create<FileQueryState>((set) => ({
-  searchQuery: "",
-  filterLiked: false,
-  filterTags: [],
-  filterDateRange: {},
-  sortType: SortType.UploadedAt,
-  sortOrder: SortOrder.Desc,
+export const useFileQueryStore = create<FileQueryState>()(
+  persist(
+    (set) => ({
+      searchQuery: "",
+      filterLiked: false,
+      filterTags: [],
+      filterDateRange: {},
+      sortType: SortType.UploadedAt,
+      sortOrder: SortOrder.Desc,
 
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  
-  setFilterLiked: (liked) => set({ filterLiked: liked }),
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      
+      setFilterLiked: (liked) => set({ filterLiked: liked }),
 
-  setFilterTags: (tags) => set({ filterTags: tags }),
+      setFilterTags: (tags) => set({ filterTags: tags }),
 
-  setFilterDateRange: (range) => set({ filterDateRange: range }),
+      setFilterDateRange: (range) => set({ filterDateRange: range }),
 
-  setSortType: (type) => {
-    set({ sortType: type });
-    setToStorage(STORAGE_KEYS.SORT_TYPE, type);
-  },
+      setSortType: (type) => {
+        set({ sortType: type });
+      },
 
-  setSortOrder: (order) => {
-    set({ sortOrder: order });
-    setToStorage(STORAGE_KEYS.SORT_ORDER, order);
-  },
+      setSortOrder: (order) => {
+        set({ sortOrder: order });
+      },
 
-  resetFilters: () => set({
-    filterLiked: false,
-    filterTags: [],
-    filterDateRange: {},
-    searchQuery: "",
-  }),
-}));
+      resetFilters: () => set({
+        filterLiked: false,
+        filterTags: [],
+        filterDateRange: {},
+        searchQuery: "",
+      }),
+    }),
+    {
+      name: 'file-query-storage',
+      partialize: (state) => ({
+        sortType: state.sortType,
+        sortOrder: state.sortOrder,
+      }),
+    }
+  )
+);
 
 export const useAvailableTags = () => {
   const items = useActiveItems();
