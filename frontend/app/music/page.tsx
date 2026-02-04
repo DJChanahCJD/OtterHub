@@ -61,11 +61,11 @@ export default function MusicPage() {
             
             if (isPlayingRef.current) {
               audioRef.current.play()
-                .then(() => controls.setPlaying(true))
+                .then(() => controls.play())
                 .catch((err) => {
                   if (err?.name === "NotAllowedError") {
                     toast.error("浏览器阻止自动播放，请点击播放按钮开始播放");
-                    controls.setPlaying(false);
+                    controls.pause();
                     return;
                   }
                   console.error(err);
@@ -103,10 +103,10 @@ export default function MusicPage() {
 
     if (isSameContext) {
       controls.playTrack(index);
-      controls.setPlaying(true);
+      controls.play();
     } else {
       playContext(list, index);
-      controls.setPlaying(true);
+      controls.play();
       // Hook sync will happen via useEffect
     }
   };
