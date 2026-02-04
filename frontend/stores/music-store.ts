@@ -15,11 +15,11 @@ interface MusicState {
   // --- Library (Persisted) ---
   favorites: MusicTrack[];
   playlists: Playlist[];
-  
+
   addToFavorites: (track: MusicTrack) => void;
   removeFromFavorites: (trackId: string) => void;
   isFavorite: (trackId: string) => boolean;
-  
+
   createPlaylist: (name: string) => void;
   deletePlaylist: (id: string) => void;
   addToUserPlaylist: (playlistId: string, track: MusicTrack) => void;
@@ -35,8 +35,8 @@ interface MusicState {
   volume: number;
   isRepeat: boolean;
   isShuffle: boolean;
-  currentTime: number; // Persisted playback progress
-  
+  currentAudioTime: number; // Persisted playback progress
+
   setVolume: (volume: number) => void;
   toggleRepeat: () => void;
   toggleShuffle: () => void;
@@ -45,21 +45,21 @@ interface MusicState {
   // --- Playback (Queue) ---
   queue: MusicTrack[];
   currentIndex: number;
-  
+
   /** 
    * Play a context (list of tracks). 
    * Replaces the current queue with this list and starts playing from startIndex.
    */
   playContext: (tracks: MusicTrack[], startIndex?: number) => void;
-  
+
   /** Add a single track to the end of the queue */
   addToQueue: (track: MusicTrack) => void;
-  
+
   /** Remove a track from the current queue */
   removeFromQueue: (trackId: string) => void;
-  
+
   clearQueue: () => void;
-  setCurrentIndex: (index: number) => void;
+  setCurrentIndex: (index: number, resetTime?: boolean) => void;
 }
 
 export const useMusicStore = create<MusicState>()(
@@ -67,7 +67,7 @@ export const useMusicStore = create<MusicState>()(
     (set, get) => ({
       favorites: [],
       playlists: [],
-      
+
       addToFavorites: (track) => set((state) => {
         if (state.favorites.some(t => t.id === track.id)) return state;
         return { favorites: [...state.favorites, track] };
@@ -87,15 +87,15 @@ export const useMusicStore = create<MusicState>()(
         playlists: state.playlists.filter(p => p.id !== id)
       })),
       addToUserPlaylist: (pid, track) => set((state) => ({
-        playlists: state.playlists.map(p => 
-          p.id === pid 
+        playlists: state.playlists.map(p =>
+          p.id === pid
             ? { ...p, tracks: p.tracks.some(t => t.id === track.id) ? p.tracks : [...p.tracks, track] }
             : p
         )
       })),
       removeFromUserPlaylist: (pid, tid) => set((state) => ({
-        playlists: state.playlists.map(p => 
-          p.id === pid 
+        playlists: state.playlists.map(p =>
+          p.id === pid
             ? { ...p, tracks: p.tracks.filter(t => t.id !== tid) }
             : p
         )
@@ -109,19 +109,19 @@ export const useMusicStore = create<MusicState>()(
       volume: 0.7,
       isRepeat: false,
       isShuffle: false,
-      currentTime: 0,
-      
+      currentAudioTime: 0,
+
       setVolume: (volume) => set({ volume }),
       toggleRepeat: () => set((state) => ({ isRepeat: !state.isRepeat })),
       toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
-      setAudioCurrentTime: (currentTime) => set({ currentTime }),
+      setAudioCurrentTime: (currentTime) => set({ currentAudioTime: currentTime }),
 
       queue: [],
       currentIndex: 0,
 
       playContext: (tracks, startIndex) => set((state) => {
         let actualIndex = startIndex;
-        
+
         // 如果未指定 startIndex (例如点击播放全部)，且处于随机模式，则随机选一首
         if (actualIndex === undefined) {
           if (state.isShuffle && tracks.length > 0) {
@@ -131,28 +131,33 @@ export const useMusicStore = create<MusicState>()(
           }
         }
 
-        return { 
+        return {
           queue: tracks,
           currentIndex: actualIndex,
-          currentTime: 0 // Reset time on new context
+          currentAudioTime: 0 // Reset time on new context
         };
       }),
-      
+
       addToQueue: (track) => set((state) => {
         if (state.queue.some(t => t.id === track.id)) return state;
         return { queue: [...state.queue, track] };
       }),
-      
+
       removeFromQueue: (trackId) => set((state) => ({
         queue: state.queue.filter(t => t.id !== trackId)
       })),
-      
-      clearQueue: () => set({ queue: [], currentIndex: 0, currentTime: 0 }),
-      setCurrentIndex: (index) => set({ currentIndex: index, currentTime: 0 }), // Reset time on track change
+
+      clearQueue: () => set({ queue: [], currentIndex: 0, currentAudioTime: 0 }),
+      setCurrentIndex: (index, resetTime = true) =>
+        set((state) => ({
+          currentIndex: index,
+          currentAudioTime: resetTime ? 0 : state.currentAudioTime,
+        }))
+
     }),
     {
       name: storeKey.MusicStore,
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         favorites: state.favorites,
         playlists: state.playlists,
         queue: state.queue,
@@ -160,7 +165,7 @@ export const useMusicStore = create<MusicState>()(
         volume: state.volume,
         isRepeat: state.isRepeat,
         isShuffle: state.isShuffle,
-        currentTime: state.currentTime,
+        currentAudioTime: state.currentAudioTime,
         quality: state.quality,
         searchSource: state.searchSource,
       }),

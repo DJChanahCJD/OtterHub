@@ -25,7 +25,7 @@ export default function MusicPage() {
     removeFromUserPlaylist,
     quality,
     currentIndex,
-    currentTime: savedTime // Get saved time from store
+    currentAudioTime: savedTime // Get saved time from store
   } = useMusicStore();
 
   // Local View State

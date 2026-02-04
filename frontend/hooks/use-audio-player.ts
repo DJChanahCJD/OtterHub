@@ -42,6 +42,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     toggleShuffle,
     currentIndex,
     setCurrentIndex,
+    currentAudioTime,
     setAudioCurrentTime,
   } = useMusicStore()
 
@@ -185,10 +186,10 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     }
     const onDurationChange = () => setDuration(audio.duration || 0)
     const onEnded = () => {
-      setAudioCurrentTime(0) // Reset time on end
       if (isRepeat) {
-        audio.currentTime = 0
-        play()
+        audio.currentTime = 0;
+        setAudioCurrentTime(0);
+        play();
       } else {
         next()
       }
@@ -208,16 +209,22 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
   /* ---------- Edge ---------- */
 
   useEffect(() => {
-    if (!audioFiles.length) {
-      pause()
-      setCurrentTime(0)
-      setDuration(0)
-      setCurrentIndex(0)
-    } else if (currentIndex >= audioFiles.length) {
-      setCurrentIndex(0)
-      pause()
+    if (!audioFiles.length) return;
+    if (currentIndex >= audioFiles.length) {
+      setCurrentIndex(0);
+      pause();
     }
-  }, [audioFiles.length, currentIndex, pause, setCurrentIndex])
+  }, [audioFiles.length, currentIndex, pause, setCurrentIndex]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (currentAudioTime > 0 && audio.currentTime === 0) {
+      audio.currentTime = currentAudioTime;
+      setCurrentTime(currentAudioTime);
+    }
+  }, [currentIndex, currentAudioTime]);
 
   /* ---------- Export ---------- */
 
