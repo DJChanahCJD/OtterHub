@@ -53,20 +53,35 @@ export default function MusicPage() {
   }, [state.currentTrackIndex]);
 
   // Load Audio Source
+  const isFirstLoad = useRef(true);
+  
   useEffect(() => {
     if (!currentTrack || !audioRef.current) return;
 
     const loadSrc = async () => {
+      // 立即暂停旧音频，防止切歌时播放上一首的残留内容
+      audioRef.current?.pause();
+      
+      const trackId = currentTrack.id;
+
       try {
         const url = await musicApi.getUrl(currentTrack.id, currentTrack.source, parseInt(quality));
-        if (url && audioRef.current) {
+        
+        // 确保组件未卸载且歌曲未再次切换
+        if (url && audioRef.current && trackId === currentTrack.id) {
           if (audioRef.current.src !== url) {
             audioRef.current.src = url;
-            if (state.isPlaying) {
-              audioRef.current.play().catch(console.error);
+            
+            // 如果是切歌（非首次加载）或当前原本就在播放，则自动播放
+            const shouldPlay = !isFirstLoad.current || state.isPlaying;
+            
+            if (shouldPlay) {
+              audioRef.current.play()
+                .then(() => controls.setPlaying(true))
+                .catch(console.error);
             }
           }
-        } else {
+        } else if (!url) {
           toast.error("无法获取播放链接");
           controls.next();
         }
@@ -75,7 +90,12 @@ export default function MusicPage() {
         controls.next();
       }
     };
+    
     loadSrc();
+    
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+    }
   }, [currentTrack?.id, quality]);
 
   // Handlers

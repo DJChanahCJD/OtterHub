@@ -20,6 +20,7 @@ export interface AudioPlayerState {
 export interface AudioPlayerControls {
   playTrack: (index: number) => void
   togglePlay: () => void
+  setPlaying: (isPlaying: boolean) => void
   next: () => void
   previous: () => void
   seek: (value: number[]) => void
@@ -89,14 +90,16 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     if (!audioRef.current || audioFiles.length === 0) return
 
     setCurrentTrackIndex(index)
-    setIsPlaying(true)
-
-    // 切歌时重置时间，防止残留
-    audioRef.current.currentTime = 0
+    // 移除自动 setIsPlaying(true)，由外部（如页面加载完成后）控制
+    // 移除 currentTime 重置，防止旧音频被重置后播放
   }, [audioFiles.length, setCurrentTrackIndex])
 
   const togglePlay = useCallback(() => {
     setIsPlaying((v) => !v)
+  }, [])
+
+  const setPlaying = useCallback((playing: boolean) => {
+    setIsPlaying(playing)
   }, [])
 
   const next = useCallback(() => {
@@ -190,7 +193,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     } else {
       audio.pause()
     }
-  }, [isPlaying, currentTrackIndex])
+  }, [isPlaying])
 
   // 监听音频事件
   useEffect(() => {
@@ -249,6 +252,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     controls: {
       playTrack,
       togglePlay,
+      setPlaying,
       next,
       previous,
       seek,
