@@ -57,7 +57,6 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const currentFile = audioFiles[currentIndex]
-  console.log(currentIndex)
 
   /* ---------- Utils ---------- */
 

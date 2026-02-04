@@ -92,7 +92,7 @@ export function FullScreenPlayer({
         </div>
 
         {/* Mobile Layout: Single Column */}
-        <div className="flex flex-col items-center justify-center w-full md:hidden gap-6">
+        <div className="flex flex-col items-center justify-center w-full md:hidden py-8">
           {/* Small Album Art (Mobile) */}
           <div className="aspect-square w-40 h-40 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] overflow-hidden bg-muted/20 flex items-center justify-center">
             {coverUrl ? (
