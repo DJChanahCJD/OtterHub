@@ -2,8 +2,9 @@
 
 import { ImageIcon, Music, Video, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFileDataStore } from "@/lib/file-store";
+
 import { FileType } from "@shared/types";
+import { useFileDataStore } from "@/stores/file";
 
 const fileTypes = [
   { id: FileType.Image, label: "Images", icon: ImageIcon },

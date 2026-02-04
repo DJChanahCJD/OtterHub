@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFileDataStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/stores/file";
 import { FileType } from "@shared/types";
 
 const fileTypes = [

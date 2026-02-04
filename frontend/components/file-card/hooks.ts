@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/lib/file-store";
+import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
 import { getFileTypeFromKey, downloadFile } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
 import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";

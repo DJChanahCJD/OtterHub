@@ -90,7 +90,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
               canPreview={!blur}
               tags={file.metadata?.tags}
               fileSize={file.metadata.fileSize}
-              loadImageMode={imageLoadMode}
+              imageLoadMode={imageLoadMode}
               thumbUrl={file.metadata.thumbUrl}
               className={ICON_DISPLAY_SIZE}
             />

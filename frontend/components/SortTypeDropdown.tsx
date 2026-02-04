@@ -21,7 +21,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { useFileQueryStore } from "@/lib/file-store";
+import { useFileQueryStore } from "@/stores/file"
 import { SortType, SortOrder } from "@/lib/types";
 
 const typeOptions = [

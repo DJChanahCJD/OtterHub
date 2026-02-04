@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, X, Settings2 } from "lucide-react";
-import { useFileQueryStore } from "@/lib/file-store";
+import { useFileQueryStore } from "@/stores/file";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Button } from "./ui/button";

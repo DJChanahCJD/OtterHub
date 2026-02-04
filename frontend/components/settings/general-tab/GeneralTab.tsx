@@ -57,7 +57,7 @@ export function GeneralTab() {
     setIsSyncing(true);
     try {
       await fetchSettings();
-      toast.success("已从云端同步最新设置");
+      toast.success("同步成功");
     } catch (error) {
       toast.error("从云端同步失败");
     } finally {
@@ -70,9 +70,9 @@ export function GeneralTab() {
     setIsUploading(true);
     try {
       await syncSettings();
-      toast.success("设置已成功备份到云端");
+      toast.success("备份成功");
     } catch (error) {
-      toast.error("备份到云端失败");
+      toast.error("备份失败");
     } finally {
       setIsUploading(false);
     }

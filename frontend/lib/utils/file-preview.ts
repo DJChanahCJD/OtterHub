@@ -21,19 +21,19 @@ export function shouldBlur({
 // 判断是否应该加载图片（LoadImageMode + 文件大小）
 export function shouldLoadImage({
   fileType,
-  loadImageMode,
+  imageLoadMode,
   fileSize,
   threshold,
 }: {
   fileType: FileType;
-  loadImageMode: ImageLoadMode;
+  imageLoadMode: ImageLoadMode;
   fileSize?: number;
   threshold: number;
 }): boolean {
   if (fileType !== FileType.Image) return false;
-  if (loadImageMode === ImageLoadMode.NoImage) return false;
+  if (imageLoadMode === ImageLoadMode.NoImage) return false;
   if (
-    loadImageMode === ImageLoadMode.DataSaver &&
+    imageLoadMode === ImageLoadMode.DataSaver &&
     fileSize &&
     fileSize > threshold
   ) {

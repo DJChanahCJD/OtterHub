@@ -61,7 +61,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
             canPreview={!blur}
             tags={file.metadata?.tags}
             fileSize={file.metadata.fileSize}
-            loadImageMode={imageLoadMode}
+            imageLoadMode={imageLoadMode}
             thumbUrl={file.metadata.thumbUrl}
             className="h-5 w-5"
           />

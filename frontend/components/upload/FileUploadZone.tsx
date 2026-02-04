@@ -5,7 +5,7 @@ import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
 import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils";
-import { useFileDataStore, useFileUIStore } from "@/lib/file-store";
+import { useFileDataStore, useFileUIStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
 import {

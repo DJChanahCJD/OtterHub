@@ -10,7 +10,7 @@ import {
   useFileDataStore,
   useFileUIStore,
   useActiveSelectedKeys,
-} from "@/lib/file-store";
+} from "@/stores/file";
 import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";

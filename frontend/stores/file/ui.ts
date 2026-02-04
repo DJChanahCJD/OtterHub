@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useFileDataStore } from "./data";
-import { ViewMode, SortType, SortOrder } from "../types";
+import { ViewMode, SortType, SortOrder } from "@/lib/types";
 import { FileType } from "@shared/types";
+import { storeKey } from "..";
 
 interface FileUIState {
   viewMode: ViewMode;
@@ -99,7 +100,7 @@ export const useFileUIStore = create<FileUIState>()(
         }),
     }),
     {
-      name: 'file-ui-storage',
+      name: storeKey.FileUI,
       partialize: (state) => ({
         viewMode: state.viewMode,
         itemsPerPage: state.itemsPerPage,

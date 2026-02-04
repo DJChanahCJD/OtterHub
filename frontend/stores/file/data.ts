@@ -4,11 +4,12 @@ import {
   ListFilesRequest,
   TRASH_EXPIRATION_TTL,
   ViewMode,
-} from "../types";
+} from "@/lib/types";
 import { getFileList } from "@/lib/api";
-import { getFileTypeFromKey } from "../utils/file";
+import { getFileTypeFromKey } from "@/lib/utils/file";
 import { useFileUIStore } from "./ui";
 import { FileItem, FileMetadata, trashPrefix, FileType } from "@shared/types";
+import { storeKey } from "..";
 
 type FileBucket = {
   items: FileItem[];
@@ -218,7 +219,7 @@ export const useFileDataStore = create<FileDataState>()(
         }),
     }),
     {
-      name: 'file-data-storage',
+      name: storeKey.FileData,
       partialize: (state) => ({
         activeType: state.activeType,
       }),

@@ -1,24 +1,24 @@
 "use client";
 
-import { useFileUIStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/stores/file";
 import { FileItem, FileType } from "@shared/types";
 import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { PhotoView } from "react-photo-view";
 import { cn } from "@/lib/utils";
 import { NsfwSign } from "../file-card/NsfwSign";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface MasonryImageCardProps {
   file: FileItem;
 }
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
-  const { safeMode, imageLoadMode: loadImageMode, dataSaverThreshold } = useFileUIStore();
-
+  const { safeMode, imageLoadMode, dataSaverThreshold} = useGeneralSettingsStore()
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const load = shouldLoadImage({
     fileType: FileType.Image,
-    loadImageMode,
+    imageLoadMode,
     fileSize: file.metadata.fileSize,
     threshold: dataSaverThreshold * 1024 * 1024,
   });

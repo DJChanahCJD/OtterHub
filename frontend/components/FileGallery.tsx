@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/lib/file-store";
-import { useFileUIStore } from "@/lib/file-store";
+import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/stores/file";
+import { useFileUIStore } from "@/stores/file";
 import { FileCard } from "@/components/file-card";
 import { ViewModeToggle } from "@/components/ViewModeToggle";
 import { SortTypeDropdown } from "@/components/SortTypeDropdown";

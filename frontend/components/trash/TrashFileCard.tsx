@@ -3,13 +3,14 @@
 import { useState, useMemo } from "react";
 import { RefreshCcw, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFileDataStore } from "@/lib/file-store";
-import { useFileUIStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/stores/file";
+import { useFileUIStore } from "@/stores/file";
 import { FileItem, FileType, trashPrefix } from "@shared/types";
 import { getFileTypeFromKey, cn } from "@/lib/utils";
 import { FileContent } from "@/components/file-card";
 import { deleteFile, getTrashFileUrl, restoreFile } from "@/lib/api";
 import { toast } from "sonner";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface TrashFileCardProps {
   file: FileItem;
@@ -22,10 +23,10 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
   } = useFileDataStore();
 
   const { 
-    imageLoadMode, 
     toggleSelection, 
     selectedKeys,
   } = useFileUIStore();
+  const { imageLoadMode } = useGeneralSettingsStore();
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -108,7 +109,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
             safeMode={false}
             canPreview={false}
             fileSize={file.metadata.fileSize}
-            loadImageMode={imageLoadMode}
+            imageLoadMode={imageLoadMode}
             thumbUrl={file.metadata.thumbUrl}
             imgSrc={getTrashFileUrl(file.name)}
           />

@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { SortType, SortOrder } from "../types";
+import { SortType, SortOrder } from "@/lib/types";
 import { useMemo } from "react";
 import { useActiveItems } from "./data";
+import { storeKey } from "..";
 
 interface FileQueryState {
   searchQuery: string;
@@ -56,7 +57,7 @@ export const useFileQueryStore = create<FileQueryState>()(
       }),
     }),
     {
-      name: 'file-query-storage',
+      name: storeKey.FileQuery,
       partialize: (state) => ({
         sortType: state.sortType,
         sortOrder: state.sortOrder,

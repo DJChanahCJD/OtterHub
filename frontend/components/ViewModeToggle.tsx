@@ -2,8 +2,8 @@
 
 import { Grid3x3, LayoutTemplate, List, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useFileDataStore } from "@/lib/file-store"
-import { useFileUIStore } from "@/lib/file-store"
+import { useFileDataStore } from "@/stores/file"
+import { useFileUIStore } from "@/stores/file"
 import { cn } from "@/lib/utils"
 import { ViewMode } from "@/lib/types"
 import { FileType } from "@shared/types"

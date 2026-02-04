@@ -9,7 +9,7 @@ import { TrashSheet } from "./trash/TrashSheet";
 import { SettingsDialog } from "./settings/SettingsDialog";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useFileUIStore } from "@/lib/file-store";
+import { useFileUIStore } from "@/stores/file";
 
 /**
  * 悬浮操作按钮组件 (FAB)

@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useFileDataStore, useActiveItems, useFilteredFiles } from "@/lib/file-store";
-import { useFileUIStore, useActiveSelectedKeys } from "@/lib/file-store";
+import { useFileDataStore, useActiveItems, useFilteredFiles } from "@/stores/file";
+import { useFileUIStore, useActiveSelectedKeys } from "@/stores/file";
 import { getFileUrl, moveToTrash } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, ViewMode } from "@/lib/types";

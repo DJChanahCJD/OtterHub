@@ -8,12 +8,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useFileUIStore } from "@/lib/file-store"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
+import { useGeneralSettingsStore } from "@/stores/general-store"
 
 export function SafeModeToggle() {
-  const { safeMode, setSafeMode } = useFileUIStore()
+  const { safeMode, setSafeMode } = useGeneralSettingsStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

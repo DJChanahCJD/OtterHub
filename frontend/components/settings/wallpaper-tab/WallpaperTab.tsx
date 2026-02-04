@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useFileDataStore } from "@/lib/file-store";
+import { useFileDataStore } from "@/stores/file";
 import { FileItem, FileTag, FileType, UnifiedWallpaper, WallpaperSourceId } from "@shared/types";
 import { useWallpaperSources, useWallpaperList } from "./hooks";
 import { WallpaperGridItem } from "./WallpaperGridItem";
