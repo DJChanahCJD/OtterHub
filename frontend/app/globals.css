@@ -139,6 +139,16 @@
   .custom-scrollbar {
     scrollbar-width: thin;
   }
+
+  .lyrics-mask {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 15%,
+      black 85%,
+      transparent 100%
+    );
+  }
 }
 
 @keyframes ripple {

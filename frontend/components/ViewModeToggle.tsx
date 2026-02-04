@@ -15,6 +15,7 @@ export function ViewModeToggle() {
   return (
     <div className="flex items-center gap-1 p-1 rounded-lg bg-glass-bg border border-glass-border">
       {activeType === FileType.Image && (
+        // TODO: 修改Button的按钮模板，避免到处调整样式
         <Button
           variant="ghost"
           size="sm"
@@ -29,20 +30,6 @@ export function ViewModeToggle() {
           <LayoutTemplate className="h-4 w-4" />
         </Button>
       )}
-      {/* TODO: 实现音频播放列表功能 */}
-      {/* {activeType === FileType.Audio && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => openExternalLink(FREE_MUSIC_URL)}
-          title="GD Studio's Online Music Platform"
-          className={cn(
-            "h-8 px-3 text-foreground/60 hover:text-foreground hover:bg-secondary/50",
-          )}
-        >
-          <Music className="h-4 w-4" />
-        </Button>
-      )} */}
       <Button
         variant="ghost"
         size="sm"

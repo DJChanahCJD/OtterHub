@@ -124,18 +124,34 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
   return (
     <div className="h-full flex flex-col p-6 gap-6">
       {/* 歌曲信息 */}
-      <div className="space-y-1">
-        <h3 className="text-lg font-bold">{track.name}</h3>
-        <div className="text-sm text-muted-foreground">
-          {track.album && <span>专辑：{track.album}</span>}
-          <span>歌手：{track.artist.join(" / ")}</span>
+      <div className="flex flex-col gap-3 pb-6 border-b border-border/40">
+        <div className="space-y-1">
+          <h3 className="text-2xl font-bold tracking-tight text-foreground/90">
+            {track.name}
+          </h3>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/80">
+          {track.album && (
+            <div className="flex items-center gap-1.5 group cursor-default">
+              专辑：
+              <span className="hover:text-foreground transition-colors truncate max-w-[200px]">
+                {track.album}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5 group cursor-default">
+            <span className="hover:text-foreground transition-colors">
+              歌手：{track.artist.join(" / ")}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* 歌词区 */}
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full mask-linear-gradient">
-          <div className="py-[50%] space-y-6 text-center">
+      <div className="flex-1 min-h-0 relative lyrics-mask">
+        <ScrollArea className="h-full">
+          <div className="py-[40%] space-y-6 text-center">
             {lyrics.map((line, i) => {
               const isActive = i === activeIndex;
               return (
@@ -145,15 +161,17 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
                     lineRefs.current[i] = el;
                   }}
                   className={cn(
-                    "px-4 transition-all duration-300",
+                    "px-4 transition-all duration-300 ease-out",
                     isActive
                       ? "text-primary scale-110 font-bold"
                       : "text-muted-foreground/60 scale-95 blur-[0.5px]"
                   )}
                 >
-                  <p className="text-base md:text-lg">{line.text}</p>
+                  <p className="text-lg md:text-xl leading-relaxed tracking-wide">
+                    {line.text}
+                  </p>
                   {line.ttext && (
-                    <p className="mt-1 text-xs md:text-sm opacity-80">
+                    <p className="mt-2 text-sm md:text-base font-medium opacity-90">
                       {line.ttext}
                     </p>
                   )}
