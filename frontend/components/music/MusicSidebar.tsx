@@ -112,6 +112,7 @@ export function MusicSidebar({
           <h3 className="text-sm font-medium text-muted-foreground px-2">我的歌单</h3>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
+              {/* 图标按钮模板 */}
               <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-transparent hover:text-primary" title="新建歌单">
                 <SquarePlus className="h-4 w-4" />
               </Button>

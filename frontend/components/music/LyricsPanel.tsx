@@ -127,8 +127,8 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
       <div className="space-y-1">
         <h3 className="text-lg font-bold">{track.name}</h3>
         <div className="text-sm text-muted-foreground">
-          <p>歌手：{track.artist.join(" / ")}</p>
-          {track.album && <p>专辑：{track.album}</p>}
+          {track.album && <span>专辑：{track.album}</span>}
+          <span>歌手：{track.artist.join(" / ")}</span>
         </div>
       </div>
 
