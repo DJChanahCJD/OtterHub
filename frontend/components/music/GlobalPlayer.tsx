@@ -4,10 +4,6 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
   Shuffle,
   Repeat,
   Repeat1,
@@ -15,15 +11,11 @@ import {
   Volume1,
   VolumeX,
   ListMusic,
+  ListPlus,
+  Plus,
+  ListVideo,
   Heart,
   Download,
-  Plus,
-  Music2,
-  ListPlus,
-  Trash2,
-  ListVideo,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
 import {
   AudioPlayerState,
@@ -46,12 +38,13 @@ import {
 import { MusicTrack } from "@shared/types";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlayerProgressBar } from "./PlayerProgressBar";
 import { useShallow } from "zustand/react/shallow";
 import { FullScreenPlayer } from "./FullScreenPlayer";
 import { musicApi } from "@/lib/music-api";
-import { Spinner } from "@/components/ui/spinner";
+import { PlayerQueuePopover } from "./PlayerQueuePopover";
+import { PlayerControls } from "./PlayerControls";
+import { PlayerTrackInfo } from "./PlayerTrackInfo";
 
 interface GlobalPlayerProps {
   state: AudioPlayerState;
@@ -126,7 +119,6 @@ export function GlobalPlayer({
     let isActive = true;
 
     const fetchCover = async () => {
-      // If no pic_id, don't fetch
       if (!currentTrack.pic_id) {
         if (isActive) setCoverUrl(null);
         return;
@@ -146,7 +138,7 @@ export function GlobalPlayer({
       }
     };
 
-    setCoverUrl(null); // Clear previous cover immediately
+    setCoverUrl(null);
     fetchCover();
 
     return () => {
@@ -178,14 +170,11 @@ export function GlobalPlayer({
 
   const handleToggleMode = () => {
     if (isRepeat) {
-      // Current: Single Loop -> Next: Shuffle
       toggleRepeat();
       if (!isShuffle) toggleShuffle();
     } else if (isShuffle) {
-      // Current: Shuffle -> Next: List Loop
       toggleShuffle();
     } else {
-      // Current: List Loop -> Next: Single Loop
       toggleRepeat();
     }
   };
@@ -230,207 +219,181 @@ export function GlobalPlayer({
 
         {/* 2. Main Controls Area (h-20) */}
         <div className="flex items-center justify-between px-4 h-20 gap-4">
-          {/* Left: Info */}
-          <div
-            className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer group"
-            onClick={() => setIsFullScreen((v) => !v)}
-          >
-            {currentTrack ? (
-              <>
-                {/* Album Art - Hide when full screen */}
-                <div
-                  className={cn(
-                    "h-12 w-12 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative transition-all duration-300",
-                  )}
-                >
-                  {coverUrl ? (
-                    <img
-                      src={coverUrl}
-                      alt={currentTrack.name}
-                      className="h-full w-full object-cover group-hover:opacity-80 transition-opacity"
-                    />
-                  ) : (
-                    <Music2 className="h-6 w-6 text-muted-foreground/50" />
-                  )}
-                  {/* Hover indicator */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {!isFullScreen ? (
-                      <ChevronUp className="h-4 w-4 text-white" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-white" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Text Info */}
-                <div className="flex flex-col min-w-0">
-                  <div className="text-sm font-semibold truncate hover:underline">
-                    {currentTrack.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate hover:underline">
-                    {currentTrack.artist.join(" / ")}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div
-                  className="flex items-center gap-1 ml-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                    onClick={handleToggleFavorite}
-                    title="喜欢"
-                  >
-                    <Heart
-                      className={cn(
-                        "h-4 w-4",
-                        isFavorite(currentTrack.id) &&
-                          "fill-primary text-primary",
-                      )}
-                    />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                    onClick={handleDownload}
-                    title="下载"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-3 opacity-50">
-                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
-                  <Music2 className="h-6 w-6" />
-                </div>
-                <div className="text-sm">未播放</div>
-              </div>
-            )}
+          {/* Left: Info - PC Only */}
+          <div className="hidden md:flex flex-1">
+            <PlayerTrackInfo
+              track={currentTrack}
+              coverUrl={coverUrl}
+              isFullScreen={isFullScreen}
+              isFavorite={currentTrack ? isFavorite(currentTrack.id) : false}
+              onToggleFullScreen={() => setIsFullScreen((v) => !v)}
+              onToggleFavorite={handleToggleFavorite}
+              onDownload={handleDownload}
+            />
           </div>
+
+          {/* Mobile: Left - Album + Song Name (Non-Fullscreen Only) */}
+          {!isFullScreen && (
+            <div className="md:hidden flex-1">
+              <PlayerTrackInfo
+                track={currentTrack}
+                coverUrl={coverUrl}
+                isFullScreen={isFullScreen}
+                onToggleFullScreen={() => setIsFullScreen(true)}
+              />
+            </div>
+          )}
+
+          {/* Mobile: Center - Favorite and Download Buttons (Non-Fullscreen Only) */}
+          {!isFullScreen && (
+            <div className="md:hidden flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                onClick={handleToggleFavorite}
+                title="喜欢"
+                disabled={!currentTrack}
+              >
+                <Heart
+                  className={cn(
+                    "h-4 w-4",
+                    currentTrack && isFavorite(currentTrack.id) && "fill-primary text-primary"
+                  )}
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                onClick={handleDownload}
+                title="下载"
+                disabled={!currentTrack}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           {/* Center: Controls */}
           <div className="flex-1 flex items-center justify-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-              onClick={handleToggleMode}
-              title={getModeTitle()}
-            >
-              <ModeIcon />
-            </Button>
+            {/* PC: Full Controls */}
+            <div className="hidden md:flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                onClick={handleToggleMode}
+                title={getModeTitle()}
+              >
+                <ModeIcon />
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-              onClick={previous}
-              title="上一首"
-            >
-              <SkipBack className="h-5 w-5 fill-current" />
-            </Button>
+              <PlayerControls
+                isPlaying={isPlaying}
+                isLoading={isLoading}
+                onPlayToggle={togglePlay}
+                onPrev={previous}
+                onNext={next}
+                size="lg"
+              />
 
-            <Button
-              size="icon"
-              className="h-12 w-12 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={togglePlay}
-              title={isPlaying ? "暂停" : "播放"}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Spinner className="h-6 w-6" />
-              ) : isPlaying ? (
-                <Pause className="h-6 w-6 fill-current" />
-              ) : (
-                <Play className="h-6 w-6 fill-current" />
-              )}
-            </Button>
+              <PlayerQueuePopover
+                queue={queue}
+                currentIndex={currentIndex}
+                isPlaying={isPlaying}
+                onPlay={playTrack}
+                onClear={handleClearQueue}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    title="播放列表"
+                  >
+                    <ListVideo className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-              onClick={next}
-              title="下一首"
-            >
-              <SkipForward className="h-5 w-5 fill-current" />
-            </Button>
+            {/* Mobile: Non-Fullscreen - Play Button and Queue Button */}
+            {!isFullScreen && (
+              <div className="md:hidden flex flex-end items-center gap-2">
+                <PlayerControls
+                  isPlaying={isPlaying}
+                  isLoading={isLoading}
+                  onPlayToggle={togglePlay}
+                  onPrev={previous}
+                  onNext={next}
+                  size="md"
+                  showPrevNext={false}
+                />
+                <PlayerQueuePopover
+                  queue={queue}
+                  currentIndex={currentIndex}
+                  isPlaying={isPlaying}
+                  onPlay={playTrack}
+                  onClear={handleClearQueue}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                      title="播放列表"
+                    >
+                      <ListVideo className="h-5 w-5" />
+                    </Button>
+                  }
+                />
+              </div>
+            )}
 
-            {/* Queue Button */}
-            <Popover>
-              <PopoverTrigger asChild>
+            {/* Mobile: Fullscreen - 5 Buttons Centered */}
+            {isFullScreen && (
+              <div className="md:hidden flex items-center gap-3">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                  title="播放列表"
+                  onClick={handleToggleMode}
+                  title={getModeTitle()}
                 >
-                  <ListVideo className="h-4 w-4" />
+                  <ModeIcon />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="top"
-                align="center"
-                className="w-80 p-0 h-96 flex flex-col"
-              >
-                <div className="p-3 border-b text-sm font-medium flex justify-between items-center">
-                  <span>播放列表 ({queue.length})</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 text-muted-foreground hover:bg-transparent hover:text-destructive"
-                    onClick={handleClearQueue}
-                    title="清空播放列表"
-                  >
-                    <Trash2 className={cn("h-4 w-4")} />
-                  </Button>
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ScrollArea className="h-full">
-                    <div className="p-1">
-                      {queue.map((track, i) => (
-                        <div
-                          key={`${track.id}-${i}`}
-                          className={cn(
-                            "flex items-center gap-2 p-2 rounded text-sm cursor-pointer hover:bg-muted/50",
-                            i === currentIndex && "bg-muted/50 text-primary",
-                          )}
-                          onClick={() => playTrack(i)}
-                        >
-                          {i === currentIndex && isPlaying ? (
-                            <div className="w-4 h-4 flex items-center justify-center">
-                              <span className="animate-spin text-primary">
-                                💿
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="w-4 text-center text-xs text-muted-foreground font-mono">
-                              {i + 1}
-                            </span>
-                          )}
-                          <div className="flex-1 min-w-0 truncate">
-                            <span className="font-medium">{track.name}</span>
-                            <span className="text-muted-foreground ml-2 text-xs">
-                              {" "}
-                              - {track.artist.join("/")}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </PopoverContent>
-            </Popover>
+
+                <PlayerControls
+                  isPlaying={isPlaying}
+                  isLoading={isLoading}
+                  onPlayToggle={togglePlay}
+                  onPrev={previous}
+                  onNext={next}
+                  size="lg"
+                />
+
+                <PlayerQueuePopover
+                  queue={queue}
+                  currentIndex={currentIndex}
+                  isPlaying={isPlaying}
+                  onPlay={playTrack}
+                  onClear={handleClearQueue}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                      title="播放列表"
+                    >
+                      <ListVideo className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </div>
+            )}
           </div>
 
-          {/* Right: Settings */}
-          <div className="flex-1 flex items-center justify-end gap-3 text-xs">
+          {/* Right: Settings - PC Only */}
+          <div className="hidden md:flex flex-1 items-center justify-end gap-3 text-xs">
             <Select value={quality} onValueChange={setQuality}>
               <SelectTrigger className="h-7 px-2 bg-transparent border-muted hover:bg-muted/20">
                 <SelectValue placeholder="音质" />
@@ -440,7 +403,6 @@ export function GlobalPlayer({
                 <SelectItem value="192">高品 (192kbps)</SelectItem>
                 <SelectItem value="320">极高 (320kbps)</SelectItem>
                 <SelectItem value="999">无损 (999kbps)</SelectItem>
-                {/* TODO: 切换音质后自动切换到当前进度 */}
               </SelectContent>
             </Select>
 
@@ -480,7 +442,6 @@ export function GlobalPlayer({
                 <div
                   className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
                   onClick={() => {
-                    // todo: 复用侧边栏的新建歌单逻辑
                     const name = window.prompt("请输入新歌单名称");
                     if (name) {
                       createPlaylist(name);
@@ -513,7 +474,6 @@ export function GlobalPlayer({
                   w-auto p-3
                 "
               >
-                {/* Arrow */}
                 <div
                   className="
                     absolute bottom-[-6px] left-1/2 -translate-x-1/2
@@ -522,7 +482,6 @@ export function GlobalPlayer({
                   "
                 />
 
-                {/* Slider */}
                 <Slider
                   orientation="vertical"
                   value={[volume]}
@@ -532,7 +491,6 @@ export function GlobalPlayer({
                   className="h-24 py-1"
                 />
 
-                {/* Percentage */}
                 <span className="text-xs text-muted-foreground w-6 text-center">
                   {Math.round(volume * 100)}%
                 </span>
