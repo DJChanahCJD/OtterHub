@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Music2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MusicTrack } from "@/lib/music-api";
+import { MusicTrack } from "@shared/types";
 import { LyricsPanel } from "./LyricsPanel";
 
 interface FullScreenPlayerProps {

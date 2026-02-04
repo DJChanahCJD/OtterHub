@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MusicTrack, MusicSource } from '@/lib/music-api';
+import { MusicTrack, MusicSource } from '@shared/types';
 import { v4 as uuidv4 } from 'uuid';
+import { storeKey } from '.';
 
 export interface Playlist {
   id: string;
@@ -145,7 +146,7 @@ export const useMusicStore = create<MusicState>()(
       setCurrentIndex: (index) => set({ currentIndex: index }),
     }),
     {
-      name: 'music-storage',
+      name: storeKey.MusicStore,
       partialize: (state) => ({ 
         favorites: state.favorites,
         playlists: state.playlists,

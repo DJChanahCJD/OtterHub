@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListChecks, Plus, Heart, Download, Trash2, ListPlus, ListMusic, Loader2, Search, ListCheck } from "lucide-react";
-import { MusicTrack } from "@/lib/music-api";
+import { MusicTrack } from "@shared/types";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";

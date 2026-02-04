@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Heart, Music2, Disc } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MusicTrack, musicApi } from "@/lib/music-api";
+import { MusicTrack } from "@shared/types";
+import { musicApi } from "@/lib/music-api";
 import { useMusicStore } from "@/stores/music-store";
 import { cn } from "@/lib/utils";
 

@@ -1,36 +1,5 @@
-export type MusicSource =
-  | 'netease' //  🌟
-  | 'tencent'
-  | 'kugou'
-  | 'kuwo' //  🌟
-  | 'bilibili'
-  | 'migu'
-  | 'qq'
-  | 'fivesing'
-  | 'tk'
-  | 'wy'
-  | 'kg'
-  | 'kw'
-  | 'mg'
-  | 'qi'
-  | 'lizhi'
-  | 'qingting'
-  | 'ximalaya'
-  | 'kg'
-  // Common sources mentioned in doc: netease, tencent, tidal, spotify, ytmusic, qobuz, joox, deezer, migu, kugou, kuwo, ximalaya, apple
-  | 'tidal' | 'spotify' | 'ytmusic' | 'qobuz' | 'joox' | 'deezer' | 'apple';
-
-export interface MusicTrack {
-  id: string;
-  name: string;
-  artist: string[];
-  album: string;
-  pic_id: string;
-  url_id: string;
-  lyric_id: string;
-  source: MusicSource;
-}
-
+import { MusicTrack, MusicSource } from '@shared/types';
+import { API_URL } from './api/config';
 export interface SearchResult {
   code: number;
   data: MusicTrack[];
@@ -51,8 +20,6 @@ export interface SongLyric {
   lyric: string;
   tlyric?: string;
 }
-
-import { API_URL } from './api/config';
 
 const API_BASE = `${API_URL}/music`;
 

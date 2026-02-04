@@ -43,13 +43,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MusicTrack, musicApi } from "@/lib/music-api";
+import { MusicTrack } from "@shared/types";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlayerProgressBar } from "./PlayerProgressBar";
 import { useShallow } from "zustand/react/shallow";
 import { FullScreenPlayer } from "./FullScreenPlayer";
+import { musicApi } from "@/lib/music-api";
 
 interface GlobalPlayerProps {
   state: AudioPlayerState;

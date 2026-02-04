@@ -1,4 +1,4 @@
-import { MusicTrack } from "@/lib/music-api";
+import { MusicTrack } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Heart, Plus, ListPlus, ListMusic, Download } from "lucide-react";

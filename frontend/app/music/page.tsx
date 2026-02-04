@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useMusicStore } from '@/stores/music-store';
 import { useAudioPlayer } from '@/hooks/use-audio-player';
-import { musicApi, MusicTrack } from '@/lib/music-api';
+import { MusicTrack } from '@shared/types';
+import { musicApi } from '@/lib/music-api';
 import { toast } from 'sonner';
 import { format } from "date-fns";
 
