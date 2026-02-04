@@ -109,20 +109,24 @@ export default function MusicPage() {
     }
   };
 
-  const handlePlayInPlaylist = (track: MusicTrack, index: number) => {
-    // Toggle play if same track
-    if (currentTrack?.id === track.id) {
-      controls.togglePlay();
-      return;
+  const handlePlayInPlaylist = (track: MusicTrack | null, index?: number) => {
+    // Case 1: 播放单曲 (有 track 和 index)
+    if (track && index !== undefined) {
+      // Toggle play if same track
+      if (currentTrack?.id === track.id) {
+        controls.togglePlay();
+        return;
+      }
     }
 
-    // For playlist views, we already know the list and index
+    // For playlist views, we already know the list
     const list = currentView === 'favorites' 
       ? favorites 
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
     
+    // Case 2: 播放全部 (index 为 undefined) -> 由 store 决定起点 (如随机)
+    // Case 3: 播放新单曲 -> 传入 index
     playContext(list, index);
-    controls.setPlaying(true);
   };
 
   // Render Content

@@ -103,9 +103,22 @@ export const useMusicStore = create<MusicState>()(
       queue: [],
       currentIndex: 0,
 
-      playContext: (tracks, startIndex = 0) => set({ 
-        queue: tracks,
-        currentIndex: startIndex
+      playContext: (tracks, startIndex) => set((state) => {
+        let actualIndex = startIndex;
+        
+        // 如果未指定 startIndex (例如点击播放全部)，且处于随机模式，则随机选一首
+        if (actualIndex === undefined) {
+          if (state.isShuffle && tracks.length > 0) {
+            actualIndex = Math.floor(Math.random() * tracks.length);
+          } else {
+            actualIndex = 0;
+          }
+        }
+
+        return { 
+          queue: tracks,
+          currentIndex: actualIndex
+        };
       }),
       
       addToQueue: (track) => set((state) => {

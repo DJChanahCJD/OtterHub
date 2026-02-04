@@ -6,7 +6,12 @@ import { MusicTrackList } from "./MusicTrackList";
 interface MusicPlaylistViewProps {
   title: string;
   tracks: MusicTrack[];
-  onPlay: (track: MusicTrack, index: number) => void;
+  /** 
+   * index 可选：
+   * - 传入 index：播放指定歌曲
+   * - 不传 index：播放全部（由上层/Store 决定起始点，如随机播放）
+   */
+  onPlay: (track: MusicTrack | null, index?: number) => void;
   onRemove?: (track: MusicTrack) => void;
   description?: string;
   currentTrackId?: string;
@@ -52,7 +57,7 @@ export function MusicPlaylistView({
           </div>
           <div className="pt-2 flex gap-2">
              <Button 
-                onClick={() => onPlay(tracks[0], 0)} 
+                onClick={() => onPlay(null)} 
                 className="rounded-full px-8"
                 size="lg"
              >
