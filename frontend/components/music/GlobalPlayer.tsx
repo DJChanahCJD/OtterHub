@@ -23,6 +23,7 @@ import {
   Trash2,
   ListVideo,
   ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   AudioPlayerState,
@@ -88,7 +89,15 @@ export function GlobalPlayer({
     createPlaylist,
     queue,
     currentIndex,
+    clearQueue,
   } = useMusicStore();
+
+  const handleClearQueue = () => {
+    if (confirm("确定要清空播放列表吗？")) {
+      clearQueue();
+      toast.success("播放列表已清空");
+    }
+  };
 
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -210,7 +219,6 @@ export function GlobalPlayer({
                 <div
                   className={cn(
                     "h-12 w-12 rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative transition-all duration-300",
-                    isFullScreen ? "w-0 opacity-0 overflow-hidden ml-0" : "opacity-100"
                   )}
                 >
                   {coverUrl ? (
@@ -224,7 +232,11 @@ export function GlobalPlayer({
                   )}
                   {/* Hover indicator */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronUp className="h-4 w-4 text-white" />
+                    {!isFullScreen ? (
+                      <ChevronUp className="h-4 w-4 text-white" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-white" />
+                    )}
                   </div>
                 </div>
 
@@ -347,8 +359,8 @@ export function GlobalPlayer({
                     variant="ghost"
                     size="icon"
                     className="h-6 text-muted-foreground hover:bg-transparent hover:text-destructive"
-                    onClick={handleToggleFavorite}
-                    title="清空列表"
+                    onClick={handleClearQueue}
+                    title="清空播放列表"
                   >
                     <Trash2 className={cn("h-4 w-4")} />
                   </Button>
