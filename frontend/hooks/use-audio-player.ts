@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { FileItem } from "@shared/types"
 import { useMusicStore } from "@/stores/music-store"
-import { musicApi } from "@/lib/music-api"
 
 /**
  * 音频播放器 Hook
@@ -40,7 +39,6 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     setVolume,
     toggleRepeat,
     toggleShuffle,
-    queue,
     currentIndex: currentTrackIndex,
     setCurrentIndex: setCurrentTrackIndex
   } = useMusicStore()
@@ -95,8 +93,24 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
   }, [audioFiles.length, setCurrentTrackIndex])
 
   const togglePlay = useCallback(() => {
-    setIsPlaying((v) => !v)
-  }, [])
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+      return
+    }
+
+    const playPromise = audio.play()
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false))
+    } else {
+      setIsPlaying(true)
+    }
+  }, [isPlaying])
 
   const setPlaying = useCallback((playing: boolean) => {
     setIsPlaying(playing)
@@ -147,9 +161,20 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
 
     // 绑定事件
     navigator.mediaSession.setActionHandler('play', () => {
-       setIsPlaying(true);
+       const audio = audioRef.current;
+       if (!audio) return;
+
+       const playPromise = audio.play();
+       if (playPromise !== undefined) {
+         playPromise
+           .then(() => setIsPlaying(true))
+           .catch(() => setIsPlaying(false));
+       } else {
+         setIsPlaying(true);
+       }
     });
     navigator.mediaSession.setActionHandler('pause', () => {
+       audioRef.current?.pause();
        setIsPlaying(false);
     });
     navigator.mediaSession.setActionHandler('previoustrack', previous);
@@ -177,23 +202,6 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     if (!audioRef.current) return
     audioRef.current.volume = volume
   }, [volume])
-
-  // 同步播放 / 暂停
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    if (isPlaying) {
-      const playPromise = audio.play()
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          setIsPlaying(false)
-        })
-      }
-    } else {
-      audio.pause()
-    }
-  }, [isPlaying])
 
   // 监听音频事件
   useEffect(() => {

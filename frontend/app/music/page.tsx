@@ -16,14 +16,11 @@ export default function MusicPage() {
   // Store
   const { 
     queue, 
-    currentIndex, 
     playContext, 
-    setCurrentIndex,
     favorites,
     playlists,
     removeFromFavorites,
     removeFromUserPlaylist,
-    addToQueue
   } = useMusicStore();
 
   // Local View State
@@ -36,24 +33,11 @@ export default function MusicPage() {
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
   const currentTrack = queue[state.currentTrackIndex];
 
-  // Sync Store -> Hook
-  // When store.currentIndex changes (e.g. playContext called), sync hook
-  useEffect(() => {
-    if (currentIndex !== state.currentTrackIndex) {
-      controls.playTrack(currentIndex);
-    }
-  }, [currentIndex]);
-
-  // Sync Hook -> Store
-  // When hook changes track (next/prev/auto), sync store
-  useEffect(() => {
-    if (state.currentTrackIndex !== currentIndex) {
-      setCurrentIndex(state.currentTrackIndex);
-    }
-  }, [state.currentTrackIndex]);
-
   // Load Audio Source
-  const isFirstLoad = useRef(true);
+  const isPlayingRef = useRef(state.isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = state.isPlaying;
+  }, [state.isPlaying]);
   
   useEffect(() => {
     if (!currentTrack || !audioRef.current) return;
@@ -71,14 +55,19 @@ export default function MusicPage() {
         if (url && audioRef.current && trackId === currentTrack.id) {
           if (audioRef.current.src !== url) {
             audioRef.current.src = url;
+            audioRef.current.load();
             
-            // 如果是切歌（非首次加载）或当前原本就在播放，则自动播放
-            const shouldPlay = !isFirstLoad.current || state.isPlaying;
-            
-            if (shouldPlay) {
+            if (isPlayingRef.current) {
               audioRef.current.play()
                 .then(() => controls.setPlaying(true))
-                .catch(console.error);
+                .catch((err) => {
+                  if (err?.name === "NotAllowedError") {
+                    toast.error("浏览器阻止自动播放，请点击播放按钮开始播放");
+                    controls.setPlaying(false);
+                    return;
+                  }
+                  console.error(err);
+                });
             }
           }
         } else if (!url) {
@@ -92,10 +81,6 @@ export default function MusicPage() {
     };
     
     loadSrc();
-    
-    if (isFirstLoad.current) {
-      isFirstLoad.current = false;
-    }
   }, [currentTrack?.id, quality]);
 
   // Handlers
@@ -116,8 +101,10 @@ export default function MusicPage() {
 
     if (isSameContext) {
       controls.playTrack(index);
+      controls.setPlaying(true);
     } else {
       playContext(list, index);
+      controls.setPlaying(true);
       // Hook sync will happen via useEffect
     }
   };
@@ -135,6 +122,7 @@ export default function MusicPage() {
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
     
     playContext(list, index);
+    controls.setPlaying(true);
   };
 
   // Render Content
