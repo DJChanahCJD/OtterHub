@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useMusicStore } from '@/stores/music-store';
 import { useAudioPlayer } from '@/hooks/use-audio-player';
 import { musicApi, MusicTrack } from '@/lib/music-api';
@@ -170,20 +170,22 @@ export default function MusicPage() {
     );
   };
 
+  const sidebar = useMemo(() => (
+    <MusicSidebar 
+      currentView={currentView}
+      currentPlaylistId={activePlaylistId}
+      onViewChange={(v, pid) => {
+        setCurrentView(v);
+        if (pid) setActivePlaylistId(pid);
+      }}
+    />
+  ), [currentView, activePlaylistId]);
+
   return (
     <>
       <audio ref={audioRef} className="hidden" />
       <MusicLayout
-        sidebar={
-          <MusicSidebar 
-            currentView={currentView}
-            currentPlaylistId={activePlaylistId}
-            onViewChange={(v, pid) => {
-              setCurrentView(v);
-              if (pid) setActivePlaylistId(pid);
-            }}
-          />
-        }
+        sidebar={sidebar}
         player={
           <GlobalPlayer 
             state={state} 

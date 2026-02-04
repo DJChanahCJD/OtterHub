@@ -48,6 +48,7 @@ import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlayerProgressBar } from "./PlayerProgressBar";
+import { useShallow } from "zustand/react/shallow";
 import { FullScreenPlayer } from "./FullScreenPlayer";
 
 interface GlobalPlayerProps {
@@ -90,7 +91,19 @@ export function GlobalPlayer({
     queue,
     currentIndex,
     clearQueue,
-  } = useMusicStore();
+  } = useMusicStore(
+    useShallow((state) => ({
+      isFavorite: state.isFavorite,
+      addToFavorites: state.addToFavorites,
+      removeFromFavorites: state.removeFromFavorites,
+      playlists: state.playlists,
+      addToUserPlaylist: state.addToUserPlaylist,
+      createPlaylist: state.createPlaylist,
+      queue: state.queue,
+      currentIndex: state.currentIndex,
+      clearQueue: state.clearQueue,
+    }))
+  );
 
   const handleClearQueue = () => {
     if (confirm("确定要清空播放列表吗？")) {

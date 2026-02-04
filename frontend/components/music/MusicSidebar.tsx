@@ -21,8 +21,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { toast } from "sonner";
+import { useShallow } from "zustand/react/shallow";
 
 interface MusicSidebarProps {
   currentView: "search" | "favorites" | "playlist";
@@ -31,13 +32,19 @@ interface MusicSidebarProps {
   className?: string;
 }
 
-export function MusicSidebar({ 
+export const MusicSidebar = memo(function MusicSidebar({ 
   currentView, 
   currentPlaylistId, 
   onViewChange,
   className 
 }: MusicSidebarProps) {
-  const { playlists, createPlaylist, deletePlaylist } = useMusicStore();
+  const { playlists, createPlaylist, deletePlaylist } = useMusicStore(
+    useShallow((state) => ({
+      playlists: state.playlists,
+      createPlaylist: state.createPlaylist,
+      deletePlaylist: state.deletePlaylist,
+    }))
+  );
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -175,4 +182,4 @@ export function MusicSidebar({
       </div>
     </div>
   );
-}
+});
