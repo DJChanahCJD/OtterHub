@@ -49,8 +49,7 @@ export function ApiKeyDialog({
   const getHelpUrl = (sourceId: WallpaperSourceId) => {
     if (sourceId === 'pixabay') return "https://pixabay.com/api/docs/";
     if (sourceId === 'wallhaven') return "https://wallhaven.cc/settings/account";
-    if (sourceId === 'unsplash') return "https://unsplash.com/developers";  //  似乎没用
-    // TODO: 对接更多壁纸源 https://blog.jixiaob.cn/?post=93
+    if (sourceId === 'unsplash') return "https://unsplash.com/developers";
     return "";
   };
 

@@ -1,16 +1,9 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { WallpaperProvider, UnsplashConfig } from "../types";
+import { WallpaperSourceId } from "@shared/types";
+import { ConfigInput, ConfigItem, ConfigSelect } from "./components";
 
 export const UnsplashSource: WallpaperProvider<UnsplashConfig> = {
-  id: "unsplash",
+  id: WallpaperSourceId.Unsplash,
   name: "Unsplash",
   requiresApiKey: true,
   defaultConfig: {
@@ -25,48 +18,36 @@ export const UnsplashSource: WallpaperProvider<UnsplashConfig> = {
 
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">搜索关键词</Label>
-        <Input
+      <ConfigItem label="搜索关键词">
+        <ConfigInput
           placeholder="例如: Nature, Architecture..."
           value={config.query}
-          onChange={(e) => onChange({ ...config, query: e.target.value })}
-          className="h-8 text-xs bg-background/50"
+          onChangeValue={(v) => onChange({ ...config, query: v })}
         />
-      </div>
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">画幅方向</Label>
-        <Select
-          value={config.orientation}
+      <ConfigItem label="画幅方向">
+        <ConfigSelect
+          value={config.orientation || "landscape"}
           onValueChange={(v: any) => onChange({ ...config, orientation: v })}
-        >
-          <SelectTrigger className="h-8 text-xs bg-background/50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="landscape" className="text-xs">横屏 (Landscape)</SelectItem>
-            <SelectItem value="portrait" className="text-xs">竖屏 (Portrait)</SelectItem>
-            <SelectItem value="squarish" className="text-xs">正方形 (Squarish)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          options={[
+            { value: "landscape", label: "横屏 (Landscape)" },
+            { value: "portrait", label: "竖屏 (Portrait)" },
+            { value: "squarish", label: "正方形 (Squarish)" },
+          ]}
+        />
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">内容过滤</Label>
-        <Select
-          value={config.content_filter}
+      <ConfigItem label="内容过滤">
+        <ConfigSelect
+          value={config.content_filter || "low"}
           onValueChange={(v: any) => onChange({ ...config, content_filter: v })}
-        >
-          <SelectTrigger className="h-8 text-xs bg-background/50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low" className="text-xs">常规 (Low)</SelectItem>
-            <SelectItem value="high" className="text-xs">严格 (High)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          options={[
+            { value: "low", label: "常规 (Low)" },
+            { value: "high", label: "严格 (High)" },
+          ]}
+        />
+      </ConfigItem>
     </div>
   ),
 };

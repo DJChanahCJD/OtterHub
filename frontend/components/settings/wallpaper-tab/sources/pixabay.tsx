@@ -1,13 +1,6 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { WallpaperProvider, PixabayConfig } from "../types";
+import { WallpaperSourceId } from "@shared/index";
+import { ConfigInput, ConfigItem, ConfigSelect } from "./components";
 
 const PIXABAY_CATEGORIES = [
   { value: "backgrounds", label: "背景" },
@@ -33,7 +26,7 @@ const PIXABAY_CATEGORIES = [
 ];
 
 export const PixabaySource: WallpaperProvider<PixabayConfig> = {
-  id: "pixabay",
+  id: WallpaperSourceId.Pixabay,
   name: "Pixabay",
   requiresApiKey: true,
   defaultConfig: {
@@ -48,53 +41,38 @@ export const PixabaySource: WallpaperProvider<PixabayConfig> = {
 
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">关键词</Label>
-        <Input
+      <ConfigItem label="关键词">
+        <ConfigInput
           placeholder="搜索关键词..."
           value={config.q}
-          onChange={(e) => onChange({ ...config, q: e.target.value })}
-          className="h-8 text-xs bg-background/50"
+          onChangeValue={(v) => onChange({ ...config, q: v })}
         />
-      </div>
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">分类</Label>
-        <Select
+      <ConfigItem label="分类">
+        <ConfigSelect
           value={config.category || "all"}
-          onValueChange={(v: any) =>
+          onValueChange={(v) =>
             onChange({ ...config, category: v === "all" ? "" : v })
           }
-        >
-          <SelectTrigger className="h-8 text-xs bg-background/50">
-            <SelectValue placeholder="全部" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">全部</SelectItem>
-            {PIXABAY_CATEGORIES.map((cat) => (
-              <SelectItem key={cat.value} value={cat.value} className="text-xs">
-                {cat.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          options={[
+            { value: "all", label: "全部" },
+            ...PIXABAY_CATEGORIES,
+          ]}
+          placeholder="全部"
+        />
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">排序</Label>
-        <Select
-          value={config.order}
+      <ConfigItem label="排序">
+        <ConfigSelect
+          value={config.order || "popular"}
           onValueChange={(v: any) => onChange({ ...config, order: v })}
-        >
-          <SelectTrigger className="h-8 text-xs bg-background/50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popular" className="text-xs">热门</SelectItem>
-            <SelectItem value="latest" className="text-xs">最新</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          options={[
+            { value: "popular", label: "热门" },
+            { value: "latest", label: "最新" },
+          ]}
+        />
+      </ConfigItem>
     </div>
   ),
 };

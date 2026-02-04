@@ -1,5 +1,6 @@
 import { client } from "./client";
 import { WallpaperSourceId, UnifiedWallpaper } from "@shared/types";
+import { unwrap } from "./config";
 
 /**
  * 获取壁纸列表
@@ -16,20 +17,12 @@ export async function getWallpapers(
     if (v) query[k] = String(v);
   });
 
-  const res = await client.wallpaper[":source"].$get({
-    param: { source },
-    query: query,
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return unwrap<UnifiedWallpaper[]>(
+    client.wallpaper[":source"].$get({
+      param: { source },
+      query: query,
+    })
+  );
 }
 
 /**
@@ -44,21 +37,13 @@ export async function uploadByUrl(
   fileName: string,
   isNsfw: boolean = false
 ): Promise<any> {
-  const res = await client.upload["by-url"].$post({
-    json: {
-      url,
-      fileName,
-      isNsfw,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return unwrap<any>(
+    client.upload["by-url"].$post({
+      json: {
+        url,
+        fileName,
+        isNsfw,
+      },
+    })
+  );
 }

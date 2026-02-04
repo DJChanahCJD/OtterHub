@@ -1,8 +1,9 @@
 import { Label } from "@/components/ui/label";
 import { WallpaperProvider, BingConfig, WP_API_KEY_PLACEHOLDER } from "../types";
+import { WallpaperSourceId } from "@shared/index";
 
 export const BingSource: WallpaperProvider<BingConfig> = {
-  id: "bing",
+  id: WallpaperSourceId.Bing,
   name: "Bing",
   requiresApiKey: false,
   defaultConfig: {},

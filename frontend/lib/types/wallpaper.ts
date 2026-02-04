@@ -1,5 +1,3 @@
-import { type WallpaperSourceId } from "@shared/types";
-
 export type PixabaySearchParams = {
     q?: string;
     lang?: string;

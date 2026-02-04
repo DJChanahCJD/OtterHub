@@ -1,9 +1,8 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WallpaperProvider, WallhavenConfig } from "../types";
 import { cn } from "@/lib/utils";
+import { WallpaperSourceId } from "@shared/types";
+import { ConfigInput, ConfigItem, ConfigSelect } from "./components";
 
 /**
  * 通用位掩码切换工具
@@ -15,7 +14,7 @@ function toggleBitMask(value: string, index: number, fallback: string) {
 }
 
 export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
-  id: "wallhaven",
+  id: WallpaperSourceId.Wallhaven,
   name: "Wallhaven",
   requiresApiKey: true,
   defaultConfig: {
@@ -32,18 +31,15 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">关键词</Label>
-        <Input 
-          placeholder="搜索关键词..." 
+      <ConfigItem label="关键词">
+        <ConfigInput
+          placeholder="搜索关键词..."
           value={config.q}
-          onChange={(e) => onChange({ ...config, q: e.target.value })}
-          className="h-8 text-xs bg-background/50"
+          onChangeValue={(v) => onChange({ ...config, q: v })}
         />
-      </div>
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">内容分类</Label>
+      <ConfigItem label="内容分类">
         <div className="flex items-center gap-1.5 p-1 bg-background/30 border border-border/50 rounded-lg w-fit">
           {[{ label: "常规" }, { label: "动漫" }, { label: "人物" }].map(
             (cat, i) => (
@@ -69,18 +65,15 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
             ),
           )}
         </div>
-      </div>
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">
-          分级筛选
-        </Label>
+      <ConfigItem label="分级筛选">
         <div className="flex items-center gap-1.5 p-1 bg-background/30 border border-border/50 rounded-lg w-fit">
           {[{ label: "安全" }, { label: "暗示" }, { label: "限制" }].map(
             (p, i) => (
             <Button
               key={p.label}
-                variant={config.purity?.[i] === "1" ? "default" : "ghost"}
+              variant={config.purity?.[i] === "1" ? "default" : "ghost"}
               size="sm"
               className={cn(
                 "h-7 px-3 text-[10px] font-medium transition-all rounded-md",
@@ -99,44 +92,40 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
             </Button>
           ))}
         </div>
-      </div>
+      </ConfigItem>
 
-      <div className="space-y-1">
-        <Label className="text-[10px] uppercase opacity-50 font-bold">排序方式</Label>
-        <Select 
-          value={config.sorting} 
+      <ConfigItem label="排序方式">
+        <ConfigSelect
+          value={config.sorting || "random"}
           onValueChange={(v: any) => onChange({ ...config, sorting: v })}
-        >
-          <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="random" className="text-xs">随机</SelectItem>
-            <SelectItem value="relevance" className="text-xs">相关</SelectItem>
-            <SelectItem value="date_added" className="text-xs">最新</SelectItem>
-            <SelectItem value="views" className="text-xs">点击量</SelectItem>
-            <SelectItem value="favorites" className="text-xs">收藏</SelectItem>
-            <SelectItem value="toplist" className="text-xs">排行</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          options={[
+            { value: "random", label: "随机" },
+            { value: "relevance", label: "相关" },
+            { value: "date_added", label: "最新" },
+            { value: "views", label: "点击量" },
+            { value: "favorites", label: "收藏" },
+            { value: "toplist", label: "排行" },
+          ]}
+        />
+      </ConfigItem>
 
       {config.sorting === 'toplist' && (
         <div className="space-y-1 animate-in fade-in slide-in-from-left-2 duration-300">
-          <Label className="text-[10px] uppercase opacity-50 font-bold">排行范围</Label>
-          <Select 
-            value={config.topRange} 
-            onValueChange={(v: any) => onChange({ ...config, topRange: v })}
-          >
-            <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1d" className="text-xs">1天</SelectItem>
-              <SelectItem value="3d" className="text-xs">3天</SelectItem>
-              <SelectItem value="1w" className="text-xs">1周</SelectItem>
-              <SelectItem value="1M" className="text-xs">1月</SelectItem>
-              <SelectItem value="3M" className="text-xs">3月</SelectItem>
-              <SelectItem value="6M" className="text-xs">6月</SelectItem>
-              <SelectItem value="1y" className="text-xs">1年</SelectItem>
-            </SelectContent>
-          </Select>
+          <ConfigItem label="排行范围">
+            <ConfigSelect
+              value={config.topRange || "1M"}
+              onValueChange={(v: any) => onChange({ ...config, topRange: v })}
+              options={[
+                { value: "1d", label: "1天" },
+                { value: "3d", label: "3天" },
+                { value: "1w", label: "1周" },
+                { value: "1M", label: "1月" },
+                { value: "3M", label: "3月" },
+                { value: "6M", label: "6月" },
+                { value: "1y", label: "1年" },
+              ]}
+            />
+          </ConfigItem>
         </div>
       )}
     </div>
