@@ -1,4 +1,4 @@
-import { GeneralSettings, MusicStoreData } from "@shared/types";
+import { GeneralSettings, MusicStoreData, WallpaperConfigs } from "@shared/types";
 
 import { client } from './client';
 import { unwrap } from './config';
@@ -24,15 +24,8 @@ export function createSettingsApi<T>(key: string) {
 export const generalSettingsApi =
   createSettingsApi<GeneralSettings>('general');
 
-export const musicSettingsApi =
+export const musicStoreApi =
   createSettingsApi<MusicStoreData>('music');
 
-/**
- * wallpaper 没有强类型也可以这样
- */
-export const wallpaperSettingsApi =
-  createSettingsApi<Record<string, any>>('wallpaper');
-
-// Wrappers for SyncTab compatibility
-export const getMusicStoreData = () => musicSettingsApi.get();
-export const syncMusicStoreData = (data: MusicStoreData) => musicSettingsApi.update(data);
+export const wallpaperConfigsApi =
+  createSettingsApi<WallpaperConfigs>('wallpaper');

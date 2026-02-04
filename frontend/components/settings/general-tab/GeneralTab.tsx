@@ -16,8 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useFileUIStore } from "@/lib/file-store";
-import { getSettings } from "@/lib/api";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 import { cn } from "@/lib/utils";
 
 export function GeneralTab() {
@@ -26,8 +25,9 @@ export function GeneralTab() {
     setDataSaverThreshold, 
     nsfwDetection, 
     setNsfwDetection,
-    syncGeneralSettings
-  } = useFileUIStore();
+    fetchSettings,
+    syncSettings
+  } = useGeneralSettingsStore();
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -56,15 +56,8 @@ export function GeneralTab() {
   const handleFetchFromCloud = async () => {
     setIsSyncing(true);
     try {
-      const settings = await getSettings();
-      if (settings?.general) {
-        const { dataSaverThreshold: cloudThreshold, nsfwDetection: cloudNsfw } = settings.general;
-        setDataSaverThreshold(cloudThreshold);
-        setNsfwDetection(cloudNsfw);
-        toast.success("已从云端同步最新设置");
-      } else {
-        toast.info("云端暂无常规设置数据");
-      }
+      await fetchSettings();
+      toast.success("已从云端同步最新设置");
     } catch (error) {
       toast.error("从云端同步失败");
     } finally {
@@ -76,7 +69,7 @@ export function GeneralTab() {
   const handleUploadToCloud = async () => {
     setIsUploading(true);
     try {
-      await syncGeneralSettings();
+      await syncSettings();
       toast.success("设置已成功备份到云端");
     } catch (error) {
       toast.error("备份到云端失败");

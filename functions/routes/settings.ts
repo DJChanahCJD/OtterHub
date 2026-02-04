@@ -1,66 +1,78 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { CF } from 'types';
-import type { Env } from '../types/hono';
+import { GeneralSettings, MusicStoreData } from '@shared/types';
 
 import { ok, fail } from '@utils/response';
+import { kvGetJSON } from '@utils/kv';
+import { Env } from 'types/hono';
+
+function createSettingsRoutes<T>(
+  app: Hono<{ Bindings: Env }>,
+  path: string,
+  key: string,
+  options?: {
+    getMessage?: string;
+    postMessage?: string;
+  }
+) {
+  const getMsg = options?.getMessage ?? "获取配置失败";
+  const postMsg = options?.postMessage ?? "配置已更新";
+
+  app.get(path, async c => {
+    try {
+      const kv = c.env.oh_file_url;
+      const data = await kvGetJSON<T>(kv, key, {} as T);
+      return ok(c, data);
+    } catch (e: any) {
+      return fail(c, `${getMsg}: ${e.message}`, 500);
+    }
+  });
+
+  app.post(path, async c => {
+    try {
+      const kv = c.env.oh_file_url;
+      const body = await c.req.json<T>();
+      await kv.put(key, JSON.stringify(body));
+      return ok(c, body, postMsg);
+    } catch (e: any) {
+      return fail(c, `${postMsg}失败: ${e.message}`, 500);
+    }
+  });
+}
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();
 
 settingsRoutes.use('*', authMiddleware);
 
-settingsRoutes.get('/', async (c) => {
-  try {
-    const kv = c.env.oh_file_url;
-    const settingsStr = await kv.get(CF.SETTINGS_KEY);
-    const settings = settingsStr ? JSON.parse(settingsStr) : {};
-    return ok(c, settings);
-  } catch (error: any) {
-    return fail(c, "获取设置失败: " + error.message, 500);
-  }
-});
+/* ========= Settings ========= */
 
-settingsRoutes.post(
-  '/',
-  async (c) => {
-    try {
-      const kv = c.env.oh_file_url;
-      const newSettings = await c.req.json();
-      
-      const oldSettingsStr = await kv.get(CF.SETTINGS_KEY);
-      const oldSettings = oldSettingsStr ? JSON.parse(oldSettingsStr) : {};
-      
-      const mergedSettings = {
-        ...oldSettings,
-        ...newSettings
-      };
-      
-      await kv.put(CF.SETTINGS_KEY, JSON.stringify(mergedSettings));
-      return ok(c, mergedSettings, "设置已更新");
-    } catch (error: any) {
-      return fail(c, "保存设置失败: " + error.message, 500);
-    }
+createSettingsRoutes<GeneralSettings>(
+  settingsRoutes,
+  '/general',
+  CF.SETTINGS_KEY,
+  {
+    getMessage: '获取常规设置失败',
+    postMessage: '常规设置已更新',
   }
 );
 
-settingsRoutes.get('/music', async (c) => {
-  try {
-    const kv = c.env.oh_file_url;
-    const musicDataStr = await kv.get(CF.MUSIC_STORE_KEY);
-    const musicData = musicDataStr ? JSON.parse(musicDataStr) : {};
-    return ok(c, musicData);
-  } catch (error: any) {
-    return fail(c, "获取音乐数据失败: " + error.message, 500);
+createSettingsRoutes(
+  settingsRoutes,
+  '/wallpaper',
+  CF.WALLPAPER_CONFIG_KEY,
+  {
+    getMessage: '获取壁纸配置失败',
+    postMessage: '壁纸配置已更新',
   }
-});
+);
 
-settingsRoutes.post('/music', async (c) => {
-  try {
-    const kv = c.env.oh_file_url;
-    const musicData = await c.req.json();
-    await kv.put(CF.MUSIC_STORE_KEY, JSON.stringify(musicData));
-    return ok(c, musicData, "音乐数据已同步");
-  } catch (error: any) {
-    return fail(c, "保存音乐数据失败: " + error.message, 500);
+createSettingsRoutes<MusicStoreData>(
+  settingsRoutes,
+  '/music',
+  CF.MUSIC_STORE_KEY,
+  {
+    getMessage: '获取音乐数据失败',
+    postMessage: '音乐数据已同步',
   }
-});
+);

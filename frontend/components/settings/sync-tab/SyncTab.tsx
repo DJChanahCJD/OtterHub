@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useMusicStore } from "@/stores/music-store";
-import { getMusicStoreData, syncMusicStoreData } from "@/lib/api/settings";
+import { musicStoreApi } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import {format} from "date-fns"
 
@@ -29,13 +29,12 @@ export function SyncTab() {
   // Access music store
   const favorites = useMusicStore((state) => state.favorites);
   const playlists = useMusicStore((state) => state.playlists);
-  const quality = useMusicStore((state) => state.quality);
 
   // Fetch Cloud Data
   const fetchCloudData = async (silent = false) => {
     setIsCheckingCloud(true);
     try {
-      const data = await getMusicStoreData();
+      const data = await musicStoreApi.get();
       setCloudData(data && Object.keys(data).length > 0 ? data : null);
       if (!silent && data && Object.keys(data).length > 0) {
         // toast.success("已获取云端最新数据");
@@ -64,6 +63,7 @@ export function SyncTab() {
     setIsUploadingMusic(true);
     try {
       const state = useMusicStore.getState();
+      // TODO: 创建一个type来定义dataToSync的结构
       const dataToSync = {
         favorites: state.favorites,
         playlists: state.playlists,
@@ -77,7 +77,7 @@ export function SyncTab() {
         updatedAt: Date.now(),
       };
 
-      await syncMusicStoreData(dataToSync);
+      await musicStoreApi.update(dataToSync);
       toast.success("音乐数据已成功备份到云端");
       // Refresh cloud data display
       setCloudData(dataToSync);
@@ -92,12 +92,9 @@ export function SyncTab() {
   const handleDownloadMusic = async () => {
     setIsSyncingMusic(true);
     try {
-      // Use existing cloudData if fresh enough, or fetch again
-      // Safer to fetch again to ensure consistency
-      const data = await getMusicStoreData();
+      const data = await musicStoreApi.get();
       
       if (data && Object.keys(data).length > 0) {
-        // Restore data to store
         useMusicStore.setState({
             favorites: data.favorites || [],
             playlists: data.playlists || [],
