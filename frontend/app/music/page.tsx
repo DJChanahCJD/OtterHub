@@ -23,7 +23,9 @@ export default function MusicPage() {
     playlists,
     removeFromFavorites,
     removeFromUserPlaylist,
-    quality
+    quality,
+    currentIndex,
+    currentTime: savedTime // Get saved time from store
   } = useMusicStore();
 
   // Local View State
@@ -33,7 +35,7 @@ export default function MusicPage() {
   // Audio Player Hook
   // We pass the queue to the hook. The hook manages audio element.
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
-  const currentTrack = queue[state.currentIndex];
+  const currentTrack = queue[currentIndex];
 
   // Load Audio Source
   const isPlayingRef = useRef(state.isPlaying);
@@ -57,6 +59,12 @@ export default function MusicPage() {
         if (url && audioRef.current && trackId === currentTrack.id) {
           if (audioRef.current.src !== url) {
             audioRef.current.src = url;
+            
+            // Restore saved time if available (e.g. after refresh)
+            if (savedTime > 0) {
+              audioRef.current.currentTime = savedTime;
+            }
+
             audioRef.current.load();
             
             if (isPlayingRef.current) {

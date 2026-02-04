@@ -42,15 +42,18 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     toggleShuffle,
     currentIndex,
     setCurrentIndex,
+    setAudioCurrentTime,
   } = useMusicStore()
 
   /* ---------- Local State ---------- */
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const lastSaveTimeRef = useRef(0)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const currentFile = audioFiles[currentIndex]
+  console.log(currentIndex)
 
   /* ---------- Utils ---------- */
 
@@ -89,7 +92,10 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
   const pause = useCallback(() => {
     audioRef.current?.pause()
     setIsPlaying(false)
-  }, [])
+    if (audioRef.current) {
+      setAudioCurrentTime(audioRef.current.currentTime)
+    }
+  }, [setAudioCurrentTime])
 
   /* ---------- Public Controls ---------- */
 
@@ -118,7 +124,8 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     if (!audio) return
     audio.currentTime = value[0]
     setCurrentTime(value[0])
-  }, [])
+    setAudioCurrentTime(value[0])
+  }, [setAudioCurrentTime])
 
   const toggleMute = useCallback(() => {
     setVolume(volume === 0 ? 0.7 : 0)
@@ -166,9 +173,19 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     const audio = audioRef.current
     if (!audio) return
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onTimeUpdate = () => {
+      const now = Date.now()
+      setCurrentTime(audio.currentTime)
+      
+      // Throttle save to store (every 2 seconds)
+      if (now - lastSaveTimeRef.current > 2000) {
+        setAudioCurrentTime(audio.currentTime)
+        lastSaveTimeRef.current = now
+      }
+    }
     const onDurationChange = () => setDuration(audio.duration || 0)
     const onEnded = () => {
+      setAudioCurrentTime(0) // Reset time on end
       if (isRepeat) {
         audio.currentTime = 0
         play()
@@ -186,7 +203,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       audio.removeEventListener("durationchange", onDurationChange)
       audio.removeEventListener("ended", onEnded)
     }
-  }, [isRepeat, next, play])
+  }, [isRepeat, next, play, setAudioCurrentTime])
 
   /* ---------- Edge ---------- */
 

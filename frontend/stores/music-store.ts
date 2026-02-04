@@ -35,10 +35,12 @@ interface MusicState {
   volume: number;
   isRepeat: boolean;
   isShuffle: boolean;
+  currentTime: number; // Persisted playback progress
   
   setVolume: (volume: number) => void;
   toggleRepeat: () => void;
   toggleShuffle: () => void;
+  setAudioCurrentTime: (time: number) => void;
 
   // --- Playback (Queue) ---
   queue: MusicTrack[];
@@ -107,10 +109,12 @@ export const useMusicStore = create<MusicState>()(
       volume: 0.7,
       isRepeat: false,
       isShuffle: false,
+      currentTime: 0,
       
       setVolume: (volume) => set({ volume }),
       toggleRepeat: () => set((state) => ({ isRepeat: !state.isRepeat })),
       toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
+      setAudioCurrentTime: (currentTime) => set({ currentTime }),
 
       queue: [],
       currentIndex: 0,
@@ -129,7 +133,8 @@ export const useMusicStore = create<MusicState>()(
 
         return { 
           queue: tracks,
-          currentIndex: actualIndex
+          currentIndex: actualIndex,
+          currentTime: 0 // Reset time on new context
         };
       }),
       
@@ -142,8 +147,8 @@ export const useMusicStore = create<MusicState>()(
         queue: state.queue.filter(t => t.id !== trackId)
       })),
       
-      clearQueue: () => set({ queue: [], currentIndex: 0 }),
-      setCurrentIndex: (index) => set({ currentIndex: index }),
+      clearQueue: () => set({ queue: [], currentIndex: 0, currentTime: 0 }),
+      setCurrentIndex: (index) => set({ currentIndex: index, currentTime: 0 }), // Reset time on track change
     }),
     {
       name: storeKey.MusicStore,
@@ -155,6 +160,7 @@ export const useMusicStore = create<MusicState>()(
         volume: state.volume,
         isRepeat: state.isRepeat,
         isShuffle: state.isShuffle,
+        currentTime: state.currentTime,
         quality: state.quality,
         searchSource: state.searchSource,
       }),
