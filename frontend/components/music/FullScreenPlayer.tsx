@@ -34,8 +34,8 @@ export function FullScreenPlayer({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-[49] bg-transparent transition-transform duration-500 ease-in-out flex flex-col dark",
-        isFullScreen ? "translate-y-0" : "translate-y-[100%]"
+        "fixed inset-0 z-49 bg-transparent transition-transform duration-500 ease-in-out flex flex-col dark",
+        isFullScreen ? "translate-y-0" : "translate-y-full"
       )}
     >
       {/* Dynamic Background Layer */}
@@ -52,14 +52,27 @@ export function FullScreenPlayer({
           </>
         ) : (
           /* Fallback Gradient */
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-slate-900 to-black" />
+          <div className="absolute inset-0 bg-linear-to-br from-zinc-900 via-slate-900 to-black" />
         )}
+      </div>
+
+
+      {/* Top Control (Down Arrow) */}
+      <div className="absolute top-3 left-3 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-12 w-12 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+          onClick={onClose}
+        >
+          <ChevronDown className="h-6 w-6" />
+        </Button>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row p-8 pb-24 gap-8 overflow-hidden relative z-10">
-        {/* Left: Big Album Art */}
-        <div className="flex-1 flex items-center justify-center p-8 min-h-0">
+        {/* Left: Big Album Art (PC) */}
+        <div className="hidden md:flex flex-1 items-center justify-center p-8 min-h-0">
           <div className="aspect-square w-full max-w-[50vh] max-h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden bg-muted/20 flex items-center justify-center">
             {coverUrl ? (
               <img
@@ -73,9 +86,30 @@ export function FullScreenPlayer({
           </div>
         </div>
 
-        {/* Right: Lyrics + Info */}
-        <div className="flex-1 h-full min-h-0">
+        {/* Right: Lyrics + Info (PC) */}
+        <div className="hidden md:block flex-1 h-full min-h-0">
           <LyricsPanel track={currentTrack} currentTime={currentTime} />
+        </div>
+
+        {/* Mobile Layout: Single Column */}
+        <div className="flex flex-col items-center justify-center w-full md:hidden gap-6">
+          {/* Small Album Art (Mobile) */}
+          <div className="aspect-square w-40 h-40 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] overflow-hidden bg-muted/20 flex items-center justify-center">
+            {coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={currentTrack?.name || "Album Art"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Music2 className="h-16 w-16 text-muted-foreground/30" />
+            )}
+          </div>
+
+          {/* Lyrics Panel (Mobile) */}
+          <div className="w-full flex-1">
+            <LyricsPanel track={currentTrack} currentTime={currentTime} />
+          </div>
         </div>
       </div>
     </div>,

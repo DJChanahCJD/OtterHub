@@ -98,7 +98,7 @@ export function MusicTrackList({
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+      <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
          <div className="grid grid-cols-[3rem_1.5fr_1fr_8rem] gap-2 items-center px-4 text-sm text-muted-foreground">
             {!isSelectionMode ? (
               <>

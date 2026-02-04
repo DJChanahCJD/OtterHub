@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MusicTrack } from "@shared/types";
 import { musicApi } from "@/lib/music-api";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LyricsPanelProps {
   track: MusicTrack | null;
@@ -59,6 +60,7 @@ function parseLrc(lrc: string, tLrc?: string): LyricLine[] {
 export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [loading, setLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const activeIndexRef = useRef(0);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -122,6 +124,44 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
 
   /* ---------- 正式 UI ---------- */
 
+  // 移动端 UI
+  if (isMobile) {
+    const currentLyric = lyrics[activeIndex];
+    
+    return (
+      <div className="h-full flex flex-col p-4 gap-4">
+        {/* 歌曲信息 */}
+        <div className="flex flex-col gap-2 pb-4 border-b border-border/40">
+          <h3 className="text-xl font-bold tracking-tight text-foreground/90 text-center">
+            {track.name}
+          </h3>
+          <p className="text-sm text-muted-foreground/80 text-center">
+            歌手：{track.artist.join(" / ")}
+          </p>
+        </div>
+
+        {/* 当前歌词 (仅显示当前行) */}
+        <div className="flex-1 flex items-center justify-center">
+          {lyrics.length > 0 ? (
+            <div className="text-center px-4">
+              <p className="text-lg font-medium text-white leading-relaxed">
+                {currentLyric?.text || "暂无歌词"}
+              </p>
+              {currentLyric?.ttext && (
+                <p className="mt-2 text-sm font-medium text-muted-foreground/90">
+                  {currentLyric.ttext}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center">纯音乐，请欣赏</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // PC 端 UI (保持不变)
   return (
     <div className="h-full flex flex-col p-6 gap-6">
       {/* 歌曲信息 */}
@@ -150,7 +190,7 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
 
       {/* 歌词区 */}
       <div className="flex-1 min-h-0 relative lyrics-mask">
-        <ScrollArea className="h-full">
+        <ScrollArea className="hidden md:block h-full">
           <div className="py-[40%] space-y-6 text-center">
             {lyrics.map((line, i) => {
               const isActive = i === activeIndex;
