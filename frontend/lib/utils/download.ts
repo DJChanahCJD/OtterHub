@@ -1,6 +1,7 @@
-import { musicApi, MusicTrack } from "@/lib/music-api";
+import { musicApi } from "@/lib/music-api";
 import { toast } from "sonner";
 import { API_URL } from "@/lib/api/config";
+import { MusicTrack } from "@shared/types";
 
 export async function downloadMusicTrack(track: MusicTrack) {
   const toastId = toast.loading(`正在获取下载链接: ${track.name}`);

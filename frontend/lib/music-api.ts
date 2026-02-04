@@ -21,7 +21,7 @@ export interface SongLyric {
   tlyric?: string;
 }
 
-const API_BASE = `${API_URL}/music`;
+const API_BASE = `${API_URL}/music-api`;
 
 export const musicApi = {
   /**

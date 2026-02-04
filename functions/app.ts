@@ -29,7 +29,7 @@ app.route('/wallpaper', wallpaperRoutes);
 app.route('/upload', uploadRoutes);
 app.route('/trash', trashRoutes);
 app.route('/proxy', proxyRoutes);
-app.route('/music', musicRoutes);
+app.route('/music-api', musicRoutes);
 app.route('/share', shareRoutes);
 
 // Export AppType for RPC

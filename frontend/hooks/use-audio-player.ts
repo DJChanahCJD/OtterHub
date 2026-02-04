@@ -7,7 +7,7 @@ import { useMusicStore } from "@/stores/music-store"
  */
 
 export interface AudioPlayerState {
-  currentTrackIndex: number
+  currentIndex: number
   isPlaying: boolean
   currentTime: number
   duration: number
@@ -206,7 +206,7 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
 
   return {
     state: {
-      currentTrackIndex: currentIndex,
+      currentIndex,
       isPlaying,
       currentTime,
       duration,

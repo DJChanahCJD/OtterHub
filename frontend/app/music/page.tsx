@@ -33,7 +33,7 @@ export default function MusicPage() {
   // Audio Player Hook
   // We pass the queue to the hook. The hook manages audio element.
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
-  const currentTrack = queue[state.currentTrackIndex];
+  const currentTrack = queue[state.currentIndex];
 
   // Load Audio Source
   const isPlayingRef = useRef(state.isPlaying);
