@@ -1,5 +1,5 @@
 import { client } from "./client";
-import { API_URL } from "./config";
+import { API_URL, unwrap } from "./config";
 import { FileType, ListFilesResponse } from "@shared/types";
 import { ListFilesRequest } from "@/lib/types";
 
@@ -7,22 +7,14 @@ import { ListFilesRequest } from "@/lib/types";
  * 上传文件
  */
 export async function uploadFile(file: File, nsfw?: boolean): Promise<string> {
-  const res = await client.upload.$post({
-    form: {
-      file: file,
-      nsfw: nsfw ? "true" : "false",
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return unwrap<string>(
+    client.upload.$post({
+      form: {
+        file: file,
+        nsfw: nsfw ? "true" : "false",
+      },
+    })
+  );
 }
 
 /**
@@ -34,24 +26,16 @@ export async function uploadChunkInit(
   fileSize: number,
   totalChunks: number
 ): Promise<string> {
-  const res = await client.upload.chunk.init.$get({
-    query: {
-      fileType,
-      fileName,
-      fileSize: fileSize.toString(),
-      totalChunks: totalChunks.toString(),
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return unwrap<string>(
+    client.upload.chunk.init.$get({
+      query: {
+        fileType,
+        fileName,
+        fileSize: fileSize.toString(),
+        totalChunks: totalChunks.toString(),
+      },
+    })
+  );
 }
 
 /**
@@ -62,23 +46,16 @@ export async function uploadChunk(
   chunkIndex: number,
   chunkFile: File | Blob,
 ): Promise<string> {
-  const res = await client.upload.chunk.$post({
-    form: {
-      key,
-      chunkIndex: chunkIndex.toString(),
-      chunkFile: chunkFile,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data.toString();
+  const res = await unwrap<string | number>( // API might return number or string for data? Check type.
+    client.upload.chunk.$post({
+      form: {
+        key,
+        chunkIndex: chunkIndex.toString(),
+        chunkFile: chunkFile,
+      },
+    })
+  );
+  return res.toString();
 }
 
 /**
@@ -94,19 +71,11 @@ export async function getFileList(
     });
   }
 
-  const res = await client.file.list.$get({
-    query: query,
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return data.data;
+  return unwrap<ListFilesResponse>(
+    client.file.list.$get({
+      query: query,
+    })
+  );
 }
 
 /**
@@ -194,18 +163,11 @@ export async function editMetadata(
   key: string,
   updates: { fileName?: string; tags?: string[] }
 ): Promise<{ metadata: any }> {
-  const res = await client.file[":key"].meta.$patch({
-    param: { key },
-    json: updates,
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.message);
-  }
-  return { metadata: data.data };
+  const data = await unwrap<any>(
+    client.file[":key"].meta.$patch({
+      param: { key },
+      json: updates,
+    })
+  );
+  return { metadata: data };
 }

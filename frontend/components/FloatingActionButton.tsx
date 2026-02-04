@@ -9,7 +9,7 @@ import { TrashSheet } from "./trash/TrashSheet";
 import { SettingsDialog } from "./settings/SettingsDialog";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { STORAGE_KEYS, getFromStorage, setToStorage } from "@/lib/local-storage";
+import { useFileUIStore } from "@/lib/file-store";
 
 /**
  * 悬浮操作按钮组件 (FAB)
@@ -19,18 +19,20 @@ export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: 32, y: 32 }); // 默认距离右下角 32px (bottom-8, right-8)
+  
+  // Use store for persistence
+  const { fabPosition, setFabPosition } = useFileUIStore();
+  const [position, setPosition] = useState(fabPosition); 
   const [isDragging, setIsDragging] = useState(false);
   
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
-  // 初始化位置
+  // 初始化位置 - sync local state with store when store changes (e.g. hydration)
   useEffect(() => {
-    const savedPosition = getFromStorage(STORAGE_KEYS.FAB_POSITION, { x: 32, y: 32 });
-    setPosition(savedPosition);
-  }, []);
+    setPosition(fabPosition);
+  }, [fabPosition]);
 
   // 点击外部关闭
   useEffect(() => {
@@ -83,7 +85,7 @@ export function FloatingActionButton() {
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (dragRef.current.isDragging) {
-      setToStorage(STORAGE_KEYS.FAB_POSITION, position);
+      setFabPosition(position); // Save to store
       // 延迟重置拖拽状态，确保点击事件能正确判断
       setTimeout(() => {
         setIsDragging(false);

@@ -1,11 +1,9 @@
 "use client";
 
-import { ImageIcon, Music, Video, FileText, Layers } from "lucide-react";
+import { ImageIcon, Music, Video, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFileDataStore } from "@/lib/file-store";
 import { FileType } from "@shared/types";
-import { STORAGE_KEYS, getFromStorage } from "@/lib/local-storage";
-import { useEffect } from "react";
 
 const fileTypes = [
   { id: FileType.Image, label: "Images", icon: ImageIcon },
@@ -17,10 +15,6 @@ const fileTypes = [
 export function FileTypeTabs() {
   const activeType = useFileDataStore((s) => s.activeType);
   const setActiveType = useFileDataStore((s) => s.setActiveType);
-
-  useEffect(() => {
-    setActiveType(getFromStorage(STORAGE_KEYS.ACTIVE_TYPE, FileType.Image));
-  }, [setActiveType]);
 
   return (
     <div className="flex items-center gap-2 flex-wrap">

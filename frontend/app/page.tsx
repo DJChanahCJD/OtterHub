@@ -15,10 +15,8 @@ import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { useInitFileStore } from "@/hooks/use-init-file-store";
 
 export default function OtterHubPage() {
-  useInitFileStore();
   const activeItems = useActiveItems();
   const selectedKeys = useActiveSelectedKeys();
 

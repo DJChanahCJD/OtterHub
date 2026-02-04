@@ -6,6 +6,7 @@ import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
 import { FileItem } from "@shared/types";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 export function useFileCardActions(file: FileItem) {
   const {
@@ -15,9 +16,9 @@ export function useFileCardActions(file: FileItem) {
   
   const {
     toggleSelection,
-    safeMode,
-    imageLoadMode,
   } = useFileUIStore();
+  
+  const { safeMode } = useGeneralSettingsStore();
 
   const selectedKeys = useActiveSelectedKeys();
 
@@ -151,8 +152,7 @@ export function useFileCardActions(file: FileItem) {
     showEdit,
     showShare,
     isResuming,
-    safeMode,
-    imageLoadMode,
+
     inputRef,
     
     // Actions
