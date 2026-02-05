@@ -110,18 +110,25 @@ export class TGAdapter extends BaseAdapter {
     chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
-  ): Promise<string> {
+    fileName?: string,
+  ): Promise<{ chunkId: string; thumbUrl?: string }> {
     const formData = new FormData();
     formData.append("chat_id", this.env.TG_CHAT_ID);
-    
+
     // 确保是 File 实例以便带有文件名
     let fileToUpload: File;
-    if (chunkFile instanceof File) {
+    if (chunkIndex === 0 && fileName) {
+      // 如果是第一个分片且有文件名，使用原文件名以帮助Telegram识别文件类型（如视频）
+      const blob =
+        chunkFile instanceof File ? chunkFile : new Blob([chunkFile]);
+      const type = chunkFile instanceof File ? chunkFile.type : undefined;
+      fileToUpload = new File([blob], fileName, { type });
+    } else if (chunkFile instanceof File) {
       fileToUpload = chunkFile;
     } else {
       fileToUpload = new File([chunkFile], `part-${chunkIndex}`);
     }
-    
+
     formData.append("document", fileToUpload);
 
     const apiUrl = buildTgApiUrl(this.env.TG_BOT_TOKEN, "sendDocument");
@@ -148,7 +155,18 @@ export class TGAdapter extends BaseAdapter {
         );
       }
 
-      return result.result.document.file_id;
+      const chunkId = result.result.document.file_id;
+      let thumbUrl: string | undefined;
+
+      // 尝试获取缩略图
+      if (chunkIndex === 0) {
+        const thumbFileId = getVideoThumbId(result);
+        if (thumbFileId) {
+          thumbUrl = `/file/${thumbFileId}/thumb`;
+        }
+      }
+
+      return { chunkId, thumbUrl };
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === "AbortError") {

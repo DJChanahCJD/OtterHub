@@ -79,7 +79,8 @@ export abstract class BaseAdapter implements DBAdapter {
     chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
-  ): Promise<string>;
+    fileName?: string,
+  ): Promise<string | { chunkId: string; thumbUrl?: string }>;
 
   /**
    * 消费分片（模板方法）
@@ -96,6 +97,7 @@ export abstract class BaseAdapter implements DBAdapter {
     parentKey: string,
     tempChunkKey: string,
     chunkIndex: number,
+    fileName?: string,
   ): Promise<void> {
     const kv = this.env[this.kvName];
 
@@ -116,10 +118,24 @@ export abstract class BaseAdapter implements DBAdapter {
       const chunkFile = new File([chunkBlob], `part-${chunkIndex}`);
 
       // 3. 调用子类实现的上传方法
-      const chunkId = await this.uploadToTarget(chunkFile, parentKey, chunkIndex);
-      console.log(
-        `[consumeChunk] Uploaded chunk ${chunkIndex}: ${chunkId}`,
+      const result = await this.uploadToTarget(
+        chunkFile,
+        parentKey,
+        chunkIndex,
+        fileName,
       );
+
+      let chunkId: string;
+      let thumbUrl: string | undefined;
+
+      if (typeof result === "string") {
+        chunkId = result;
+      } else {
+        chunkId = result.chunkId;
+        thumbUrl = result.thumbUrl;
+      }
+
+      console.log(`[consumeChunk] Uploaded chunk ${chunkIndex}: ${chunkId}`);
 
       // 4. 更新 KV metadata
       await this.updateChunkInfo(
@@ -127,6 +143,7 @@ export abstract class BaseAdapter implements DBAdapter {
         chunkIndex,
         chunkId,
         chunkFile.size,
+        thumbUrl,
       );
 
       // 5. 删除临时 KV
@@ -198,7 +215,12 @@ export abstract class BaseAdapter implements DBAdapter {
     });
 
     // 4. 异步处理：使用模板方法 consumeChunk
-    const uploadPromise = this.consumeChunk(key, tempChunkKey, chunkIndex);
+    const uploadPromise = this.consumeChunk(
+      key,
+      tempChunkKey,
+      chunkIndex,
+      metadata.fileName,
+    );
 
     if (waitUntil) {
       // 使用 waitUntil 异步处理，不阻塞响应
@@ -258,6 +280,7 @@ export abstract class BaseAdapter implements DBAdapter {
     chunkIndex: number,
     chunkId: string,
     chunkSize: number,
+    thumbUrl?: string,
   ): Promise<void> {
     const kv = this.env[this.kvName];
     const maxRetries = 3;
@@ -291,6 +314,11 @@ export abstract class BaseAdapter implements DBAdapter {
           file_id: chunkId,
           size: chunkSize,
         });
+
+        // 如果有缩略图且元数据中没有，则更新
+        if (thumbUrl && !metadata.thumbUrl) {
+          metadata.thumbUrl = thumbUrl;
+        }
 
         // 5. 写回 KV
         await kv.put(key, JSON.stringify(chunks), { metadata });

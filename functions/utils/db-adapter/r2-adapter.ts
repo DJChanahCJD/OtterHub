@@ -114,6 +114,7 @@ export class R2Adapter extends BaseAdapter {
     chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
+    fileName?: string,
   ): Promise<string> {
     const bucket = this.env[this.bucketName];
     const chunkId = this.getTempChunkId(parentKey, chunkIndex);
