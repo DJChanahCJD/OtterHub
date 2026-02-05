@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-import { useMusicStore } from "@/stores/music-store";
+import { useMusicStore, buildCloudPayload } from "@/stores/music-store";
 import { musicStoreApi } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -40,11 +40,12 @@ export function SyncTab() {
 
   const [isMergingMusic, setIsMergingMusic] = useState(false);
   const [isCheckingCloud, setIsCheckingCloud] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [cloudData, setCloudData] = useState<any>(null);
-  const [pendingAction, setPendingAction] = useState<"merge" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"merge" | "upload" | null>(null);
 
-  const isBusy = isMergingMusic;
+  const isBusy = isMergingMusic || isUploading;
 
   /* -------------------- 本地数据 -------------------- */
 
@@ -102,10 +103,27 @@ export function SyncTab() {
     }
   };
 
+  const executeUpload = async () => {
+    setIsUploading(true);
+    try {
+      const localState = useMusicStore.getState();
+      const payload = buildCloudPayload(localState);
+      await musicStoreApi.update(payload);
+      await fetchCloudData(true);
+      toast.success("本地数据已覆盖上传到云端");
+    } catch (error: any) {
+      toast.error("上传失败: " + error.message);
+    } finally {
+      setIsUploading(false);
+      setPendingAction(null);
+    }
+  };
+
   /* -------------------- 确认执行 -------------------- */
 
   const confirmAction = () => {
     if (pendingAction === "merge") executeMerge();
+    if (pendingAction === "upload") executeUpload();
   };
 
   /* -------------------- UI -------------------- */
@@ -135,12 +153,25 @@ export function SyncTab() {
 
       {/* 卡片 */}
       <Card className="rounded-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Music className="h-4 w-4 text-pink-500" />
-            <CardTitle className="text-base">音乐数据</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Music className="h-4 w-4 text-pink-500" />
+              <CardTitle className="text-base">音乐数据</CardTitle>
+            </div>
+            <CardDescription>同步歌单与喜欢</CardDescription>
           </div>
-          <CardDescription>同步歌单与喜欢</CardDescription>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setPendingAction("upload")}
+            disabled={isBusy}
+            title="覆盖上传到云端"
+          >
+            <CloudUpload
+              className={cn("h-4 w-4", isUploading && "animate-spin")}
+            />
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="flex flex-col space-y-4">
@@ -233,6 +264,16 @@ export function SyncTab() {
                   <li>去重合并喜欢歌曲</li>
                   <li>按ID匹配合并歌单</li>
                   <li>保留两边的新数据</li>
+                </ul>
+              </>
+            )}
+            {pendingAction === "upload" && (
+              <>
+                <p>将本地数据上传到云端并覆盖现有数据：</p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground">
+                  <li>覆盖云端的喜欢歌曲</li>
+                  <li>覆盖云端的歌单</li>
+                  <li>保留本地的所有设置</li>
                 </ul>
               </>
             )}

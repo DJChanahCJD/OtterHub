@@ -8,7 +8,7 @@ import { musicStoreApi } from '@/lib/api/settings';
 /**
  * 构建云端同步的 payload
  */
-const buildCloudPayload = (state: MusicStoreData) => ({
+export const buildCloudPayload = (state: MusicStoreData) => ({
   favorites: state.favorites,
   playlists: state.playlists,
   queue: state.queue,
