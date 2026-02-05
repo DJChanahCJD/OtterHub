@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { neteaseApi } from '@/lib/api/music-import';
-import { processBatch } from '@/lib/utils/common';
+import { processBatch } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNetEaseStore } from '@/stores/netease-store';
 import { useMusicStore } from '@/stores/music-store';

@@ -4,18 +4,14 @@ import { useCallback, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
-import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch } from "@/lib/utils";
+import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices } from "@/lib/utils";
 import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
-import {
-  updateProgress,
-  getMissingChunkIndices,
-  runBatches,
-} from "./upload-utils";
 import { toast } from "sonner";
 import { FileItem, FileTag } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
+import { updateProgress } from "@/lib/utils/upload";
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);
@@ -113,7 +109,7 @@ export function FileUploadZone() {
             );
           };
 
-          await runBatches(missing, MAX_CONCURRENTS, uploadOne);
+          await processBatch(missing, uploadOne, undefined, MAX_CONCURRENTS);
 
           const fileItem: FileItem = {
             name: key,

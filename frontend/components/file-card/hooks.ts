@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
-import { getFileTypeFromKey, downloadFile } from "@/lib/utils";
+import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
 import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
 import { toast } from "sonner";
@@ -110,26 +110,23 @@ export function useFileCardActions(file: FileItem) {
     const uploadedIndices = new Set(chunkInfo.uploadedIndices || []);
 
     try {
-      const chunkIndicesToUpload: number[] = [];
-      for (let i = 0; i < totalChunks; i++) {
-        if (!uploadedIndices.has(i)) {
-          chunkIndicesToUpload.push(i);
-        }
-      }
+      const chunkIndicesToUpload = getMissingChunkIndices(
+        totalChunks,
+        chunkInfo.uploadedIndices
+      );
 
-      for (let i = 0; i < chunkIndicesToUpload.length; i += MAX_CONCURRENTS) {
-        const batch: Promise<void>[] = [];
-        const end = Math.min(i + MAX_CONCURRENTS, chunkIndicesToUpload.length);
-        for (let j = i; j < end; j++) {
-          const chunkIndex = chunkIndicesToUpload[j];
+      await processBatch(
+        chunkIndicesToUpload,
+        async (chunkIndex) => {
           const start = chunkIndex * MAX_CHUNK_SIZE;
           const endPos = Math.min(start + MAX_CHUNK_SIZE, selectedFile.size);
           const chunkFile = selectedFile.slice(start, endPos);
 
-          batch.push(uploadChunk(file.name, chunkIndex, chunkFile).then(() => {}));
-        }
-        await Promise.all(batch);
-      }
+          await uploadChunk(file.name, chunkIndex, chunkFile);
+        },
+        undefined,
+        MAX_CONCURRENTS
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 500));
       window.location.reload();

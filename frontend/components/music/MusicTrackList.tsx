@@ -14,7 +14,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { MusicTrack } from "@shared/types";
-import { processBatch } from "@/lib/utils/common";
+import { processBatch } from "@/lib/utils";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";

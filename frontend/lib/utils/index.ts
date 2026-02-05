@@ -1,5 +1,6 @@
 
 // index.ts
+export * from "./upload";
 export * from "./common";
 export * from "./file";
 export * from "./file-preview";
