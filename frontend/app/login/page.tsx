@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { login } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Lock, Loader2 } from "lucide-react";
@@ -23,6 +23,17 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // 获取重定向 URL，默认跳转到首页
+  const getRedirectUrl = () => {
+    const redirect = searchParams.get('redirect');
+    // 安全检查：确保重定向 URL 是站内地址
+    if (redirect && (redirect.startsWith('/') || redirect.startsWith(window.location.origin))) {
+      return redirect;
+    }
+    return '/';
+  };
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema as any),  // TODO: 处理 zod 版本问题（当前根目录和frontend目录zod版本不一致）
@@ -36,7 +47,8 @@ export default function LoginPage() {
     try {
       await login(values.password);
       toast.success("登录成功");
-      router.push("/");
+      const redirectUrl = getRedirectUrl();
+      router.push(redirectUrl);
     } catch (err: any) {
       console.error("Login failed:", err);
       toast.error(err.message || "登录失败，请检查密码");

@@ -13,7 +13,10 @@ const customFetch: typeof fetch = async (input, init) => {
 
   if (res.status === 401) {
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-      window.location.href = '/login'
+      // 保存当前 URL 作为重定向目标
+      const currentUrl = window.location.href;
+      const redirectUrl = `/login?redirect=${encodeURIComponent(currentUrl)}`;
+      window.location.href = redirectUrl;
     }
   }
 
