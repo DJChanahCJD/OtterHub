@@ -119,7 +119,7 @@ interface MusicState {
   removeFromFavorites: (trackId: string) => void;
   isFavorite: (trackId: string) => boolean;
 
-  createPlaylist: (name: string) => void;
+  createPlaylist: (name: string) => string;
   deletePlaylist: (id: string) => void;
   renamePlaylist: (id: string, name: string) => void;
   addToPlaylist: (playlistId: string, track: MusicTrack) => void;
@@ -185,12 +185,16 @@ export const useMusicStore = create<MusicState>()(
       })),
       isFavorite: (trackId) => get().favorites.some(t => t.id === trackId),
 
-      createPlaylist: (name) => set((state) => ({
+      createPlaylist: (name) => {
+        const id = uuidv4();
+        set((state) => ({
         playlists: [
           ...state.playlists,
-          { id: uuidv4(), name, tracks: [], createdAt: Date.now() }
+          { id, name, tracks: [], createdAt: Date.now() }
         ]
-      })),
+      }));
+      return id;
+    },
       deletePlaylist: (id) => set((state) => ({
         playlists: state.playlists.filter(p => p.id !== id)
       })),

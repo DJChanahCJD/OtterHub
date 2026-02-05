@@ -12,6 +12,7 @@ import { MusicLayout } from '@/components/music/MusicLayout';
 import { MusicSidebar } from '@/components/music/MusicSidebar';
 import { MusicSearchView } from '@/components/music/MusicSearchView';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
+import { NetEaseView } from '@/components/music/NetEaseView';
 import { GlobalPlayer } from '@/components/music/GlobalPlayer';
 import { retry } from '@/lib/utils';
 
@@ -32,7 +33,7 @@ export default function MusicPage() {
     currentAudioTime: savedTime
   } = useMusicStore();
 
-  const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist" | "queue">("search");
+  const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist" | "queue" | "netease">("search");
   const [activePlaylistId, setActivePlaylistId] = useState<string>();
 
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
@@ -162,6 +163,10 @@ export default function MusicPage() {
           isPlaying={state.isPlaying}
         />
       </div>
+
+      {currentView === 'netease' && (
+        <NetEaseView />
+      )}
 
       {currentView === 'favorites' && (
         <MusicPlaylistView 

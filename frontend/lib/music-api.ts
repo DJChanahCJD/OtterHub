@@ -1,5 +1,7 @@
 import { MusicTrack, MusicSource } from '@shared/types';
 import { API_URL } from './api/config';
+import { useNetEaseStore } from '@/stores/netease-store';
+
 export interface SearchResult {
   code: number;
   data: MusicTrack[];
@@ -23,13 +25,25 @@ export interface SongLyric {
 
 const API_BASE = `${API_URL}/music-api`;
 
+// Helper to get cookie parameter
+const getCookieParam = (source: MusicSource) => {
+  if (source === 'netease') {
+    const cookie = useNetEaseStore.getState().cookie;
+    if (cookie) {
+      return `&cookie=${encodeURIComponent(cookie)}`;
+    }
+  }
+  return '';
+};
+
 export const musicApi = {
   /**
    * 搜索音乐
    */
   async search(query: string, source: MusicSource = 'netease', page: number = 1, count: number = 20): Promise<MusicTrack[]> {
     try {
-      const res = await fetch(`${API_BASE}?types=search&source=${source}&name=${encodeURIComponent(query)}&count=${count}&pages=${page}`);
+      const cookieParam = getCookieParam(source);
+      const res = await fetch(`${API_BASE}?types=search&source=${source}&name=${encodeURIComponent(query)}&count=${count}&pages=${page}${cookieParam}`);
       const json = await res.json();
       // The API returns a JSON array directly for search results based on the doc example?
       // Doc says: "返回：id...name...artist..."
@@ -46,7 +60,8 @@ export const musicApi = {
    */
   async getUrl(id: string, source: MusicSource, br: number = 320): Promise<string | null> {
     try {
-      const res = await fetch(`${API_BASE}?types=url&source=${source}&id=${id}&br=${br}`);
+      const cookieParam = getCookieParam(source);
+      const res = await fetch(`${API_BASE}?types=url&source=${source}&id=${id}&br=${br}${cookieParam}`);
       const json = await res.json();
       return json.url || null;
     } catch (e) {
@@ -61,7 +76,8 @@ export const musicApi = {
   async getPic(id: string, source: MusicSource, size: 300 | 500 = 300): Promise<string | null> {
     try {
       // id param for pic is pic_id
-      const res = await fetch(`${API_BASE}?types=pic&source=${source}&id=${id}&size=${size}`);
+      const cookieParam = getCookieParam(source);
+      const res = await fetch(`${API_BASE}?types=pic&source=${source}&id=${id}&size=${size}${cookieParam}`);
       const json = await res.json();
       return json.url || null;
     } catch (e) {
@@ -76,7 +92,8 @@ export const musicApi = {
   async getLyric(id: string, source: MusicSource): Promise<SongLyric | null> {
     try {
       // id param for lyric is lyric_id
-      const res = await fetch(`${API_BASE}?types=lyric&source=${source}&id=${id}`);
+      const cookieParam = getCookieParam(source);
+      const res = await fetch(`${API_BASE}?types=lyric&source=${source}&id=${id}${cookieParam}`);
       const json = await res.json();
       return {
         lyric: json.lyric || '',

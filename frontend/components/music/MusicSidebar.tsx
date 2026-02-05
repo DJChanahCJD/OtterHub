@@ -10,6 +10,7 @@ import {
   RefreshCw,
   CloudSync,
   ListVideo,
+  Cloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -26,10 +27,10 @@ import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 
 interface MusicSidebarProps {
-  currentView: "search" | "favorites" | "playlist" | "queue";
+  currentView: "search" | "favorites" | "playlist" | "queue" | "netease";
   currentPlaylistId?: string;
   onViewChange: (
-    view: "search" | "favorites" | "playlist" | "queue",
+    view: "search" | "favorites" | "playlist" | "queue" | "netease",
     playlistId?: string,
   ) => void;
   className?: string;
@@ -54,6 +55,7 @@ export const MusicSidebar = memo(function MusicSidebar({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSyncConfirmOpen, setIsSyncConfirmOpen] = useState(false);
+
 
   const handleCreatePlaylist = () => {
     if (!newPlaylistName.trim()) {
@@ -145,6 +147,12 @@ export const MusicSidebar = memo(function MusicSidebar({
             icon={ListVideo}
             label={`播放队列 (${queue.length})`}
             onClick={() => onViewChange("queue")}
+          />
+          <NavItem
+            active={currentView === "netease"}
+            icon={Cloud}
+            label="网易云音乐"
+            onClick={() => onViewChange("netease")}
           />
         </div>
       </div>
