@@ -349,8 +349,7 @@ OtterHub/
 - [x] 基于 cookie 实现登录登出
 - [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面）
   - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
-- [x] 随机壁纸
-  - 多壁纸源（Wallhaven、Bing、Pixabay 等）
+- [x] 随机壁纸（Wallhaven、Bing、Pixabay 等）
 - [x] 全面重构为 Hono 后端（鉴权更灵活，可移植性更好）
 - [x] 前端迁移至 Hono RPC (End-to-end Type Safety)
 - [x] 临时分享文件（无论是否 Private 都可以访问）
@@ -364,31 +363,25 @@ OtterHub/
     - [x] 对接KV持久化
     - [x] 随机播放队列（允许回溯上一首）
     - [x] 歌单导入功能（支持获取网易云的个人歌单导入, 参考1Listen）
+    - [] 网易云QR登录
     - [ ] 对接播客...
   - ~~[x] 视频：在线播放支持 (video.js)~~
-  - [ ] 文档：预览支持
-    - [ ] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
-    - [ ] 漫画（图片 → 连续阅读 / PDF）
+  - [x] 文档：预览支持
+    - [x] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
+    - [x] 漫画（图片 → 连续阅读 / PDF）
 
 ---
 
 ### Low Priority
 
 - [ ] API Token 支持
-- [ ] 对接外部 API 工具
-  - [ ] GD's Studio API（音频）
-  - [ ] wallheaven / Pixabay / Unsplash
-  - [ ] ~~在线图片编辑（压缩`browser-image-compression` / 裁剪`cropperjs` / 缩放+格式转换`Pica`）~~
-  - [ ] ~~音视频格式转换（Save As 功能 `ffmpeg.wasm`）~~
 - 其他
-  - 是否拓展V2 API， `blog:`/`music:` 拓展场景，或者直接用单个KV存json
-  - 前端localstorage自定义方案改用 Zustand persist
-- [ ] Demo 站点上传限制可配置（环境变量）
-- [ ] KV vs D1 数据库评估
-  - D1：单库 500MB，分库可达 5GB
-  - 优点：SQL、关系模型、文件夹结构更自然
-  - 当前结论：KV 足够，暂不迁移
-- [ ] ~~文件夹系统（通过文件名前缀 + 搜索 + Tag 达成等效能力）~~
+  - [ ] Demo 站点上传限制可配置（环境变量）
+  - [ ] KV vs D1 数据库评估
+    - D1：单库 500MB，分库可达 5GB
+    - 优点：SQL、关系模型、文件夹结构更自然
+    - 当前结论：KV 足够，暂不迁移
+  - [ ] ~~文件夹系统（通过文件名前缀 + 搜索 + Tag 达成等效能力）~~
 
 ---
 
