@@ -130,7 +130,10 @@
   html {
       scrollbar-gutter: auto;
       scrollbar-width: thin;
+      /* 日间模式 */
       scrollbar-color: var(--border) transparent;
+      /* 暗夜模式 */
+      @apply dark:[scrollbar-color:var(--muted-foreground)_transparent];
   }
 
   html::-webkit-scrollbar {
@@ -143,14 +146,14 @@
   }
 
   html::-webkit-scrollbar-thumb {
-    background-color: var(--border);
+    background-color: var(--muted-foreground);
     border-radius: 9999px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
 
   html::-webkit-scrollbar-thumb:hover {
-    background-color: var(--muted-foreground);
+    background-color: var(--foreground);
   }
   
   body {

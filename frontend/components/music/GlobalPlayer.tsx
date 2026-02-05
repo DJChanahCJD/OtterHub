@@ -407,17 +407,49 @@ export function GlobalPlayer({
 
           {/* Right: Settings - PC Only */}
           <div className="hidden md:flex flex-1 items-center justify-end gap-3 text-xs">
-            <Select value={quality} onValueChange={setQuality}>
-              <SelectTrigger className="h-7 px-2 bg-transparent border-muted hover:bg-muted/20">
-                <SelectValue placeholder="音质" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="128">标准 (128kbps)</SelectItem>
-                <SelectItem value="192">高品 (192kbps)</SelectItem>
-                <SelectItem value="320">极高 (320kbps)</SelectItem>
-                <SelectItem value="999">无损 (999kbps)</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Volume Control */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                >
+                  <VolumeIcon />
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                side="top"
+                align="center"
+                sideOffset={8}
+                className="
+                  relative flex flex-col items-center gap-2
+                  w-auto p-3
+                "
+              >
+                <div
+                  className="
+                    absolute bottom-[-6px] left-1/2 -translate-x-1/2
+                    w-3 h-3 rotate-45
+                    bg-popover border-r border-b
+                  "
+                />
+
+                <Slider
+                  orientation="vertical"
+                  value={[volume]}
+                  max={1}
+                  step={0.01}
+                  onValueChange={setVolumeValue}
+                  className="h-24 py-1"
+                />
+
+                <span className="text-xs text-muted-foreground w-6 text-center">
+                  {Math.round(volume * 100)}%
+                </span>
+              </PopoverContent>
+            </Popover>
 
             {/* Add to Playlist */}
             <Popover>
@@ -467,48 +499,18 @@ export function GlobalPlayer({
               </PopoverContent>
             </Popover>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                >
-                  <VolumeIcon />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                side="top"
-                align="center"
-                sideOffset={8}
-                className="
-                  relative flex flex-col items-center gap-2
-                  w-auto p-3
-                "
-              >
-                <div
-                  className="
-                    absolute bottom-[-6px] left-1/2 -translate-x-1/2
-                    w-3 h-3 rotate-45
-                    bg-popover border-r border-b
-                  "
-                />
-
-                <Slider
-                  orientation="vertical"
-                  value={[volume]}
-                  max={1}
-                  step={0.01}
-                  onValueChange={setVolumeValue}
-                  className="h-24 py-1"
-                />
-
-                <span className="text-xs text-muted-foreground w-6 text-center">
-                  {Math.round(volume * 100)}%
-                </span>
-              </PopoverContent>
-            </Popover>
+            {/* Quality Control */}
+            <Select value={quality} onValueChange={setQuality}>
+              <SelectTrigger className="h-7 px-2 bg-transparent border-muted hover:bg-muted/20">
+                <SelectValue placeholder="音质" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="128">标准 (128kbps)</SelectItem>
+                <SelectItem value="192">高品 (192kbps)</SelectItem>
+                <SelectItem value="320">极高 (320kbps)</SelectItem>
+                <SelectItem value="999">无损 (999kbps)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
