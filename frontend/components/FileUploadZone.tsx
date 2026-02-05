@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
-import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices } from "@/lib/utils";
+import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices, scanFiles } from "@/lib/utils";
 import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
@@ -23,8 +23,8 @@ export function FileUploadZone() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFiles = useCallback(
-    async (files: FileList) => {
-      const fileArray = Array.from(files);
+    async (files: FileList | File[]) => {
+      const fileArray = Array.isArray(files) ? files : Array.from(files);
       if (!fileArray.length) return;
 
       const uploadProgressMap: Record<string, number> = {};
@@ -161,10 +161,16 @@ export function FileUploadZone() {
   return (
     <div className="mb-6">
       <div
-        onDrop={(e) => {
+        onDrop={async (e) => {
           e.preventDefault();
           setIsDragging(false);
-          processFiles(e.dataTransfer.files);
+
+          if (e.dataTransfer.items) {
+            const files = await scanFiles(e.dataTransfer.items);
+            processFiles(files);
+          } else {
+            processFiles(e.dataTransfer.files);
+          }
         }}
         onDragOver={(e) => {
           e.preventDefault();

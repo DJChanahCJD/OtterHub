@@ -78,7 +78,7 @@ export async function retry<T>(
  * @param items 要处理的数组
  * @param fn 处理单个项目的函数（支持异步）
  * @param onProgress 进度回调 (current, total) => void
- * @param batchSize 每批处理数量，默认 50 (Store操作较快，可以大一点)
+ * @param batchSize 每批处理数量，默认 50 
  * @param interval 批次间隔(ms)，默认 0 (利用事件循环释放主线程)
  */
 export async function processBatch<T>(

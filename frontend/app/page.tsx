@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { FileUploadZone } from "@/components/upload/FileUploadZone";
+import { FileUploadZone } from "@/components/FileUploadZone";
 import { FileGallery } from "@/components/FileGallery";
 import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
 import { EmptyState } from "@/components/EmptyState";
