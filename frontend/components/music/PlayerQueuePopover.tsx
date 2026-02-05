@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
+import { useEffect, useRef, useState } from "react";
 
 interface PlayerQueuePopoverProps {
   queue: MusicTrack[];
@@ -28,13 +29,38 @@ export function PlayerQueuePopover({
   onReshuffle,
   trigger,
 }: PlayerQueuePopoverProps) {
+  const [open, setOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    // 等待 Radix 定位 + ScrollArea 计算高度
+    const id = requestAnimationFrame(() => {
+      scrollRef.current?.scrollIntoView({
+        block: "center",
+        behavior: "instant", // 打开时不要 smooth，否则会抖
+      });
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, [open, currentIndex]);
+
+  const setCurrentRef = (el: HTMLDivElement | null) => {
+    if (el) scrollRef.current = el;
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
         side="top"
         align="center"
         className="w-80 p-0 h-96 flex flex-col"
+        onOpenAutoFocus={(e) => {
+          // 防止 Popover 打开时自动聚焦导致滚动跳动，或者可以在这里也触发一次滚动
+           e.preventDefault();
+        }}
       >
         <div className="p-3 border-b text-sm font-medium flex justify-between items-center">
           <span>播放列表 ({queue.length})</span>
@@ -67,6 +93,7 @@ export function PlayerQueuePopover({
               {queue.map((track, i) => (
                 <div
                   key={`${track.id}-${i}`}
+                  ref={i === currentIndex ? setCurrentRef : undefined}
                   className={cn(
                     "flex items-center gap-2 p-2 rounded text-sm cursor-pointer hover:bg-muted/50",
                     i === currentIndex && "bg-muted/50 text-primary",
@@ -74,11 +101,14 @@ export function PlayerQueuePopover({
                   onClick={() => onPlay(i)}
                 >
                   {i === currentIndex && isPlaying ? (
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      <span className="animate-spin text-primary">💿</span>
+                    <div className="relative w-4 h-4 flex items-center justify-center shrink-0">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                      </span>
                     </div>
                   ) : (
-                    <span className="w-4 text-center text-xs text-muted-foreground font-mono">
+                    <span className="w-4 text-center text-xs text-muted-foreground font-mono shrink-0">
                       {i + 1}
                     </span>
                   )}
