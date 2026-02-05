@@ -9,6 +9,7 @@ import {
   SquarePlus,
   RefreshCw,
   CloudSync,
+  ListVideo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -23,13 +24,12 @@ import { Input } from "@/components/ui/input";
 import { useState, memo } from "react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
-import { musicStoreApi } from "@/lib/api/settings";
 
 interface MusicSidebarProps {
-  currentView: "search" | "favorites" | "playlist";
+  currentView: "search" | "favorites" | "playlist" | "queue";
   currentPlaylistId?: string;
   onViewChange: (
-    view: "search" | "favorites" | "playlist",
+    view: "search" | "favorites" | "playlist" | "queue",
     playlistId?: string,
   ) => void;
   className?: string;
@@ -41,10 +41,13 @@ export const MusicSidebar = memo(function MusicSidebar({
   onViewChange,
   className,
 }: MusicSidebarProps) {
-  const { playlists, createPlaylist } = useMusicStore(
+  const { playlists, createPlaylist, queue, currentIndex, clearQueue } = useMusicStore(
     useShallow((state) => ({
       playlists: state.playlists,
       createPlaylist: state.createPlaylist,
+      queue: state.queue,
+      currentIndex: state.currentIndex,
+      clearQueue: state.clearQueue,
     })),
   );
   const [newPlaylistName, setNewPlaylistName] = useState("");
@@ -136,6 +139,12 @@ export const MusicSidebar = memo(function MusicSidebar({
             icon={Heart}
             label="我的喜欢"
             onClick={() => onViewChange("favorites")}
+          />
+          <NavItem
+            active={currentView === "queue"}
+            icon={ListVideo}
+            label={`播放队列 (${queue.length})`}
+            onClick={() => onViewChange("queue")}
           />
         </div>
       </div>

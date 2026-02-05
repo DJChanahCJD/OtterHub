@@ -26,12 +26,13 @@ export default function MusicPage() {
     removeFromPlaylist,
     renamePlaylist,
     deletePlaylist,
+    clearQueue,
     quality,
     currentIndex,
     currentAudioTime: savedTime
   } = useMusicStore();
 
-  const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist">("search");
+  const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist" | "queue">("search");
   const [activePlaylistId, setActivePlaylistId] = useState<string>();
 
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
@@ -145,6 +146,8 @@ export default function MusicPage() {
 
     const list = currentView === 'favorites' 
       ? favorites 
+      : currentView === 'queue'
+      ? queue
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
 
     playContext(list, index);
@@ -188,6 +191,27 @@ export default function MusicPage() {
             if (activePlaylistId === id) {
               setCurrentView('search');
               setActivePlaylistId(undefined);
+            }
+          }}
+          currentTrackId={currentTrack?.id}
+          isPlaying={state.isPlaying}
+        />
+      )}
+
+      {currentView === 'queue' && (
+        <MusicPlaylistView 
+          title="播放队列"
+          description={`共 ${queue.length} 首歌曲`}
+          tracks={queue}
+          onPlay={handlePlayInPlaylist}
+          onRemove={(t) => {
+            // 从队列中移除歌曲
+            const newQueue = queue.filter(item => item.id !== t.id);
+            playContext(newQueue, Math.min(currentIndex, newQueue.length - 1));
+          }}
+          onDelete={() => {
+            if (confirm('确定清空播放队列吗？')) {
+              clearQueue();
             }
           }}
           currentTrackId={currentTrack?.id}
