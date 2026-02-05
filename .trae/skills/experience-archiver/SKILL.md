@@ -19,7 +19,7 @@ description: 用于归纳开发经验、错误复盘或关键决策，并将其�
      - **分类**：确定属于 `代码规范`、`技术栈`、`部署` 还是 `通用经验`。
 
 3. **读取规则文件**
-   - 读取 `c:\Users\DJCHAN\SE\2_GithubProject\OtterHub\.trae\rules\project_rules.md`。
+   - 读取 `c:\Users\DJCHAN\SE\2_GithubProject\OtterHub\.trae\rules`目录下的对应 rule 文件。
 
 4. **更新规则文件**
    - 检查现有规则，避免重复。
