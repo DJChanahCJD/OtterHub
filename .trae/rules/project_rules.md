@@ -1,12 +1,12 @@
 ---
 alwaysApply: false
-description: 当前问题涉及前后端协作时使用
+description: 当前问题涉及前后端协作、项目架构时使用
 ---
 
 # OtterHub
 
 私人云盘系统  
-基于 **Cloudflare Pages + KV + Telegram Bot API**
+基于 **Cloudflare Pages + KV + Telegram Bot API**，不支持 Node.js Runtime。
 
 ---
 
