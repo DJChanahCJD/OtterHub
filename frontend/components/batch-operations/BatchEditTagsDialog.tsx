@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Tag, Info } from "lucide-react";
 import { BatchTagEditor } from "./BatchTagEditor";
-import { applyTagStates, calcOriginalTagStates, hasAnyTagChange, nextTagState, TagStateMap } from "@/lib/utils";
+import { applyTagStates, calcOriginalTagStates, hasAnyTagChange, nextTagState, TagStateMap, processBatch } from "@/lib/utils";
 
 interface BatchAddTagsDialogProps {
   files: FileItem[];
@@ -30,6 +30,7 @@ export function BatchEditTagsDialog({
   onSuccess,
 }: BatchAddTagsDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   // 计算原始状态（只算一次，作为基准）
   const originalStates = useMemo(() => calcOriginalTagStates(files), [files]);
@@ -41,6 +42,7 @@ export function BatchEditTagsDialog({
   useEffect(() => {
     if (open) {
       setTagStates(originalStates);
+      setProgress({ current: 0, total: 0 });
     }
   }, [open, originalStates]);
 
@@ -66,9 +68,11 @@ export function BatchEditTagsDialog({
 
     try {
       const updatedFiles: Array<{ name: string; tags: string[] }> = [];
+      setProgress({ current: 0, total: files.length });
 
-      await Promise.all(
-        files.map(async (file) => {
+      await processBatch(
+        files,
+        async (file) => {
           const newTags = applyTagStates(
             (file.metadata?.tags ?? []) as FileTag[],
             currentStates,
@@ -81,7 +85,9 @@ export function BatchEditTagsDialog({
             name: file.name,
             tags: newTags,
           });
-        }),
+        },
+        (current, total) => setProgress({ current, total }),
+        10,
       );
 
       toast.success(`成功更新 ${files.length} 个文件的标签`);
@@ -153,7 +159,9 @@ export function BatchEditTagsDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  更新中...
+                  {progress.total > 0
+                    ? `更新中 ${progress.current}/${progress.total}`
+                    : "更新中..."}
                 </>
               ) : (
                 "更新标签"

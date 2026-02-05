@@ -14,7 +14,7 @@ import {
 import { useFileDataStore, useActiveItems, useFilteredFiles } from "@/stores/file";
 import { useFileUIStore, useActiveSelectedKeys } from "@/stores/file";
 import { getFileUrl, moveToTrash } from "@/lib/api";
-import { downloadFile } from "@/lib/utils";
+import { downloadFile, processBatch } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
@@ -140,21 +140,35 @@ export function BatchOperationsBar() {
     const toastId = toast.loading(`正在删除 ${selectedKeys.length} 个文件...`);
 
     try {
-      const results = await Promise.all(
-        selectedKeys.map(async (key) => {
+      const successful: string[] = [];
+      const failed: string[] = [];
+
+      await processBatch(
+        selectedKeys,
+        async (key) => {
           try {
             const success = await moveToTrash(key);
-            return { key, success };
+            if (success) {
+              successful.push(key);
+            } else {
+              failed.push(key);
+            }
           } catch (err) {
-            return { key, success: false };
+            failed.push(key);
           }
-        }),
+        },
+        (current, total) => {
+          toast.loading(`正在删除 ${current}/${total} 个文件...`, {
+            id: toastId,
+          });
+        },
+        10,
       );
 
-      const successful = results.filter((r) => r.success);
-      const failed = results.filter((r) => !r.success);
-
-      successful.forEach((r) => moveToTrashLocal(itemMap.get(r.key)!));
+      successful.forEach((key) => {
+        const item = itemMap.get(key);
+        if (item) moveToTrashLocal(item);
+      });
 
       if (failed.length === 0) {
         toast.success(`成功删除 ${successful.length} 个文件`, { id: toastId });
@@ -163,7 +177,7 @@ export function BatchOperationsBar() {
           id: toastId,
           description: `${failed.length} 个文件删除失败，成功删除 ${successful.length} 个`,
         });
-      } 
+      }
     } catch (error) {
       toast.error("操作失败", {
         id: toastId,

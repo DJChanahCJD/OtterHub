@@ -4,8 +4,8 @@ import { useCallback, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
-import { buildTmpFileKey, formatFileSize, getFileType, cn } from "@/lib/utils";
-import { useFileDataStore, useFileUIStore } from "@/stores/file";
+import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch } from "@/lib/utils";
+import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
 import {
@@ -139,16 +139,15 @@ export function FileUploadZone() {
       };
 
       /** 并发上传 */
-      for (let i = 0; i < fileArray.length; i += MAX_CONCURRENTS) {
-        const batch = fileArray.slice(i, i + MAX_CONCURRENTS);
-        await Promise.all(
-          batch.map((file) =>
-            file.size > MAX_CHUNK_SIZE
-              ? uploadChunkedFile(file)
-              : uploadNormalFile(file),
-          ),
-        );
-      }
+      await processBatch(
+        fileArray,
+        (file) =>
+          file.size > MAX_CHUNK_SIZE
+            ? uploadChunkedFile(file)
+            : uploadNormalFile(file),
+        undefined,
+        MAX_CONCURRENTS,
+      );
 
       if (successCount > 0) {
         toast.success(`成功上传 ${successCount} 个文件`);

@@ -21,6 +21,7 @@ import {
   hasRenameChange,
   previewRename,
   renameFileName,
+  processBatch,
 } from "@/lib/utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ export function BatchRenameDialog({
   onSuccess,
 }: BatchRenameDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   const [mode, setMode] = useState<BatchRenameMode>("none");
   const [value, setValue] = useState("");
@@ -70,6 +72,7 @@ export function BatchRenameDialog({
     if (open) {
       setMode("none");
       setValue("");
+      setProgress({ current: 0, total: 0 });
     }
   }, [open]);
 
@@ -90,9 +93,11 @@ export function BatchRenameDialog({
 
     try {
       const updatedFiles: Array<{ name: string; fileName: string }> = [];
+      setProgress({ current: 0, total: files.length });
 
-      await Promise.all(
-        files.map(async (file) => {
+      await processBatch(
+        files,
+        async (file) => {
           const newFileName = renameFileName(file.metadata.fileName, payload);
 
           await editMetadata(file.name, { fileName: newFileName });
@@ -101,7 +106,9 @@ export function BatchRenameDialog({
             name: file.name,
             fileName: newFileName,
           });
-        })
+        },
+        (current, total) => setProgress({ current, total }),
+        10,
       );
 
       toast.success(`成功重命名 ${files.length} 个文件`);
@@ -275,7 +282,9 @@ export function BatchRenameDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  重命名中...
+                  {progress.total > 0
+                    ? `重命名中 ${progress.current}/${progress.total}`
+                    : "重命名中..."}
                 </>
               ) : (
                 "确认重命名"
