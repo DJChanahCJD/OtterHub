@@ -44,3 +44,29 @@ export function buildTmpFileKey(file: File): string {
 export function openExternalLink(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
+
+/**
+ * 简单重试工具
+ * @param fn 要执行的异步函数
+ * @param retry 重试次数
+ * @param delay 每次重试间隔(ms)
+ */
+export async function retry<T>(
+  fn: () => Promise<T>,
+  retry = 2,
+  delay = 500
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let i = 0; i <= retry; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      if (i === retry) break;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+
+  throw lastError;
+}

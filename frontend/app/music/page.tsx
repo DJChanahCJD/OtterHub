@@ -13,9 +13,10 @@ import { MusicSidebar } from '@/components/music/MusicSidebar';
 import { MusicSearchView } from '@/components/music/MusicSearchView';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
 import { GlobalPlayer } from '@/components/music/GlobalPlayer';
+import { retry } from '@/lib/utils';
 
 export default function MusicPage() {
-  // Store
+
   const { 
     queue, 
     playContext, 
@@ -27,94 +28,104 @@ export default function MusicPage() {
     deletePlaylist,
     quality,
     currentIndex,
-    currentAudioTime: savedTime // Get saved time from store
+    currentAudioTime: savedTime
   } = useMusicStore();
 
-  // Local View State
   const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist">("search");
   const [activePlaylistId, setActivePlaylistId] = useState<string>();
 
-  // Audio Player Hook
-  // We pass the queue to the hook. The hook manages audio element.
   const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
   const currentTrack = queue[currentIndex];
 
-  // Load Audio Source
+  /* ---------------- 自动播放状态锁 ---------------- */
   const isPlayingRef = useRef(state.isPlaying);
-  useEffect(() => {
-    isPlayingRef.current = state.isPlaying;
-  }, [state.isPlaying]);
-  
+  useEffect(() => { isPlayingRef.current = state.isPlaying }, [state.isPlaying]);
+
+  /* ---------------- 防止旧请求覆盖新歌 ---------------- */
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
     if (!currentTrack || !audioRef.current) return;
 
-    const loadSrc = async () => {
-      // 开始加载，设置加载状态为 true
+    const trackSnapshot = currentTrack; // 锁定歌曲
+    const requestId = ++requestIdRef.current;
+    let cancelled = false;
+
+    const load = async () => {
+      const audio = audioRef.current!;
       controls.setLoading(true);
-      
-      // 立即暂停旧音频，防止切歌时播放上一首的残留内容
-      audioRef.current?.pause();
-      
-      const trackId = currentTrack.id;
+      audio.pause();
 
       try {
-        const url = await musicApi.getUrl(currentTrack.id, currentTrack.source, parseInt(quality));
-        
-        // 确保组件未卸载且歌曲未再次切换
-        if (url && audioRef.current && trackId === currentTrack.id) {
-          if (audioRef.current.src !== url) {
-            audioRef.current.src = url;
-            
-            // Restore saved time if available (e.g. after refresh)
-            if (savedTime > 0) {
-              audioRef.current.currentTime = savedTime;
-            }
+        /* ---------- 1 获取 URL（带重试） ---------- */
+        const url = await retry(
+          () => musicApi.getUrl(trackSnapshot.id, trackSnapshot.source, parseInt(quality)),
+          2,
+          600
+        );
 
-            audioRef.current.load();
-            
-            if (isPlayingRef.current) {
-              audioRef.current.play()
-                .then(() => controls.play())
-                .catch((err) => {
-                  if (err?.name === "NotAllowedError") {
-                    toast.error("浏览器阻止自动播放，请点击播放按钮开始播放");
-                    controls.pause();
-                    return;
-                  }
-                  console.error(err);
-                });
-            }
-          }
-        } else if (!url) {
-          toast.error("无法获取播放链接");
-          controls.next();
+        if (!url) throw new Error("EMPTY_URL");
+        if (cancelled || requestId !== requestIdRef.current) return;
+
+        /* ---------- 2 设置音频 ---------- */
+        if (audio.src !== url) {
+          audio.src = url;
+
+          if (savedTime > 0) audio.currentTime = savedTime;
+          audio.load();
         }
-      } catch (e) {
-        console.error(e);
+
+        /* ---------- 3 自动播放 ---------- */
+        if (!isPlayingRef.current) return;
+
+        try {
+          await audio.play();
+          controls.play();
+          toast.success(`正在播放：${trackSnapshot.name}`);
+        } catch (err: any) {
+          if (cancelled || requestId !== requestIdRef.current) return;
+
+          // 浏览器策略阻止
+          if (err?.name === "NotAllowedError") {
+            toast.info("浏览器阻止自动播放，请点击播放");
+            controls.pause();
+            return;
+          }
+
+          throw err; // 真正播放失败
+        }
+
+      } catch (err: any) {
+        if (cancelled || requestId !== requestIdRef.current) return;
+
+        console.error("audio load failed:", err);
+
+        toast.error("该歌曲无法播放，已跳过");
         controls.next();
       } finally {
-        // 加载完成，无论成功与否都设置加载状态为 false
-        controls.setLoading(false);
+        if (!cancelled && requestId === requestIdRef.current) {
+          controls.setLoading(false);
+        }
       }
     };
-    
-    loadSrc();
+
+    load();
+    return () => { cancelled = true };
+
   }, [currentTrack?.id, quality]);
 
-  // Handlers
+
+  /* ---------------- 播放逻辑 ---------------- */
+
   const handlePlayContext = (track: MusicTrack, list: MusicTrack[]) => {
-    // Toggle play if same track
     if (currentTrack?.id === track.id) {
       controls.togglePlay();
       return;
     }
 
-    // Find index of track in list
     const index = list.findIndex(t => t.id === track.id);
     if (index === -1) return;
 
-    // Check if we are already playing this context
-    // Simple check: same length and same first item ID
     const isSameContext = queue.length === list.length && queue[0]?.id === list[0]?.id;
 
     if (isSameContext) {
@@ -123,79 +134,68 @@ export default function MusicPage() {
     } else {
       playContext(list, index);
       controls.play();
-      // Hook sync will happen via useEffect
     }
   };
 
   const handlePlayInPlaylist = (track: MusicTrack | null, index?: number) => {
-    // Case 1: 播放单曲 (有 track 和 index)
-    if (track && index !== undefined) {
-      // Toggle play if same track
-      if (currentTrack?.id === track.id) {
-        controls.togglePlay();
-        return;
-      }
+    if (track && index !== undefined && currentTrack?.id === track.id) {
+      controls.togglePlay();
+      return;
     }
 
-    // For playlist views, we already know the list
     const list = currentView === 'favorites' 
       ? favorites 
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
-    
-    // Case 2: 播放全部 (index 为 undefined) -> 由 store 决定起点 (如随机)
-    // Case 3: 播放新单曲 -> 传入 index
+
     playContext(list, index);
   };
 
-  // Render Content
-  const renderContent = () => {
-    return (
-      <div className="h-full w-full relative">
-        {/* Search View (Hidden to preserve state) */}
-        <div className={currentView === 'search' ? 'h-full w-full' : 'hidden'}>
-          <MusicSearchView 
-            onPlay={handlePlayContext} 
-            currentTrackId={currentTrack?.id}
-            isPlaying={state.isPlaying}
-          />
-        </div>
+  /* ---------------- UI ---------------- */
 
-        {/* Favorites View */}
-        {currentView === 'favorites' && (
-          <MusicPlaylistView 
-            title="我的喜欢"
-            tracks={favorites}
-            onPlay={handlePlayInPlaylist}
-            onRemove={(t) => removeFromFavorites(t.id)}
-            currentTrackId={currentTrack?.id}
-            isPlaying={state.isPlaying}
-          />
-        )}
+  const renderContent = () => (
+    <div className="h-full w-full relative">
 
-        {/* User Playlist View */}
-        {currentView === 'playlist' && activePlaylistId && (
-          <MusicPlaylistView 
-            title={playlists.find(p => p.id === activePlaylistId)?.name || "歌单"}
-            description={`创建于 ${format(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0, 'yyyy-mm-dd')}`}
-            tracks={playlists.find(p => p.id === activePlaylistId)?.tracks || []}
-            playlistId={activePlaylistId}
-            onPlay={handlePlayInPlaylist}
-            onRemove={(t) => removeFromPlaylist(activePlaylistId, t.id)}
-            onRename={(id, newName) => renamePlaylist(id, newName)}
-            onDelete={(id) => {
-              deletePlaylist(id);
-              if (activePlaylistId === id) {
-                setCurrentView('search');
-                setActivePlaylistId(undefined);
-              }
-            }}
-            currentTrackId={currentTrack?.id}
-            isPlaying={state.isPlaying}
-          />
-        )}
+      <div className={currentView === 'search' ? 'h-full w-full' : 'hidden'}>
+        <MusicSearchView 
+          onPlay={handlePlayContext} 
+          currentTrackId={currentTrack?.id}
+          isPlaying={state.isPlaying}
+        />
       </div>
-    );
-  };
+
+      {currentView === 'favorites' && (
+        <MusicPlaylistView 
+          title="我的喜欢"
+          tracks={favorites}
+          onPlay={handlePlayInPlaylist}
+          onRemove={(t) => removeFromFavorites(t.id)}
+          currentTrackId={currentTrack?.id}
+          isPlaying={state.isPlaying}
+        />
+      )}
+
+      {currentView === 'playlist' && activePlaylistId && (
+        <MusicPlaylistView 
+          title={playlists.find(p => p.id === activePlaylistId)?.name || "歌单"}
+          description={`创建于 ${format(playlists.find(p => p.id === activePlaylistId)?.createdAt || 0, 'yyyy-MM-dd')}`}
+          tracks={playlists.find(p => p.id === activePlaylistId)?.tracks || []}
+          playlistId={activePlaylistId}
+          onPlay={handlePlayInPlaylist}
+          onRemove={(t) => removeFromPlaylist(activePlaylistId, t.id)}
+          onRename={renamePlaylist}
+          onDelete={(id) => {
+            deletePlaylist(id);
+            if (activePlaylistId === id) {
+              setCurrentView('search');
+              setActivePlaylistId(undefined);
+            }
+          }}
+          currentTrackId={currentTrack?.id}
+          isPlaying={state.isPlaying}
+        />
+      )}
+    </div>
+  );
 
   const sidebar = useMemo(() => (
     <MusicSidebar 
