@@ -25,6 +25,7 @@ interface MusicTrackItemProps {
   // Custom actions to render (e.g. Delete button)
   customActions?: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function MusicTrackItem({
@@ -41,12 +42,14 @@ export function MusicTrackItem({
   hideAddToPlaylist,
   customActions,
   className,
+  style,
 }: MusicTrackItemProps) {
   const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToPlaylist, createPlaylist } = useMusicStore();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   return (
     <div
+      style={style}
       onClick={showCheckbox ? onSelect : undefined}
       onDoubleClick={!showCheckbox ? onPlay : undefined}
       className={cn(

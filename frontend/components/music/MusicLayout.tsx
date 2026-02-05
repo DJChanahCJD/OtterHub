@@ -48,7 +48,7 @@ export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
               {sidebar}
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel defaultSize={80}>
+            <ResizablePanel defaultSize={90}>
               {children}
             </ResizablePanel>
           </ResizablePanelGroup>

@@ -1,7 +1,9 @@
 import { MusicTrack } from "@shared/types";
 import { Button } from "@/components/ui/button";
-import { Play, Music, MoreHorizontal } from "lucide-react";
+import { Play, Music, MoreHorizontal, Search } from "lucide-react";
 import { MusicTrackList } from "./MusicTrackList";
+import { Input } from "@/components/ui/input";
+import { useState, useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +43,18 @@ export function MusicPlaylistView({
   isPlaying,
   action
 }: MusicPlaylistViewProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTracks = useMemo(() => {
+    if (!searchQuery.trim()) return tracks;
+    const lower = searchQuery.toLowerCase();
+    return tracks.filter(t => 
+      t.name.toLowerCase().includes(lower) ||
+      t.artist.some(a => a.toLowerCase().includes(lower)) ||
+      t.album?.toLowerCase().includes(lower)
+    );
+  }, [tracks, searchQuery]);
+
   if (!tracks || tracks.length === 0) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -112,6 +126,16 @@ export function MusicPlaylistView({
                  </DropdownMenuContent>
                </DropdownMenu>
              )}
+             
+             <div className="relative ml-auto w-48 md:w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+             </div>
           </div>
         </div>
       </div>
@@ -119,7 +143,7 @@ export function MusicPlaylistView({
       {/* List */}
       <div className="flex-1 min-h-0 bg-background/50">
         <MusicTrackList
-          tracks={tracks}
+          tracks={filteredTracks}
           onPlay={(track) => onPlay(track, tracks.findIndex(t => t.id === track.id))}
           currentTrackId={currentTrackId}
           isPlaying={isPlaying}
