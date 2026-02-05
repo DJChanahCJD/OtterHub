@@ -199,6 +199,8 @@ export function GlobalPlayer({
         currentTrack={currentTrack}
         currentTime={currentTime}
         coverUrl={coverUrl}
+        isFavorite={currentTrack ? isFavorite(currentTrack.id) : false}
+        onToggleFavorite={handleToggleFavorite}
       />
 
       {/* Bottom Player Bar */}
@@ -217,8 +219,8 @@ export function GlobalPlayer({
           onSeek={seek}
         />
 
-        {/* 2. Main Controls Area (h-20) */}
-        <div className="flex items-center justify-between px-4 h-20 gap-4">
+        {/* 2. Main Controls Area (h-24 for mobile) */}
+        <div className="flex items-center justify-between px-4 h-24 gap-4">
           {/* Left: Info - PC Only */}
           <div className="hidden md:flex flex-1">
             <PlayerTrackInfo

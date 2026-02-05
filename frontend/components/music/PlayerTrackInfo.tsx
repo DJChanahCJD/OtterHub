@@ -26,10 +26,10 @@ export function PlayerTrackInfo({
   onDownload,
 }: PlayerTrackInfoProps) {
   const isMobile = useIsMobile();
-  const sizeClasses = isMobile ? "h-10 w-10" : "h-12 w-12";
-  const iconSize = isMobile ? "h-5 w-5" : "h-6 w-6";
-  const textSize = isMobile ? "text-sm" : "text-sm";
-  const subTextSize = isMobile ? "text-xs" : "text-xs";
+  const sizeClasses = "h-16 w-16";
+  const iconSize = "h-8 w-8";
+  const textSize = "text-lg";
+  const subTextSize = "text-sm";
 
   if (!track) {
     return (
@@ -51,7 +51,7 @@ export function PlayerTrackInfo({
       )}
       onClick={onToggleFullScreen}
     >
-      <div className={`${sizeClasses} rounded bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative`}>
+      <div className={`${sizeClasses} rounded bg-muted flex items-center justify-center overflow-hidden shrink-0 relative`}>
         {coverUrl ? (
           <img
             src={coverUrl}
@@ -72,7 +72,7 @@ export function PlayerTrackInfo({
         )}
       </div>
 
-      <div className="flex flex-col min-w-0">
+      <div className="flex flex-col min-w-0 ml-1">
         <div className={`${textSize} font-semibold truncate`}>
           {track.name}
         </div>

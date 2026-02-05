@@ -14,6 +14,8 @@ interface FullScreenPlayerProps {
   currentTrack: MusicTrack | null;
   currentTime: number;
   coverUrl: string | null;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 export function FullScreenPlayer({
@@ -22,6 +24,8 @@ export function FullScreenPlayer({
   currentTrack,
   currentTime,
   coverUrl,
+  isFavorite = false,
+  onToggleFavorite,
 }: FullScreenPlayerProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -92,7 +96,7 @@ export function FullScreenPlayer({
         </div>
 
         {/* Mobile Layout: Single Column */}
-        <div className="flex flex-col items-center justify-center w-full md:hidden py-8">
+        <div className="flex flex-col items-center justify-center w-full md:hidden py-8 gap-6">
           {/* Small Album Art (Mobile) */}
           <div className="aspect-square w-40 h-40 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] overflow-hidden bg-muted/20 flex items-center justify-center">
             {coverUrl ? (
@@ -106,9 +110,9 @@ export function FullScreenPlayer({
             )}
           </div>
 
-          {/* Lyrics Panel (Mobile) */}
-          <div className="w-full flex-1">
-            <LyricsPanel track={currentTrack} currentTime={currentTime} />
+          {/* Lyrics Panel (Mobile) - Fixed Height */}
+          <div className="w-full h-80">
+            <LyricsPanel track={currentTrack} currentTime={currentTime} isFavorite={isFavorite} onToggleFavorite={onToggleFavorite} />
           </div>
         </div>
       </div>

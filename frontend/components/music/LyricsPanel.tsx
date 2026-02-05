@@ -4,10 +4,14 @@ import { MusicTrack } from "@shared/types";
 import { musicApi } from "@/lib/music-api";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "../ui/button";
+import { Heart } from "lucide-react";
 
 interface LyricsPanelProps {
   track: MusicTrack | null;
   currentTime: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 interface LyricLine {
@@ -57,7 +61,7 @@ function parseLrc(lrc: string, tLrc?: string): LyricLine[] {
   return result;
 }
 
-export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
+export function LyricsPanel({ track, currentTime, isFavorite, onToggleFavorite }: LyricsPanelProps) {
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
   const [loading, setLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -124,38 +128,84 @@ export function LyricsPanel({ track, currentTime }: LyricsPanelProps) {
 
   /* ---------- 正式 UI ---------- */
 
-  // 移动端 UI
+  // 移动端 UI - 多行歌词显示
   if (isMobile) {
-    const currentLyric = lyrics[activeIndex];
-    
     return (
       <div className="h-full flex flex-col p-4 gap-4">
-        {/* 歌曲信息 */}
-        <div className="flex flex-col gap-2 pb-4 border-b border-border/40">
-          <h3 className="text-xl font-bold tracking-tight text-foreground/90 text-center">
+        {/* 歌曲信息区域 */}
+        <div className={cn(
+          "flex flex-col gap-2",
+          "pb-4 border-b border-border/40"
+        )}>
+          <h3 className={cn(
+            "font-bold tracking-tight text-foreground/90 text-center",
+            "text-xl"
+          )}>
             {track.name}
           </h3>
-          <p className="text-sm text-muted-foreground/80 text-center">
-            歌手：{track.artist.join(" / ")}
+          <p className={cn(
+            "text-muted-foreground/80 text-center",
+            "text-sm"
+          )}>
+            {track.artist.join(" / ")}
           </p>
+          
+          <div className="flex justify-center mt-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+              onClick={onToggleFavorite}
+              title="喜欢"
+            >
+              <Heart
+                className={cn(
+                  "h-5 w-5",
+                  isFavorite && "fill-primary text-primary"
+                )}
+              />
+            </Button>
+          </div>
         </div>
-
-        {/* 当前歌词 (仅显示当前行) */}
-        <div className="flex-1 flex items-center justify-center">
-          {lyrics.length > 0 ? (
-            <div className="text-center px-4">
-              <p className="text-lg font-medium text-white leading-relaxed">
-                {currentLyric?.text || "暂无歌词"}
-              </p>
-              {currentLyric?.ttext && (
-                <p className="mt-2 text-sm font-medium text-muted-foreground/90">
-                  {currentLyric.ttext}
-                </p>
+        
+        {/* 歌词显示区域 */}
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full">
+            <div className="py-8 space-y-4 text-center">
+              {lyrics.map((line, i) => {
+                const isActive = i === activeIndex;
+                return (
+                  <div
+                    key={i}
+                    ref={(el) => {
+                      lineRefs.current[i] = el;
+                    }}
+                    className={cn(
+                      "px-4 transition-all duration-300 ease-out",
+                      isActive
+                        ? "text-white text-lg font-semibold scale-105"
+                        : "text-muted-foreground/60 scale-100 blur-[0.5px]"
+                    )}
+                  >
+                    <p className="text-lg leading-relaxed">
+                      {line.text}
+                    </p>
+                    {line.ttext && (
+                      <p className="mt-1 text-sm font-medium text-muted-foreground/90">
+                        {line.ttext}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              
+              {lyrics.length === 0 && (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground text-center">纯音乐，请欣赏</p>
+                </div>
               )}
             </div>
-          ) : (
-            <p className="text-muted-foreground text-center">纯音乐，请欣赏</p>
-          )}
+          </ScrollArea>
         </div>
       </div>
     );
