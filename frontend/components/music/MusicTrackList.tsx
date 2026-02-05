@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListChecks, Plus, Heart, Download, Trash2, ListPlus, ListMusic, Loader2, Search, ListCheck } from "lucide-react";
+import { ListChecks, Plus, Heart, Download, Trash2, ListPlus, ListMusic, Loader2, Search, Check, X, MoreVertical } from "lucide-react";
 import { MusicTrack } from "@shared/types";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
@@ -100,7 +100,7 @@ export function MusicTrackList({
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
-         <div className="grid grid-cols-[3rem_1.5fr_1fr_8rem] gap-2 items-center px-4 text-sm text-muted-foreground">
+         <div className="grid items-center gap-2 px-3 md:px-4 text-sm text-muted-foreground grid-cols-[3rem_1fr_auto] md:grid-cols-[3rem_1.5fr_1fr_auto]">
             {!isSelectionMode ? (
               <>
                  <div className="text-center">#</div>
@@ -128,78 +128,147 @@ export function MusicTrackList({
                       aria-label="Select all"
                     />
                  </div>
-                 <div className="col-span-2 flex items-center gap-2">
-                     <span className="text-xs mr-2 text-foreground whitespace-nowrap">已选 {selectedIds.size} 首</span>
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="h-8 px-3 text-xs font-normal" 
-                      onClick={() => handleBatch(addToQueue, "已添加")} 
-                      disabled={selectedIds.size === 0}
-                    >
-                      <Plus className="w-3.5 h-3.5 mr-1.5" /> 
-                      加入播放列表
-                    </Button>
-                     <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleBatch(addToFavorites, "已喜欢")} disabled={selectedIds.size === 0} title="喜欢">
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleBatchDownload} disabled={selectedIds.size === 0} title="下载">
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        
-                        <Popover>
-                            <PopoverTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-8 w-8" disabled={selectedIds.size === 0} title="加入歌单">
-                                <ListPlus className="w-4 h-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent side="top" align="end" className="w-48 p-1">
-                               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
-                               {playlists.map(p => (
-                                 <div 
-                                    key={p.id} 
-                                    className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                                    onClick={() => handleBatch((t) => addToPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
-                                 >
-                                    <ListMusic className="mr-2 h-4 w-4 opacity-50" />
-                                    <span className="truncate">{p.name}</span>
-                                 </div>
-                               ))}
-                               <div className="border-t my-1" />
-                               <div 
-                                  className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
-                                  onClick={() => {
-                                    const name = window.prompt("请输入新歌单名称");
-                                    if (name) {
-                                      createPlaylist(name);
-                                      toast.success("已创建歌单");
-                                    }
-                                  }}
-                               >
-                                  <Plus className="mr-2 h-4 w-4" /> 新建歌单
-                               </div>
-                            </PopoverContent>
-                        </Popover>
+                 <div className="md:col-span-2 col-span-1 flex items-center">
+                   <span className="text-xs mr-2 text-foreground whitespace-nowrap">已选 {selectedIds.size} 首</span>
+                   <div className="hidden md:flex items-center gap-2">
+                     <Button 
+                       size="sm" 
+                       variant="secondary" 
+                       className="h-8 px-3 text-xs font-normal whitespace-nowrap"
+                       onClick={() => handleBatch(addToQueue, "已添加")} 
+                       disabled={selectedIds.size === 0}
+                     >
+                       <Plus className="w-3.5 h-3.5 mr-1.5" /> 
+                       加入播放列表
+                     </Button>
+                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleBatch(addToFavorites, "已喜欢")} disabled={selectedIds.size === 0} title="喜欢">
+                       <Heart className="w-4 h-4" />
+                     </Button>
+                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleBatchDownload} disabled={selectedIds.size === 0} title="下载">
+                       <Download className="w-4 h-4" />
+                     </Button>
+                     
+                     <Popover>
+                         <PopoverTrigger asChild>
+                           <Button size="icon" variant="ghost" className="h-8 w-8" disabled={selectedIds.size === 0} title="加入歌单">
+                             <ListPlus className="w-4 h-4" />
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent side="top" align="end" className="w-48 p-1">
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
+                            {playlists.map(p => (
+                              <div 
+                                 key={p.id} 
+                                 className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                                 onClick={() => handleBatch((t) => addToPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
+                              >
+                                 <ListMusic className="mr-2 h-4 w-4 opacity-50" />
+                                 <span className="truncate">{p.name}</span>
+                              </div>
+                            ))}
+                            <div className="border-t my-1" />
+                            <div 
+                               className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
+                               onClick={() => {
+                                 const name = window.prompt("请输入新歌单名称");
+                                 if (name) {
+                                   createPlaylist(name);
+                                   toast.success("已创建歌单");
+                                 }
+                               }}
+                            >
+                               <Plus className="mr-2 h-4 w-4" /> 新建歌单
+                            </div>
+                         </PopoverContent>
+                     </Popover>
 
-                        {onRemove && (
-                          <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" onClick={handleBatchRemove} disabled={selectedIds.size === 0} title="移除">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                     </div>
+                     {onRemove && (
+                       <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" onClick={handleBatchRemove} disabled={selectedIds.size === 0} title="移除">
+                         <Trash2 className="w-4 h-4" />
+                       </Button>
+                     )}
+                   </div>
+                   <div className="md:hidden flex items-center gap-2">
+                     <Button 
+                       size="sm" 
+                       variant="secondary" 
+                       className="h-8 px-3 text-xs font-normal whitespace-nowrap"
+                       onClick={() => handleBatch(addToQueue, "已添加")} 
+                       disabled={selectedIds.size === 0}
+                     >
+                       <Plus className="w-3.5 h-3.5 mr-1.5" /> 
+                       加入播放列表
+                     </Button>
+                     <Popover>
+                         <PopoverTrigger asChild>
+                           <Button size="icon" variant="ghost" className="h-8 w-8" disabled={selectedIds.size === 0} title="更多操作">
+                             <MoreVertical className="w-4 h-4" />
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent side="top" align="end" className="w-48 p-1">
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">批量操作</div>
+                            <div 
+                               className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                               onClick={() => handleBatch(addToFavorites, "已喜欢")}
+                            >
+                               <Heart className="mr-2 h-4 w-4" /> 喜欢
+                            </div>
+                            <div 
+                               className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                               onClick={handleBatchDownload}
+                            >
+                               <Download className="mr-2 h-4 w-4" /> 下载
+                            </div>
+                            <div className="border-t my-1" />
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
+                            {playlists.map(p => (
+                              <div 
+                                 key={p.id} 
+                                 className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                                 onClick={() => handleBatch((t) => addToPlaylist(p.id, t), `已添加到歌单「${p.name}」`)}
+                              >
+                                 <ListMusic className="mr-2 h-4 w-4 opacity-50" />
+                                 <span className="truncate">{p.name}</span>
+                              </div>
+                            ))}
+                            <div 
+                               className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
+                               onClick={() => {
+                                 const name = window.prompt("请输入新歌单名称");
+                                 if (name) {
+                                   createPlaylist(name);
+                                   toast.success("已创建歌单");
+                                 }
+                               }}
+                            >
+                               <Plus className="mr-2 h-4 w-4" /> 新建歌单
+                            </div>
+                            {onRemove && (
+                              <>
+                                <div className="border-t my-1" />
+                                <div 
+                                   className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-destructive"
+                                   onClick={handleBatchRemove}
+                                >
+                                   <Trash2 className="mr-2 h-4 w-4" /> 移除
+                                </div>
+                              </>
+                            )}
+                         </PopoverContent>
+                     </Popover>
+                   </div>
                  </div>
                   <Button
                     variant="ghost" 
-                    size="sm"
-                    className="text-xs h-8"
+                    size="icon"
+                    className="text-xs"
                     onClick={() => {
                       setIsSelectionMode(false);
                       setSelectedIds(new Set());
                     }}
                     title="退出批量操作"
                   >
-                    完成
+                    <Check className="w-4 h-4" />
                   </Button>
               </>
             )}

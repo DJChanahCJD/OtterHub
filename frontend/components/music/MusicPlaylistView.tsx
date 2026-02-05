@@ -1,6 +1,6 @@
 import { MusicTrack } from "@shared/types";
 import { Button } from "@/components/ui/button";
-import { Play, Music, MoreVertical } from "lucide-react";
+import { Play, Music, MoreHorizontal } from "lucide-react";
 import { MusicTrackList } from "./MusicTrackList";
 import {
   DropdownMenu,
@@ -83,7 +83,7 @@ export function MusicPlaylistView({
                      size="icon"
                      title="更多操作"
                    >
-                     <MoreVertical className="h-4 w-4" />
+                     <MoreHorizontal className="h-4 w-4" />
                    </Button>
                  </DropdownMenuTrigger>
                  <DropdownMenuContent align="end">

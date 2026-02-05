@@ -328,7 +328,7 @@ export function GlobalPlayer({
                   onPlayToggle={togglePlay}
                   onPrev={previous}
                   onNext={next}
-                  size="md"
+                  size="lg"
                   showPrevNext={false}
                 />
                 <PlayerQueuePopover
