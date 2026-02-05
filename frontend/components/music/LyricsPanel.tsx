@@ -171,7 +171,7 @@ export function LyricsPanel({ track, currentTime, isFavorite, onToggleFavorite }
         {/* 歌词显示区域 */}
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full">
-            <div className="py-8 space-y-4 text-center">
+            <div className="py-[45%] space-y-4 text-center">
               {lyrics.map((line, i) => {
                 const isActive = i === activeIndex;
                 return (
