@@ -1,9 +1,10 @@
+import { ImageLoadMode } from "./wallpaper";
 
 export * from "./wallpaper";
 export * from "./music";
 
 // === 全局设置相关类型 ===
-import { ImageLoadMode } from "..";
+
 
 export interface GeneralSettings {
   dataSaverThreshold: number; // MB
@@ -99,3 +100,5 @@ export interface CreateShareRequest {
   oneTime?: boolean;
 }
 
+
+export const MAX_FILENAME_LENGTH = 128; // 最大文件名长度（包括扩展名）

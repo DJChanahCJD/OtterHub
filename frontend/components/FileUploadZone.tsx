@@ -12,7 +12,7 @@ import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
 import { toast } from "sonner";
-import { FileItem, FileTag } from "@shared/types";
+import { FileItem, FileTag, MAX_FILENAME_LENGTH } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { updateProgress } from "@/lib/utils/upload";
 
@@ -36,12 +36,22 @@ export function FileUploadZone() {
       const fileArray = Array.isArray(files) ? files : Array.from(files);
       if (!fileArray.length) return;
 
-      // 如果处于合并模式，且输入包含图片，则执行合并
-      // 注意：如果是递归调用（传入的是生成的PDF），不应再次合并
-      // 这里通过简单的判断：如果只传入了一个 PDF 文件且是合并模式触发的，可能需要区分
-      // 但更安全的方式是：合并逻辑在 processFiles 外部调用，或者 processFiles 内部处理
-      // 鉴于 processFiles 被多处调用，我们在 handleFiles 中处理合并逻辑更清晰
-      
+      // 重命名文件名过长的文件 (保留扩展名)
+      const processedFiles = fileArray.map(file => {
+        if (file.name.length <= MAX_FILENAME_LENGTH) return file;
+        
+        const extIndex = file.name.lastIndexOf('.');
+        const ext = extIndex !== -1 ? file.name.substring(extIndex) : '';
+        const nameWithoutExt = extIndex !== -1 ? file.name.substring(0, extIndex) : file.name;
+        
+        // 截断文件名，预留扩展名空间
+        const truncatedName = nameWithoutExt.substring(0, MAX_FILENAME_LENGTH - ext.length);
+        const newName = truncatedName + ext;
+        
+        // 创建新文件对象
+        return new File([file], newName, { type: file.type, lastModified: file.lastModified });
+      });
+
       const uploadProgressMap: Record<string, number> = {};
       setUploadProgress({});
 
@@ -151,7 +161,7 @@ export function FileUploadZone() {
 
       /** 并发上传 */
       await processBatch(
-        fileArray,
+        processedFiles,
         (file) =>
           file.size > MAX_CHUNK_SIZE
             ? uploadChunkedFile(file)

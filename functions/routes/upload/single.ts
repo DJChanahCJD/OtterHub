@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { FileMetadata, FileTag } from '@shared/types';
+import { FileMetadata, FileTag, MAX_FILENAME_LENGTH } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
@@ -15,7 +15,7 @@ singleUploadRoutes.post('/', async (c) => {
       return fail(c, 'No file uploaded', 400);
     }
 
-    const fileName = uploadFile.name.substring(0, 100);
+    const fileName = uploadFile.name.substring(0, MAX_FILENAME_LENGTH);
     const fileSize = uploadFile.size;
     const isNsfw = formData.get('nsfw') === 'true';
 

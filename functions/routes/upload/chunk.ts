@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { FileType, FileMetadata, chunkPrefix } from '@shared/types';
+import { FileType, FileMetadata, chunkPrefix, MAX_FILENAME_LENGTH } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
 import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from 'types';
@@ -17,7 +17,7 @@ chunkUploadRoutes.get(
     'query',
     z.object({
       fileType: z.nativeEnum(FileType),
-      fileName: z.string().min(1).max(100),
+      fileName: z.string().min(1).max(MAX_FILENAME_LENGTH),
       fileSize: z.string().transform(v => parseInt(v, 10)),
       totalChunks: z.string().transform(v => parseInt(v, 10)),
     })
