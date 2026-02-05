@@ -4,6 +4,7 @@ import { FileItem, FileType } from "@shared/types";
 import { FileCardList } from "./FileCardList";
 import { FileCardGrid } from "./FileCardGrid";
 import { useFileCardActions } from "./hooks";
+import { getFileUrl } from "@/lib/api";
 
 interface FileCardProps {
   file: FileItem;

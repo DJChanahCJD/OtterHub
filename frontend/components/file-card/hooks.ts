@@ -65,6 +65,13 @@ export function useFileCardActions(file: FileItem) {
 
   const handleView = () => {
     const url = getFileUrl(file.name);
+    
+    if (file.metadata.fileName?.toLowerCase().endsWith(".epub")) {
+      const readerUrl = `/epub-reader?url=${encodeURIComponent(url)}&title=${encodeURIComponent(file.metadata.fileName || "Epub")}`;
+      window.open(readerUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
