@@ -29,6 +29,8 @@ interface FileUIState {
 
   toggleSelection: (name: string, type?: FileType) => void;
   selectAll: (names?: string[], type?: FileType) => void;
+  addSelection: (names: string[], type?: FileType) => void;
+  removeSelection: (names: string[], type?: FileType) => void;
   clearSelection: (type?: FileType) => void;
   addForceLoadFile: (name: string) => void;
 }
@@ -90,6 +92,33 @@ export const useFileUIStore = create<FileUIState>()(
             selectedKeys: {
               ...state.selectedKeys,
               [currentType]: keys,
+            },
+          };
+        }),
+
+      addSelection: (names, type) =>
+        set((state) => {
+          const currentType = type ?? useFileDataStore.getState().activeType;
+          const current = state.selectedKeys[currentType] || [];
+          const newSet = new Set(current);
+          names.forEach(name => newSet.add(name));
+          return {
+            selectedKeys: {
+              ...state.selectedKeys,
+              [currentType]: Array.from(newSet),
+            },
+          };
+        }),
+
+      removeSelection: (names, type) =>
+        set((state) => {
+          const currentType = type ?? useFileDataStore.getState().activeType;
+          const current = state.selectedKeys[currentType] || [];
+          const toRemove = new Set(names);
+          return {
+            selectedKeys: {
+              ...state.selectedKeys,
+              [currentType]: current.filter(key => !toRemove.has(key)),
             },
           };
         }),

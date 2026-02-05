@@ -31,6 +31,8 @@ export function BatchOperationsBar() {
   const {
     clearSelection,
     selectAll,
+    addSelection,
+    removeSelection,
     viewMode,
     currentPage,
     itemsPerPage,
@@ -256,7 +258,14 @@ export function BatchOperationsBar() {
                 className="min-w-[180px] border-glass-border bg-popover"
               >
                 <DropdownMenuItem
-                  onClick={() => isAllSelected ? clearSelection(activeType) : selectAll(currentFiles.map(i => i.name), activeType)}
+                  onClick={() => {
+                    const names = currentFiles.map((i) => i.name);
+                    if (isAllSelected) {
+                      removeSelection(names, activeType);
+                    } else {
+                      addSelection(names, activeType);
+                    }
+                  }}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Check
@@ -264,7 +273,7 @@ export function BatchOperationsBar() {
                       isAllSelected ? "text-primary" : "text-blue-400"
                     }`}
                   />
-                  {isAllSelected ? "取消全选" : "全选当前页"}
+                  {isAllSelected ? "取消本页全选" : "全选当前页"}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
