@@ -304,7 +304,10 @@ export function GlobalPlayer({
                 queue={queue}
                 currentIndex={currentIndex}
                 isPlaying={isPlaying}
-                onPlay={playTrack}
+                onPlay={(index) => {
+                  playTrack(index);
+                  controls.play();
+                }}
                 onClear={handleClearQueue}
                 trigger={
                   <Button

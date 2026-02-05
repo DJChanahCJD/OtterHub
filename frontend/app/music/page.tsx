@@ -58,7 +58,6 @@ export default function MusicPage() {
       audio.pause();
 
       try {
-        /* ---------- 1 获取 URL（带重试） ---------- */
         const url = await retry(
           () => musicApi.getUrl(trackSnapshot.id, trackSnapshot.source, parseInt(quality)),
           2,
@@ -68,7 +67,6 @@ export default function MusicPage() {
         if (!url) throw new Error("EMPTY_URL");
         if (cancelled || requestId !== requestIdRef.current) return;
 
-        /* ---------- 2 设置音频 ---------- */
         if (audio.src !== url) {
           audio.src = url;
 
@@ -76,13 +74,11 @@ export default function MusicPage() {
           audio.load();
         }
 
-        /* ---------- 3 自动播放 ---------- */
         if (!isPlayingRef.current) return;
 
         try {
           await audio.play();
           controls.play();
-          toast.success(`正在播放：${trackSnapshot.name}`);
         } catch (err: any) {
           if (cancelled || requestId !== requestIdRef.current) return;
 
@@ -151,6 +147,7 @@ export default function MusicPage() {
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
 
     playContext(list, index);
+    controls.play();
   };
 
   /* ---------------- UI ---------------- */
