@@ -1,8 +1,6 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/hono';
 import { 
-  loginCellphone, 
-  loginEmail, 
   getUserPlaylists, 
   getPlaylistDetail, 
   getQrKey, 
@@ -127,20 +125,6 @@ musicRoutes.get('/', async (c) => {
   }
 });
 
-musicRoutes.post('/netease/login', async (c) => {
-  const { type, account, password, countrycode } = await c.req.json();
-  try {
-    let res;
-    if (type === 'email') {
-      res = await loginEmail(account, password);
-    } else {
-      res = await loginCellphone(account, password, countrycode);
-    }
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
 
 musicRoutes.get('/netease/login/qr/key', async (c) => {
   try {

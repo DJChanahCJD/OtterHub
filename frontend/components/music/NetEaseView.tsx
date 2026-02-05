@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { neteaseApi } from '@/lib/api/music-import';
@@ -25,125 +24,23 @@ export function NetEaseView() {
 
 function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, userId: string) => void }) {
   const [loading, setLoading] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [countrycode, setCountrycode] = useState('86');
   const [cookieInput, setCookieInput] = useState('');
   
-  // QR Code State
-  const [qrUrl, setQrUrl] = useState('');
-  const [qrStatus, setQrStatus] = useState<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
-
-  // Init QR Code on mount
-  useEffect(() => {
-    // initQrCode();
-    return () => stopPolling();
-  }, []);
-
-  const stopPolling = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = undefined;
-    }
-  };
-
-  const initQrCode = async () => {
-    stopPolling();
-    setQrStatus(0);
-    try {
-      const keyRes = await neteaseApi.getQrKey();
-      if (keyRes.data.code === 200) {
-        const key = keyRes.data.unikey;
-        setQrUrl(`https://music.163.com/login?codekey=${key}`);
-        setQrStatus(801);
-        
-        // Start polling
-        timerRef.current = setInterval(() => checkStatus(key), 3000);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to init QR code');
-    }
-  };
-
-  const checkStatus = async (key: string) => {
-    return
-    try {
-      const res = await neteaseApi.checkQrStatus(key);
-      const code = res.data.code;
-      setQrStatus(code);
-
-      if (code === 800) {
-        stopPolling();
-        toast.error('QR code expired');
-      } else if (code === 803) {
-        stopPolling();
-        toast.success('Login successful');
-        const cookie = res.cookie;
-        
-        // Fetch user info to get ID
-        try {
-          const profileRes = await neteaseApi.getMyInfo(cookie);
-          if (profileRes.data.account) {
-             onLoginSuccess(cookie, profileRes.data.account.id);
-          } else {
-             toast.error('Failed to get user profile');
-          }
-        } catch (err) {
-          console.error(err);
-          toast.error('Failed to fetch user info');
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleLogin = async (type: 'cellphone' | 'email' | 'cookie') => {
-    if (type === 'cookie') {
-        if (!cookieInput) return;
-        setLoading(true);
-        try {
-            const profileRes = await neteaseApi.getMyInfo(cookieInput);
-            if (profileRes.data.account) {
-                 toast.success('Login successful');
-                 onLoginSuccess(cookieInput, profileRes.data.account.id);
-            } else {
-                 toast.error('Invalid cookie or session expired');
-            }
-        } catch (e: any) {
-            toast.error(e.message);
-        } finally {
-            setLoading(false);
-        }
-        return;
-    }
-
-    if (!password) return;
-    if (type === 'cellphone' && !phone) return;
-    if (type === 'email' && !email) return;
-
+  const handleLogin = async () => {
+    if (!cookieInput) return;
     setLoading(true);
     try {
-      let res;
-      if (type === 'cellphone') {
-        res = await neteaseApi.loginCellphone(phone, password, countrycode);
-      } else {
-        res = await neteaseApi.loginEmail(email, password);
-      }
-      
-      if (res.data.code === 200) {
-        toast.success('Login successful');
-        onLoginSuccess(res.cookie, res.data.account.id);
-      } else {
-        toast.error(res.data.msg || 'Login failed');
-      }
+        const profileRes = await neteaseApi.getMyInfo(cookieInput);
+        if (profileRes.data.account) {
+             toast.success('Login successful');
+             onLoginSuccess(cookieInput, profileRes.data.account.id);
+        } else {
+             toast.error('Invalid cookie or session expired');
+        }
     } catch (e: any) {
-      toast.error(e.message);
+        toast.error(e.message);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -152,116 +49,28 @@ function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, use
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login to NetEase Music</CardTitle>
-          <CardDescription>Scan QR code or use account to login</CardDescription>
+          <CardDescription>Use your MUSIC_U cookie to login</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="cookie" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="cookie">Cookie</TabsTrigger>
-              <TabsTrigger value="qrcode">QR Code</TabsTrigger>
-              <TabsTrigger value="phone">Phone</TabsTrigger>
-              <TabsTrigger value="email">Email</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="cookie" className="space-y-4 pt-4">
-               <div className="space-y-2">
-                 <Label>MUSIC_U Cookie</Label>
-                 <Input 
-                   value={cookieInput} 
-                   onChange={(e) => setCookieInput(e.target.value)} 
-                   placeholder="Paste your MUSIC_U cookie here..."
-                 />
-                 <p className="text-xs text-muted-foreground">
-                    1. Open music.163.com and login<br/>
-                    2. Press F12 to open DevTools<br/>
-                    3. Go to Application -&gt; Cookies<br/>
-                    4. Copy the value of 'MUSIC_U' or the full cookie string
-                 </p>
-               </div>
-               <Button className="w-full" onClick={() => handleLogin('cookie')} disabled={loading}>
-                 {loading ? <Loader2 className="animate-spin h-4 w-4"/> : 'Verify & Login'}
-               </Button>
-            </TabsContent>
-            
-            {/* <TabsContent value="qrcode" className="flex flex-col items-center justify-center space-y-4 py-4">
-               {qrStatus === 0 && <div className="text-sm flex items-center gap-2"><Loader2 className="animate-spin h-4 w-4"/> Initializing...</div>}
-               {(qrStatus === 801 || qrStatus === 802) && (
-                   <div className="relative">
-                       <QRCodeSVG value={qrUrl} size={180} />
-                       {qrStatus === 802 && (
-                           <div className="absolute inset-0 bg-white/90 flex items-center justify-center text-center text-sm font-medium text-green-600 px-4">
-                               Scanned successfully<br/>Please confirm on phone
-                           </div>
-                       )}
-                   </div>
-               )}
-               {qrStatus === 800 && (
-                   <div className="flex flex-col items-center gap-2">
-                       <div className="w-[180px] h-[180px] bg-muted flex items-center justify-center text-muted-foreground">
-                           Expired
-                       </div>
-                       <Button variant="outline" size="sm" onClick={initQrCode}>
-                           <RefreshCw className="mr-2 h-4 w-4"/> Refresh
-                       </Button>
-                   </div>
-               )}
-               <div className="text-xs text-muted-foreground text-center">
-                   Open NetEase Music App<br/>Scan QR code to login
-               </div>
-            </TabsContent> */}
-
-            <TabsContent value="phone" className="space-y-4">
-              <div className="space-y-2">
-                <Label>Phone Number</Label>
-                <div className="flex gap-2">
-                   <Input 
-                     className="w-20" 
-                     value={countrycode} 
-                     onChange={(e) => setCountrycode(e.target.value)} 
-                     placeholder="86"
-                   />
-                   <Input 
-                     value={phone} 
-                     onChange={(e) => setPhone(e.target.value)} 
-                     placeholder="Phone number"
-                   />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <Input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button className="w-full" onClick={() => handleLogin('cellphone')} disabled={loading}>
-                {loading ? <Loader2 className="animate-spin h-4 w-4"/> : 'Login'}
-              </Button>
-            </TabsContent>
-            
-            <TabsContent value="email" className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  placeholder="Email address"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <Input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button className="w-full" onClick={() => handleLogin('email')} disabled={loading}>
-                {loading ? <Loader2 className="animate-spin h-4 w-4"/> : 'Login'}
-              </Button>
-            </TabsContent>
-          </Tabs>
+           <div className="space-y-4">
+             <div className="space-y-2">
+               <Label>MUSIC_U Cookie</Label>
+               <Input 
+                 value={cookieInput} 
+                 onChange={(e) => setCookieInput(e.target.value)} 
+                 placeholder="Paste your MUSIC_U cookie here..."
+               />
+               <p className="text-xs text-muted-foreground leading-relaxed">
+                  1. Open <a href="https://music.163.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">music.163.com</a> and login<br/>
+                  2. Press F12 to open DevTools<br/>
+                  3. Go to Application -&gt; Cookies<br/>
+                  4. Copy the value of 'MUSIC_U' or the full cookie string
+               </p>
+             </div>
+             <Button className="w-full" onClick={handleLogin} disabled={loading}>
+               {loading ? <Loader2 className="animate-spin h-4 w-4"/> : 'Verify & Login'}
+             </Button>
+           </div>
         </CardContent>
       </Card>
     </div>

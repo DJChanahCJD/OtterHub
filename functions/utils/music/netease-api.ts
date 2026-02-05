@@ -1,4 +1,3 @@
-import * as forge from 'node-forge';
 import { weapi, eapi } from './netease-crypto';
 
 // 参考项目：https://github.com/listen1
@@ -79,34 +78,6 @@ async function requestEapi(url: string, path: string, data: any, cookie: string 
     return { data: json };
 }
 
-
-export async function loginCellphone(phone: string, password: string, countrycode: string = '86') {
-  const url = `${BASE_URL}/weapi/login/cellphone`;
-  const md5Pass = forge.md5.create().update(password).digest().toHex();
-  
-  const data = {
-    phone,
-    countrycode,
-    password: md5Pass,
-    rememberLogin: 'true',
-  };
-  
-  return request(url, data);
-}
-
-export async function loginEmail(email: string, password: string) {
-    const url = `${BASE_URL}/weapi/login`;
-    const md5Pass = forge.md5.create().update(password).digest().toHex();
-    
-    const data = {
-      username: email,
-      password: md5Pass,
-      rememberLogin: 'true',
-    };
-    
-    return request(url, data);
-}
-
 export async function getQrKey() {
     const url = `${BASE_URL}/weapi/login/qrcode/unikey`;
     const data = { type: 1 };
@@ -118,7 +89,6 @@ export async function checkQrStatus(key: string) {
     const data = { key, type: 1 };
     return request(url, data);
 }
-
 export async function getMyInfo(cookie: string) {
     const url = `${BASE_URL}/api/nuser/account/get`;
     const data = {};
@@ -127,17 +97,6 @@ export async function getMyInfo(cookie: string) {
 
 export async function getUserPlaylists(userId: string, cookie: string) {
     const url = `${BASE_URL}/api/user/playlist`;
-    // Note: api/user/playlist is not weapi? 1Listen uses api/user/playlist with URLSearchParams directly?
-    // Wait, 1Listen's getUserPlaylist uses axios.post(target_url, new URLSearchParams(req_data)) but NOT weapi encrypted?
-    // Let's check 1Listen source again.
-    // Line 843: axios.post(target_url, new URLSearchParams(req_data))
-    // req_data = { uid, limit, offset, includeVideo }
-    // It does NOT call this.weapi(req_data).
-    // So it's a plain POST? But wait, "api" usually means plain, "weapi" means encrypted.
-    // However, 1Listen has headers modification.
-    
-    // Let's try plain POST first as per 1Listen code.
-    // But we need headers.
     
     const params = new URLSearchParams({
         uid: userId,
@@ -172,8 +131,6 @@ export async function getUserPlaylists(userId: string, cookie: string) {
 }
 
 export async function getPlaylistDetail(playlistId: string, cookie: string) {
-    // 1Listen uses weapi for playlist detail
-    // target_url = 'https://music.163.com/weapi/v3/playlist/detail';
     const url = `${BASE_URL}/weapi/v3/playlist/detail`;
     const data = {
         id: playlistId,
@@ -187,8 +144,6 @@ export async function getPlaylistDetail(playlistId: string, cookie: string) {
     const res = await request(url, data, cookie);
     const playlist = res.data.playlist;
     
-    // Track IDs are just IDs. We need details.
-    // 1Listen fetches details in batches.
     const trackIds = playlist.trackIds.map((t: any) => t.id);
     
     // Batch fetch details
@@ -263,7 +218,6 @@ export async function getLyric(id: string, cookie: string = '') {
 export async function getSongDetail(id: string, cookie: string = '') {
     const realId = id.replace(/^(netrack_|ne_track_)/, '');
     // Reuse existing getTracksDetail but for single ID
-    // However, getTracksDetail returns an array.
     const tracks = await getTracksDetail([parseInt(realId)], cookie);
     return tracks[0];
 }
