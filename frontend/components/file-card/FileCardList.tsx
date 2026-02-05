@@ -9,6 +9,7 @@ import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface FileCardListProps {
   file: FileItem;
@@ -24,8 +25,6 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     showDetail,
     showEdit,
     isResuming,
-    safeMode,
-    imageLoadMode,
     setShowDetail,
     setShowEdit,
     handleSelect,
@@ -38,6 +37,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     handleToggleLike,
     handleResumeUpload,
   } = actions;
+  const { safeMode, imageLoadMode } = useGeneralSettingsStore();
 
   const tags = file.metadata?.tags ?? [];
   return (

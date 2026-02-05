@@ -4,6 +4,7 @@ import { PhotoView } from "react-photo-view";
 import { Image, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import { useState } from "react";
 
 interface FileImagePreviewProps {
   src: string;
@@ -55,7 +56,10 @@ export function FileImagePreview({
   iconClassName = "h-16 w-16 text-blue-300",
   className,
 }: FileImagePreviewProps) {
-  const img = shouldLoad ? (
+  const [forceLoad, setForceLoad] = useState(false);
+  const isLoaded = shouldLoad || forceLoad;
+
+  const img = isLoaded ? (
     <img
       src={src}
       alt={alt}
@@ -68,13 +72,17 @@ export function FileImagePreview({
       )}
     />
   ) : (
-    <div className="flex items-center justify-center w-full h-full">
-      <Image className={cn(iconClassName)} />
+    <div 
+      className="flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group" 
+      onClick={() => setForceLoad(true)}
+      title="点击加载图片"
+    >
+      <Image className={cn(iconClassName, "group-hover:opacity-80 transition-opacity")} />
     </div>
   );
 
   // 只有：加载了图片 + 允许预览 + 非模糊状态 才启用 PhotoView
-  if (shouldLoad && canPreview && !shouldBlur) {
+  if (isLoaded && canPreview && !shouldBlur) {
     return (
       <PhotoView src={src}>
         {img}

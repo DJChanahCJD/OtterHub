@@ -10,6 +10,7 @@ import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface FileCardGridProps {
   file: FileItem;
@@ -25,8 +26,6 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
     showDetail,
     showEdit,
     isResuming,
-    safeMode,
-    imageLoadMode,
     setShowDetail,
     setShowEdit,
     handleSelect,
@@ -39,6 +38,8 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
     handleToggleLike,
     handleResumeUpload,
   } = actions;
+
+  const { safeMode, imageLoadMode } = useGeneralSettingsStore();
 
   return (
     <>

@@ -18,7 +18,6 @@ export function Header() {
   const { searchQuery, setSearchQuery } = useFileQueryStore();
   const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [isTrashOpen, setIsTrashOpen] = useState(false);
 
   // 移动端头部导航栏
   if (isMobile) {
