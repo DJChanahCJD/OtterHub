@@ -25,6 +25,7 @@ interface MusicPlaylistViewProps {
   description?: string;
   currentTrackId?: string;
   isPlaying?: boolean;
+  action?: React.ReactNode;
 }
 
 export function MusicPlaylistView({
@@ -37,7 +38,8 @@ export function MusicPlaylistView({
   onDelete,
   description,
   currentTrackId,
-  isPlaying
+  isPlaying,
+  action
 }: MusicPlaylistViewProps) {
   if (!tracks || tracks.length === 0) {
     return (
@@ -75,6 +77,7 @@ export function MusicPlaylistView({
              >
                 <Play className="mr-2 h-4 w-4 fill-current" /> 播放全部
              </Button>
+             {action}
              {playlistId && (onRename || onDelete) && (
                <DropdownMenu>
                  <DropdownMenuTrigger asChild>

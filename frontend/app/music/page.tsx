@@ -12,7 +12,7 @@ import { MusicLayout } from '@/components/music/MusicLayout';
 import { MusicSidebar } from '@/components/music/MusicSidebar';
 import { MusicSearchView } from '@/components/music/MusicSearchView';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
-import { NetEaseView } from '@/components/music/NetEaseView';
+import { NetEaseView } from '@/components/music/external/NetEaseView';
 import { GlobalPlayer } from '@/components/music/GlobalPlayer';
 import { retry } from '@/lib/utils';
 
