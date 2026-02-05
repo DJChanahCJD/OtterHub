@@ -47,16 +47,18 @@ export async function scanFiles(
       entry.file(
         (file) => {
           // entry.fullPath 通常以 / 开头，例如 "/folder/file.txt"
-          // 我们去掉开头的 /，保留 "folder/file.txt"
-          const path = entry.fullPath.replace(/^\//, "");
-          
+          // 我们去掉开头的 /，改为 "folder_file.txt"
+          const nameByPath = entry.fullPath
+            .replace(/^\//, "")
+            .replace(/\//g, "_");
+
           // 创建新文件对象以保留路径信息
           // 注意：File 构造函数在部分旧浏览器可能不支持，但在现代浏览器中可用
-          const fileWithPath = new File([file], path, {
+          const fileWithPath = new File([file], nameByPath, {
             type: file.type,
             lastModified: file.lastModified,
           });
-          
+
           files.push(fileWithPath);
           resolve();
         },
@@ -75,7 +77,7 @@ export async function scanFiles(
    */
   async function processDirectory(entry: FileSystemDirectoryEntry) {
     const reader = entry.createReader();
-    
+
     // readEntries 可能不会一次返回所有文件，需要循环读取
     const readEntries = () =>
       new Promise<FileSystemEntry[]>((resolve, reject) => {
