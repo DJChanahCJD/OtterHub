@@ -1,12 +1,18 @@
 import { MusicTrack } from "@shared/types";
 import { Button } from "@/components/ui/button";
-import { Play, Music } from "lucide-react";
+import { Play, Music, MoreVertical } from "lucide-react";
 import { MusicTrackList } from "./MusicTrackList";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// TODO: 重命名、删除功能....
 interface MusicPlaylistViewProps {
   title: string;
   tracks: MusicTrack[];
+  playlistId?: string;
   /** 
    * index 可选：
    * - 传入 index：播放指定歌曲
@@ -14,6 +20,8 @@ interface MusicPlaylistViewProps {
    */
   onPlay: (track: MusicTrack | null, index?: number) => void;
   onRemove?: (track: MusicTrack) => void;
+  onRename?: (playlistId: string, newName: string) => void;
+  onDelete?: (playlistId: string) => void;
   description?: string;
   currentTrackId?: string;
   isPlaying?: boolean;
@@ -22,8 +30,11 @@ interface MusicPlaylistViewProps {
 export function MusicPlaylistView({
   title,
   tracks,
+  playlistId,
   onPlay,
   onRemove,
+  onRename,
+  onDelete,
   description,
   currentTrackId,
   isPlaying
@@ -56,7 +67,7 @@ export function MusicPlaylistView({
               </>
             )}
           </div>
-          <div className="pt-2 flex gap-2">
+          <div className="pt-2 flex gap-2 items-center">
              <Button 
                 onClick={() => onPlay(null)} 
                 className="rounded-full px-8"
@@ -64,6 +75,40 @@ export function MusicPlaylistView({
              >
                 <Play className="mr-2 h-4 w-4 fill-current" /> 播放全部
              </Button>
+             {playlistId && (onRename || onDelete) && (
+               <DropdownMenu>
+                 <DropdownMenuTrigger asChild>
+                   <Button
+                     variant="secondary"
+                     size="icon"
+                     title="更多操作"
+                   >
+                     <MoreVertical className="h-4 w-4" />
+                   </Button>
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end">
+                   {onRename && (
+                     <DropdownMenuItem onClick={() => {
+                       const newName = window.prompt("请输入新歌单名称", title);
+                       if (newName && newName.trim()) {
+                         onRename(playlistId, newName.trim());
+                       }
+                     }}>
+                       重命名
+                     </DropdownMenuItem>
+                   )}
+                   {onDelete && (
+                     <DropdownMenuItem onClick={() => {
+                       if (confirm(`确定删除歌单「${title}」吗？`)) {
+                         onDelete(playlistId);
+                       }
+                     }} className="text-red-500">
+                       删除歌单
+                     </DropdownMenuItem>
+                   )}
+                 </DropdownMenuContent>
+               </DropdownMenu>
+             )}
           </div>
         </div>
       </div>

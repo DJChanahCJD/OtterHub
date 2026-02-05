@@ -108,6 +108,7 @@ interface MusicState {
 
   createPlaylist: (name: string) => void;
   deletePlaylist: (id: string) => void;
+  renamePlaylist: (id: string, name: string) => void;
   addToPlaylist: (playlistId: string, track: MusicTrack) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
 
@@ -177,6 +178,13 @@ export const useMusicStore = create<MusicState>()(
       })),
       deletePlaylist: (id) => set((state) => ({
         playlists: state.playlists.filter(p => p.id !== id)
+      })),
+      renamePlaylist: (id, name) => set((state) => ({
+        playlists: state.playlists.map(p =>
+          p.id === id
+            ? { ...p, name }
+            : p
+        )
       })),
       addToPlaylist: (pid, track) => set((state) => ({
         playlists: state.playlists.map(p =>

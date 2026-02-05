@@ -106,18 +106,18 @@ export function MusicTrackList({
                  <div className="text-center">#</div>
                  <div>标题</div>
                  <div className="hidden md:block">专辑</div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 hover:bg-transparent hover:text-foreground"
-                    onClick={() => {
-                      setIsSelectionMode(true);
-                      setSelectedIds(new Set());
-                    }}
-                    title="批量操作"
-                  >
-                    <ListChecks className="h-4 w-4" /> 操作
-                  </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-transparent hover:text-foreground"
+                  onClick={() => {
+                    setIsSelectionMode(true);
+                    setSelectedIds(new Set());
+                  }}
+                  title="批量操作"
+                >
+                  <ListChecks className="h-4 w-4" />
+                </Button>
               </>
             ) : (
               <>
