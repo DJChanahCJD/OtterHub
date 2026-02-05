@@ -57,6 +57,7 @@
     "react-hook-form": "^7.60.0",
     "react-paginate": "^8.3.0",
     "react-photo-view": "^1.2.7",
+    "react-reader": "^2.0.15",
     "react-resizable-panels": "^2.1.7",
     "react-virtualized-auto-sizer": "^2.0.2",
     "react-window": "^2.2.6",
