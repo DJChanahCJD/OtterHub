@@ -6,7 +6,6 @@ import {
   Search,
   Heart,
   Music2,
-  Trash2,
   SquarePlus,
   RefreshCw,
   CloudSync,
@@ -42,14 +41,12 @@ export const MusicSidebar = memo(function MusicSidebar({
   onViewChange,
   className,
 }: MusicSidebarProps) {
-  const { playlists, createPlaylist, deletePlaylist } =
-    useMusicStore(
-      useShallow((state) => ({
-        playlists: state.playlists,
-        createPlaylist: state.createPlaylist,
-        deletePlaylist: state.deletePlaylist,
-      })),
-    );
+  const { playlists, createPlaylist } = useMusicStore(
+    useShallow((state) => ({
+      playlists: state.playlists,
+      createPlaylist: state.createPlaylist,
+    })),
+  );
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -76,11 +73,8 @@ export const MusicSidebar = memo(function MusicSidebar({
     try {
       const result = await useMusicStore.getState().syncWithCloud();
 
-      if (result === "uploaded")
-        toast.success("本地数据已上传到云端");
-      else
-        toast.success("数据合并同步成功");
-
+      if (result === "uploaded") toast.success("本地数据已上传到云端");
+      else toast.success("数据合并同步成功");
     } catch (error: any) {
       // 认证失败会自动跳转到登录页面
       if (error.message !== "Failed to fetch") {
@@ -96,13 +90,11 @@ export const MusicSidebar = memo(function MusicSidebar({
     icon: Icon,
     label,
     onClick,
-    action,
   }: {
     active: boolean;
     icon: any;
     label: string;
     onClick: () => void;
-    action?: React.ReactNode;
   }) => (
     <div
       role="button"
@@ -113,13 +105,8 @@ export const MusicSidebar = memo(function MusicSidebar({
       )}
       onClick={onClick}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4 shrink-0" />
       <span className="truncate flex-1 text-left">{label}</span>
-      {action && (
-        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
-          {action}
-        </div>
-      )}
     </div>
   );
 
@@ -217,24 +204,6 @@ export const MusicSidebar = memo(function MusicSidebar({
                 icon={ListMusic}
                 label={playlist.name}
                 onClick={() => onViewChange("playlist", playlist.id)}
-                action={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="删除歌单"
-                    onClick={() => {
-                      if (confirm(`确定删除歌单「${playlist.name}」吗？`)) {
-                        deletePlaylist(playlist.id);
-                        if (currentPlaylistId === playlist.id) {
-                          onViewChange("search");
-                        }
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                }
               />
             ))}
             {playlists.length === 0 && (
