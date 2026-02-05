@@ -51,6 +51,7 @@ export function FileContent({
       <FileImagePreview
         src={imgSrc || getFileUrl(fileKey)}
         alt={fileKey}
+        fileKey={fileKey}
         shouldLoad={load}
         shouldBlur={blur}
         canPreview={canPreview}

@@ -16,6 +16,9 @@ interface FileUIState {
   // selection 按桶管理
   selectedKeys: Record<FileType, string[]>;
 
+  // 强制加载的文件（不持久化）
+  forceLoadFiles: string[];
+
   // Actions
   setViewMode: (mode: ViewMode) => void;
   setItemsPerPage: (count: number) => void;
@@ -27,6 +30,7 @@ interface FileUIState {
   toggleSelection: (name: string, type?: FileType) => void;
   selectAll: (names?: string[], type?: FileType) => void;
   clearSelection: (type?: FileType) => void;
+  addForceLoadFile: (name: string) => void;
 }
 
 export const useFileUIStore = create<FileUIState>()(
@@ -46,6 +50,8 @@ export const useFileUIStore = create<FileUIState>()(
         [FileType.Document]: [],
         [FileType.Trash]: [],
       },
+      
+      forceLoadFiles: [],
 
       setViewMode: (mode) => {
         set({ viewMode: mode, currentPage: 0 }); // 切换视图模式时重置页码
@@ -98,6 +104,11 @@ export const useFileUIStore = create<FileUIState>()(
             },
           };
         }),
+
+      addForceLoadFile: (name) =>
+        set((state) => ({
+          forceLoadFiles: [...state.forceLoadFiles, name],
+        })),
     }),
     {
       name: storeKey.FileUI,

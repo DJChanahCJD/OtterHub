@@ -18,7 +18,7 @@ interface MasonryImageCardProps {
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const { safeMode, imageLoadMode, dataSaverThreshold} = useGeneralSettingsStore()
-  const [forceLoad, setForceLoad] = useState(false);
+  const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
   
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
   const shouldLoad = shouldLoadImage({
@@ -28,7 +28,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
     threshold: dataSaverThreshold * 1024 * 1024,
   });
   
-  const load = shouldLoad || forceLoad;
+  const load = shouldLoad || forceLoadFiles.includes(file.name);
 
   const imageUrl = getFileUrl(file.name);
 
@@ -48,7 +48,10 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   ) : (
     <div 
       className="flex flex-col items-center justify-center w-full py-12 bg-secondary/10 text-muted-foreground gap-2 cursor-pointer hover:bg-secondary/20 transition-colors"
-      onClick={() => setForceLoad(true)}
+      onClick={(e) => {
+        e.stopPropagation();
+        addForceLoadFile(file.name);
+      }}
     >
       <Image className="w-8 h-8 opacity-50" />
       <span className="text-xs opacity-50">点击加载</span>
@@ -58,7 +61,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   return (
     <div className="relative group rounded-xl overflow-hidden bg-glass-bg border border-glass-border">
       {/* 实际图片（加载完成后显示） */}
-      {!blur ? (
+      {!blur && load ? (
         <PhotoView src={imageUrl}>{imgContent}</PhotoView>
       ) : (
         imgContent

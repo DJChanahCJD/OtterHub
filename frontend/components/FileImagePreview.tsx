@@ -4,11 +4,12 @@ import { PhotoView } from "react-photo-view";
 import { Image, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useFileUIStore } from "@/stores/file";
 
 interface FileImagePreviewProps {
   src: string;
   alt?: string;
+  fileKey: string;
   shouldLoad: boolean;
   shouldBlur: boolean;
   canPreview: boolean;
@@ -50,14 +51,15 @@ export function PhotoToolbar({ rotate, onRotate, scale, onScale }: any) {
 export function FileImagePreview({
   src,
   alt,
+  fileKey,
   shouldLoad,
   shouldBlur,
   canPreview,
   iconClassName = "h-16 w-16 text-blue-300",
   className,
 }: FileImagePreviewProps) {
-  const [forceLoad, setForceLoad] = useState(false);
-  const isLoaded = shouldLoad || forceLoad;
+  const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
+  const isLoaded = shouldLoad || forceLoadFiles.includes(fileKey);
 
   const img = isLoaded ? (
     <img
@@ -74,7 +76,10 @@ export function FileImagePreview({
   ) : (
     <div 
       className="flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group" 
-      onClick={() => setForceLoad(true)}
+      onClick={(e) => {
+        e.stopPropagation();
+        addForceLoadFile(fileKey);
+      }}
       title="点击加载图片"
     >
       <Image className={cn(iconClassName, "group-hover:opacity-80 transition-opacity")} />
