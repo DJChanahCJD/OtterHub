@@ -15,10 +15,11 @@ import {
 } from "./upload-utils";
 import { toast } from "sonner";
 import { FileItem, FileTag } from "@shared/types";
+import { useGeneralSettingsStore } from "@/stores/general-store";
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);
-  const nsfwDetection = useFileUIStore((s) => s.nsfwDetection);
+  const { nsfwDetection } = useGeneralSettingsStore();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {},
