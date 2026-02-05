@@ -35,19 +35,16 @@ import { musicStoreApi } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
-type PendingAction = "upload" | "download" | null;
-
 export function SyncTab() {
   /* -------------------- 状态 -------------------- */
 
-  const [isSyncingMusic, setIsSyncingMusic] = useState(false);
-  const [isUploadingMusic, setIsUploadingMusic] = useState(false);
+  const [isMergingMusic, setIsMergingMusic] = useState(false);
   const [isCheckingCloud, setIsCheckingCloud] = useState(false);
 
   const [cloudData, setCloudData] = useState<any>(null);
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [pendingAction, setPendingAction] = useState<"merge" | null>(null);
 
-  const isBusy = isSyncingMusic || isUploadingMusic;
+  const isBusy = isMergingMusic;
 
   /* -------------------- 本地数据 -------------------- */
 
@@ -89,67 +86,18 @@ export function SyncTab() {
     fetchCloudData(true);
   }, []);
 
-  /* -------------------- 执行上传 -------------------- */
+  /* -------------------- 执行合并 -------------------- */
 
-  const executeUpload = async () => {
-    setIsUploadingMusic(true);
+  const executeMerge = async () => {
+    setIsMergingMusic(true);
     try {
-      const state = useMusicStore.getState();
-
-      const dataToSync = {
-        favorites: state.favorites,
-        playlists: state.playlists,
-        queue: state.queue,
-        currentIndex: state.currentIndex,
-        volume: state.volume,
-        isRepeat: state.isRepeat,
-        isShuffle: state.isShuffle,
-        quality: state.quality,
-        searchSource: state.searchSource,
-        updatedAt: Date.now(),
-      };
-
-      await musicStoreApi.update(dataToSync);
-      setCloudData(dataToSync);
-      toast.success("已备份到云端");
+      await useMusicStore.getState().syncWithCloud();
+      await fetchCloudData(true);
+      toast.success("数据合并成功");
     } catch (error: any) {
-      toast.error("备份失败: " + error.message);
+      toast.error("合并失败: " + error.message);
     } finally {
-      setIsUploadingMusic(false);
-      setPendingAction(null);
-    }
-  };
-
-  /* -------------------- 执行下载 -------------------- */
-
-  const executeDownload = async () => {
-    setIsSyncingMusic(true);
-    try {
-      const data = await musicStoreApi.get();
-
-      if (!data || Object.keys(data).length === 0) {
-        toast.info("云端暂无数据");
-        return;
-      }
-
-      useMusicStore.setState({
-        favorites: data.favorites || [],
-        playlists: data.playlists || [],
-        queue: data.queue || [],
-        currentIndex: data.currentIndex || 0,
-        volume: data.volume,
-        isRepeat: data.isRepeat,
-        isShuffle: data.isShuffle,
-        quality: data.quality || "320",
-        searchSource: data.searchSource || "netease",
-      });
-
-      setCloudData(data);
-      toast.success("已从云端恢复");
-    } catch (error: any) {
-      toast.error("恢复失败: " + error.message);
-    } finally {
-      setIsSyncingMusic(false);
+      setIsMergingMusic(false);
       setPendingAction(null);
     }
   };
@@ -157,8 +105,7 @@ export function SyncTab() {
   /* -------------------- 确认执行 -------------------- */
 
   const confirmAction = () => {
-    if (pendingAction === "upload") executeUpload();
-    if (pendingAction === "download") executeDownload();
+    if (pendingAction === "merge") executeMerge();
   };
 
   /* -------------------- UI -------------------- */
@@ -249,27 +196,17 @@ export function SyncTab() {
             {/* 操作按钮 */}
             <div className="flex gap-3">
               <Button
-                variant="outline"
-                className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-500/10"
-                disabled={isBusy}
-                onClick={() => setPendingAction("download")}
-              >
-                <CloudDownload className="h-4 w-4 mr-2" />
-                从云端恢复
-              </Button>
-
-              <Button
                 className="flex-1 bg-linear-to-r from-pink-500 to-rose-500 text-white"
                 disabled={isBusy}
-                onClick={() => setPendingAction("upload")}
+                onClick={() => setPendingAction("merge")}
               >
-                <CloudUpload className="h-4 w-4 mr-2" />
-                备份到云端
+                <RefreshCw className="h-4 w-4 mr-2" />
+                合并同步
               </Button>
             </div>
             <p className="text-xs text-muted-foreground flex gap-1">
               <Info className="h-3 w-3 mt-0.5" />
-              恢复将覆盖本地数据
+              智能合并本地和云端数据，避免数据丢失
             </p>
           </div>
         </CardContent>
@@ -289,9 +226,15 @@ export function SyncTab() {
           </DialogHeader>
 
           <div className="text-sm space-y-2">
-            {pendingAction === "upload" && <p>将使用 本地数据 覆盖 云端数据</p>}
-            {pendingAction === "download" && (
-              <p>将使用 云端数据 覆盖 本地数据</p>
+            {pendingAction === "merge" && (
+              <>
+                <p>将智能合并本地和云端数据：</p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground">
+                  <li>去重合并喜欢歌曲</li>
+                  <li>按ID匹配合并歌单</li>
+                  <li>保留两边的新数据</li>
+                </ul>
+              </>
             )}
           </div>
 
