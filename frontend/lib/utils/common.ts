@@ -70,3 +70,38 @@ export async function retry<T>(
 
   throw lastError;
 }
+
+/**
+ * 渐进式批量处理工具
+ * 用于避免大量同步操作阻塞主线程，同时提供进度反馈
+ *
+ * @param items 要处理的数组
+ * @param fn 处理单个项目的函数（支持异步）
+ * @param onProgress 进度回调 (current, total) => void
+ * @param batchSize 每批处理数量，默认 50 (Store操作较快，可以大一点)
+ * @param interval 批次间隔(ms)，默认 0 (利用事件循环释放主线程)
+ */
+export async function processBatch<T>(
+  items: T[],
+  fn: (item: T) => Promise<void> | void,
+  onProgress?: (current: number, total: number) => void,
+  batchSize = 50,
+  interval = 0
+): Promise<void> {
+  const total = items.length;
+  if (total === 0) return;
+
+  for (let i = 0; i < total; i += batchSize) {
+    const chunk = items.slice(i, i + batchSize);
+    
+    // 处理当前批次
+    await Promise.all(chunk.map(item => fn(item)));
+    
+    // 更新进度
+    const current = Math.min(i + batchSize, total);
+    onProgress?.(current, total);
+    
+    // 释放主线程
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+}

@@ -14,6 +14,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { MusicTrack } from "@shared/types";
+import { processBatch } from "@/lib/utils/common";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -166,21 +167,40 @@ export function MusicTrackList({
     }
   };
 
-  const handleBatch = (fn: (t: MusicTrack) => void, tip: string) => {
+  const handleBatch = async (fn: (t: MusicTrack) => void, tip: string) => {
     const selectedTracks = tracks.filter((t) => selectedIds.has(t.id));
-    selectedTracks.forEach(fn);
-    toast.success(`${tip} ${selectedTracks.length} 首`);
+    
+    const toastId = toast.loading(`正在处理 0/${selectedTracks.length}...`);
+    
+    await processBatch(
+      selectedTracks,
+      fn,
+      (current, total) => {
+        toast.loading(`正在处理 ${current}/${total}...`, { id: toastId });
+      }
+    );
+
+    toast.success(`${tip} ${selectedTracks.length} 首`, { id: toastId });
     setIsSelectionMode(false);
     setSelectedIds(new Set());
   };
 
-  const handleBatchRemove = () => {
+  const handleBatchRemove = async () => {
     if (!onRemove) return;
     const count = selectedIds.size;
     if (confirm(`确定移除选中的 ${count} 首歌曲吗？`)) {
       const selectedTracks = tracks.filter((t) => selectedIds.has(t.id));
-      selectedTracks.forEach(onRemove);
-      toast.success(`已移除 ${count} 首歌曲`);
+      
+      const toastId = toast.loading(`正在移除 0/${count}...`);
+      await processBatch(
+        selectedTracks,
+        onRemove,
+        (current, total) => {
+          toast.loading(`正在移除 ${current}/${total}...`, { id: toastId });
+        }
+      );
+
+      toast.success(`已移除 ${count} 首歌曲`, { id: toastId });
       setIsSelectionMode(false);
       setSelectedIds(new Set());
     }
@@ -188,13 +208,19 @@ export function MusicTrackList({
 
   const handleBatchDownload = async () => {
     const selectedTracks = tracks.filter((t) => selectedIds.has(t.id));
-    toast.info(`开始准备下载 ${selectedTracks.length} 首歌曲...`);
+    const toastId = toast.loading(`准备下载 0/${selectedTracks.length}...`);
 
-    for (const track of selectedTracks) {
-      await downloadMusicTrack(track);
-      // Small delay to avoid browser blocking multiple downloads
-      await new Promise((r) => setTimeout(r, 1000));
-    }
+    await processBatch(
+      selectedTracks,
+      downloadMusicTrack,
+      (current, total) => {
+        toast.loading(`已开始下载 ${current}/${total}...`, { id: toastId });
+      },
+      1, // 一次下载一个
+      1000 // 间隔1秒
+    );
+    
+    toast.success(`下载任务已全部开始`, { id: toastId });
     setIsSelectionMode(false);
     setSelectedIds(new Set());
   };

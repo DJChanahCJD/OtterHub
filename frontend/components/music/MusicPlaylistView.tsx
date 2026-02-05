@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MusicPlaylistViewProps {
   title: string;
@@ -44,13 +45,14 @@ export function MusicPlaylistView({
   action
 }: MusicPlaylistViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const isMobile = useIsMobile();
 
   const filteredTracks = useMemo(() => {
     if (!searchQuery.trim()) return tracks;
     const lower = searchQuery.toLowerCase();
     return tracks.filter(t => 
       t.name.toLowerCase().includes(lower) ||
-      t.artist.some(a => a.toLowerCase().includes(lower)) ||
+      t.artist?.some(a => a?.toLowerCase().includes(lower)) ||
       t.album?.toLowerCase().includes(lower)
     );
   }, [tracks, searchQuery]);
@@ -89,7 +91,8 @@ export function MusicPlaylistView({
                 className="rounded-full px-8"
                 size="lg"
              >
-                <Play className="mr-2 h-4 w-4 fill-current" /> 播放全部
+                <Play className="md:mr-2 h-4 w-4 fill-current" />
+                {!isMobile && <span>播放全部</span>}
              </Button>
              {action}
              {playlistId && (onRename || onDelete) && (

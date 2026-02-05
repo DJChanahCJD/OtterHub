@@ -17,6 +17,7 @@ import {
   Heart,
   Download,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   AudioPlayerState,
   AudioPlayerControls,
@@ -59,8 +60,15 @@ export function GlobalPlayer({
   currentTrack,
   onTogglePlaylist,
 }: GlobalPlayerProps) {
-  const { isPlaying, currentTime, duration, volume, isRepeat, isShuffle, isLoading } =
-    state;
+  const {
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    isRepeat,
+    isShuffle,
+    isLoading,
+  } = state;
   const {
     togglePlay,
     next,
@@ -84,7 +92,7 @@ export function GlobalPlayer({
     clearQueue,
     quality,
     setQuality,
-    reshuffle
+    reshuffle,
   } = useMusicStore(
     useShallow((state) => ({
       isFavorite: state.isFavorite,
@@ -99,7 +107,7 @@ export function GlobalPlayer({
       quality: state.quality,
       setQuality: state.setQuality,
       reshuffle: state.reshuffle,
-    }))
+    })),
   );
 
   const handleClearQueue = () => {
@@ -262,7 +270,9 @@ export function GlobalPlayer({
                 <Heart
                   className={cn(
                     "h-4 w-4",
-                    currentTrack && isFavorite(currentTrack.id) && "fill-primary text-primary"
+                    currentTrack &&
+                      isFavorite(currentTrack.id) &&
+                      "fill-primary text-primary",
                   )}
                 />
               </Button>
@@ -357,6 +367,7 @@ export function GlobalPlayer({
                     </Button>
                   }
                 />
+                <ThemeToggle />
               </div>
             )}
 
@@ -511,6 +522,7 @@ export function GlobalPlayer({
                 <SelectItem value="999">无损 (999kbps)</SelectItem>
               </SelectContent>
             </Select>
+            <ThemeToggle />
           </div>
         </div>
       </div>

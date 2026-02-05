@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { neteaseApi } from '@/lib/api/music-import';
+import { processBatch } from '@/lib/utils/common';
 import { toast } from 'sonner';
 import { useNetEaseStore } from '@/stores/netease-store';
 import { useMusicStore } from '@/stores/music-store';
@@ -137,14 +138,22 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
       if (!currentPlaylist || playlistDetail.length === 0) return;
       
       setImporting(true);
+      const toastId = toast.loading(`Importing 0/${playlistDetail.length}...`);
+      
       try {
-          const playlistId = createPlaylist(currentPlaylist.name);
-          playlistDetail.forEach(track => {
-              addToPlaylist(playlistId, track);
-          });
-          toast.success(`Imported playlist "${currentPlaylist.name}"`);
+          const playlistId = createPlaylist(currentPlaylist.name + ' - Netease');
+          
+          await processBatch(
+            playlistDetail,
+            (track) => addToPlaylist(playlistId, track),
+            (current, total) => {
+                toast.loading(`Importing ${current}/${total}...`, { id: toastId });
+            }
+          );
+          
+          toast.success(`Imported playlist "${currentPlaylist.name}"`, { id: toastId });
       } catch (e: any) {
-          toast.error('Import failed: ' + e.message);
+          toast.error('Import failed: ' + e.message, { id: toastId });
       } finally {
           setImporting(false);
       }
@@ -186,7 +195,7 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
                     action={
                         <Button onClick={handleImport} disabled={importing}>
                             {importing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Plus className="mr-2 h-4 w-4" />}
-                            Import to Library
+                            Import
                         </Button>
                     }
                   />
