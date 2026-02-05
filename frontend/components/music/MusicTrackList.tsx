@@ -91,6 +91,7 @@ export function MusicTrackList({
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
         <Search className="h-10 w-10 mb-4 opacity-20" />
         <p>{emptyMessage}</p>
+        <p className="text-sm text-muted-foreground/60">from GD音乐台(music.gdstudio.xyz)</p>
       </div>
     );
   }
