@@ -6,12 +6,25 @@ import { storeKey } from '.';
 import { musicStoreApi } from '@/lib/api/settings';
 
 /**
+ * Fisher-Yates shuffle
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+}
+
+/**
  * 构建云端同步的 payload
  */
 export const buildCloudPayload = (state: MusicStoreData) => ({
   favorites: state.favorites,
   playlists: state.playlists,
   queue: state.queue,
+  originalQueue: state.originalQueue,
   currentIndex: state.currentIndex,
   volume: state.volume,
   isRepeat: state.isRepeat,
@@ -131,6 +144,7 @@ interface MusicState {
 
   // --- Playback (Queue) ---
   queue: MusicTrack[];
+  originalQueue: MusicTrack[];
   currentIndex: number;
 
   /** 
@@ -146,6 +160,7 @@ interface MusicState {
   removeFromQueue: (trackId: string) => void;
 
   clearQueue: () => void;
+  reshuffle: () => void;
   setCurrentIndex: (index: number, resetTime?: boolean) => void;
 
   /**
@@ -213,41 +228,127 @@ export const useMusicStore = create<MusicState>()(
 
       setVolume: (volume) => set({ volume }),
       toggleRepeat: () => set((state) => ({ isRepeat: !state.isRepeat })),
-      toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
+      toggleShuffle: () => set((state) => {
+        const newIsShuffle = !state.isShuffle;
+
+        if (newIsShuffle) {
+          // 开启随机：备份 -> 打乱
+          if (state.queue.length <= 1) {
+            return { isShuffle: true, originalQueue: state.queue };
+          }
+
+          const currentTrack = state.queue[state.currentIndex];
+          // 排除当前歌曲，打乱剩余的
+          const rest = state.queue.filter((_, i) => i !== state.currentIndex);
+          const shuffledRest = shuffleArray(rest);
+          const newQueue = [currentTrack, ...shuffledRest];
+
+          return {
+            isShuffle: true,
+            originalQueue: state.queue,
+            queue: newQueue,
+            currentIndex: 0,
+          };
+        } else {
+          // 关闭随机：恢复
+          if (!state.originalQueue || state.originalQueue.length === 0) {
+            return { isShuffle: false };
+          }
+
+          const currentTrack = state.queue[state.currentIndex];
+          // 在原始队列中找到当前歌曲的新位置
+          const newIndex = state.originalQueue.findIndex((t) => t.id === currentTrack.id);
+
+          return {
+            isShuffle: false,
+            queue: state.originalQueue,
+            currentIndex: newIndex !== -1 ? newIndex : 0,
+            originalQueue: [], 
+          };
+        }
+      }),
       setAudioCurrentTime: (currentTime) => set({ currentAudioTime: currentTime }),
 
       queue: [],
+      originalQueue: [],
       currentIndex: 0,
 
       playContext: (tracks, startIndex) => set((state) => {
-        let actualIndex = startIndex;
+        let actualIndex = startIndex ?? 0;
 
-        // 如果未指定 startIndex (例如点击播放全部)，且处于随机模式，则随机选一首
-        if (actualIndex === undefined) {
-          if (state.isShuffle && tracks.length > 0) {
+        // 始终保存原始队列
+        const originalQueue = tracks;
+
+        if (state.isShuffle && tracks.length > 0) {
+          // 如果 startIndex 未定义，且是随机模式，随机选一首作为第一首
+          if (startIndex === undefined) {
             actualIndex = Math.floor(Math.random() * tracks.length);
-          } else {
-            actualIndex = 0;
           }
+
+          const firstTrack = tracks[actualIndex];
+          const rest = tracks.filter((_, i) => i !== actualIndex);
+          const shuffledRest = shuffleArray(rest);
+          const newQueue = [firstTrack, ...shuffledRest];
+
+          return {
+            queue: newQueue,
+            originalQueue,
+            currentIndex: 0,
+            currentAudioTime: 0,
+          };
         }
 
         return {
           queue: tracks,
+          originalQueue,
           currentIndex: actualIndex,
-          currentAudioTime: 0 // Reset time on new context
+          currentAudioTime: 0,
         };
       }),
 
       addToQueue: (track) => set((state) => {
-        if (state.queue.some(t => t.id === track.id)) return state;
-        return { queue: [...state.queue, track] };
+        if (state.queue.some((t) => t.id === track.id)) return state;
+        const newQueue = [...state.queue, track];
+        // 如果在随机模式下，也要添加到 originalQueue，以防切回顺序播放时丢失
+        const newOriginalQueue = state.isShuffle 
+          ? [...(state.originalQueue || []), track] 
+          : []; // 非随机模式下 originalQueue 通常为空或不重要，但如果之后切换到随机，playContext会重置它。
+                // 不过如果用户先顺序播放，add，再切随机，toggleShuffle会用 queue 填充 originalQueue。
+                // 所以这里只需要在 isShuffle 为 true 时维护 originalQueue。
+        
+        return { 
+          queue: newQueue,
+          originalQueue: state.isShuffle ? newOriginalQueue : state.originalQueue
+        };
       }),
 
       removeFromQueue: (trackId) => set((state) => ({
-        queue: state.queue.filter(t => t.id !== trackId)
+        queue: state.queue.filter((t) => t.id !== trackId),
+        originalQueue: state.isShuffle 
+          ? (state.originalQueue || []).filter((t) => t.id !== trackId)
+          : state.originalQueue
       })),
 
-      clearQueue: () => set({ queue: [], currentIndex: 0, currentAudioTime: 0 }),
+      clearQueue: () => set({ queue: [], originalQueue: [], currentIndex: 0, currentAudioTime: 0 }),
+      reshuffle: () => set((state) => {
+        if (!state.isShuffle || state.queue.length <= 1) return state;
+
+        // 使用 originalQueue 进行重新打乱
+        const sourceQueue = (state.originalQueue && state.originalQueue.length > 0)
+          ? state.originalQueue
+          : state.queue;
+
+        const currentTrack = state.queue[state.currentIndex];
+        // 排除当前歌曲
+        const rest = sourceQueue.filter((t) => t.id !== currentTrack.id);
+        const shuffledRest = shuffleArray(rest);
+        const newQueue = [currentTrack, ...shuffledRest];
+
+        return {
+          queue: newQueue,
+          currentIndex: 0,
+        };
+      }),
       setCurrentIndex: (index, resetTime = true) =>
         set((state) => ({
           currentIndex: index,

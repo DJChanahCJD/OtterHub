@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2 } from "lucide-react";
+import { Trash2, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
 
@@ -11,8 +11,10 @@ interface PlayerQueuePopoverProps {
   queue: MusicTrack[];
   currentIndex: number;
   isPlaying: boolean;
+  isShuffle: boolean;
   onPlay: (index: number) => void;
   onClear: () => void;
+  onReshuffle: () => void;
   trigger: React.ReactNode;
 }
 
@@ -20,8 +22,10 @@ export function PlayerQueuePopover({
   queue,
   currentIndex,
   isPlaying,
+  isShuffle,
   onPlay,
   onClear,
+  onReshuffle,
   trigger,
 }: PlayerQueuePopoverProps) {
   return (
@@ -34,15 +38,28 @@ export function PlayerQueuePopover({
       >
         <div className="p-3 border-b text-sm font-medium flex justify-between items-center">
           <span>播放列表 ({queue.length})</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 text-muted-foreground hover:bg-transparent hover:text-destructive"
-            onClick={onClear}
-            title="清空播放列表"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {isShuffle && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 text-muted-foreground hover:bg-transparent hover:text-primary"
+                onClick={onReshuffle}
+                title="再次打乱"
+              >
+                <Shuffle className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 text-muted-foreground hover:bg-transparent hover:text-destructive"
+              onClick={onClear}
+              title="清空播放列表"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full">

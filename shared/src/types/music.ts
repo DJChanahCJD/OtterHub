@@ -46,6 +46,7 @@ export interface MusicStoreData {
   favorites: MusicTrack[];
   playlists: Playlist[];
   queue: MusicTrack[];
+  originalQueue?: MusicTrack[];
   currentIndex: number;
   volume: number;
   isRepeat: boolean;

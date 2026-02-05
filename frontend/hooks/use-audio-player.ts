@@ -65,17 +65,9 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
       const len = audioFiles.length
       if (!len) return 0
 
-      if (isShuffle && len > 1) {
-        let next = currentIndex
-        while (next === currentIndex) {
-          next = Math.floor(Math.random() * len)
-        }
-        return next
-      }
-
       return (currentIndex + step + len) % len
     },
-    [audioFiles.length, currentIndex, isShuffle],
+    [audioFiles.length, currentIndex],
   )
 
   /* ---------- Atomic Controls ---------- */

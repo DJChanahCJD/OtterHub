@@ -84,6 +84,7 @@ export function GlobalPlayer({
     clearQueue,
     quality,
     setQuality,
+    reshuffle
   } = useMusicStore(
     useShallow((state) => ({
       isFavorite: state.isFavorite,
@@ -97,6 +98,7 @@ export function GlobalPlayer({
       clearQueue: state.clearQueue,
       quality: state.quality,
       setQuality: state.setQuality,
+      reshuffle: state.reshuffle,
     }))
   );
 
@@ -304,11 +306,13 @@ export function GlobalPlayer({
                 queue={queue}
                 currentIndex={currentIndex}
                 isPlaying={isPlaying}
+                isShuffle={isShuffle}
                 onPlay={(index) => {
                   playTrack(index);
                   controls.play();
                 }}
                 onClear={handleClearQueue}
+                onReshuffle={reshuffle}
                 trigger={
                   <Button
                     variant="ghost"
@@ -338,8 +342,10 @@ export function GlobalPlayer({
                   queue={queue}
                   currentIndex={currentIndex}
                   isPlaying={isPlaying}
+                  isShuffle={isShuffle}
                   onPlay={playTrack}
                   onClear={handleClearQueue}
+                  onReshuffle={reshuffle}
                   trigger={
                     <Button
                       variant="ghost"
@@ -380,8 +386,10 @@ export function GlobalPlayer({
                   queue={queue}
                   currentIndex={currentIndex}
                   isPlaying={isPlaying}
+                  isShuffle={isShuffle}
                   onPlay={playTrack}
                   onClear={handleClearQueue}
+                  onReshuffle={reshuffle}
                   trigger={
                     <Button
                       variant="ghost"
