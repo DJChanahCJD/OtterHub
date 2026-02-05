@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { FileItem } from "@shared/types"
 import { useMusicStore } from "@/stores/music-store"
+import { toast } from "sonner"
 
 /**
  * 音频播放器 Hook
@@ -183,7 +184,10 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
         lastSaveTimeRef.current = now
       }
     }
-    const onDurationChange = () => setDuration(audio.duration || 0)
+    const onDurationChange = () => {
+      setDuration(audio.duration || 0)
+      if (audio.duration === 30) toast.info('30s试听？请检查账号状态！')
+    }
     const onEnded = () => {
       if (isRepeat) {
         audio.currentTime = 0;
