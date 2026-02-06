@@ -123,6 +123,7 @@ Fork 本项目，然后在 Cloudflare Dashboard 创建 Pages 项目：
 PASSWORD=your_password          # 密码
 TG_CHAT_ID=your_tg_chat_id      # Telegram Chat ID
 TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
+API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 ```
 
 ### 3. 绑定 KV Namespace
@@ -361,8 +362,6 @@ OtterHub/
     - [x] 对接KV持久化
     - [x] 随机播放队列（允许回溯上一首）
     - [x] 歌单导入功能（支持获取网易云的个人歌单导入, 参考1Listen）
-    - [] 网易云QR登录
-    - [ ] 对接播客...
   - ~~[x] 视频：在线播放支持 (video.js)~~
   - [x] 文档：预览支持
     - [x] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
@@ -375,7 +374,6 @@ OtterHub/
 
 - [x] API Token 支持 (通过 `API_TOKEN` 环境变量配置)
 - 其他
-  - [ ] Demo 站点上传限制可配置（环境变量）
   - [ ] KV vs D1 数据库评估
     - D1：单库 500MB，分库可达 5GB
     - 优点：SQL、关系模型、文件夹结构更自然
