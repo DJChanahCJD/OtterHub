@@ -223,15 +223,6 @@ export function FileUploadZone() {
 
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-end mb-2 space-x-2">
-         <div className="flex items-center space-x-2">
-            <Switch id="merge-mode" checked={isMergeMode} onCheckedChange={setIsMergeMode} />
-            <Label htmlFor="merge-mode" className="text-sm text-foreground/80 cursor-pointer select-none">
-              Merge images to PDF
-            </Label>
-         </div>
-      </div>
-
       {pdfProcessing.processing && (
         <div className="mb-4 bg-secondary/30 p-3 rounded-lg border border-glass-border">
             <div className="flex justify-between text-xs mb-1 text-foreground/80">
@@ -264,12 +255,22 @@ export function FileUploadZone() {
         onDragLeave={() => setIsDragging(false)}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
-          "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all backdrop-blur-sm bg-glass-bg",
+          "relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all backdrop-blur-sm bg-glass-bg group",
           isDragging
             ? "border-primary bg-primary/10"
             : "border-glass-border hover:border-primary/50",
         )}
       >
+        <div 
+          className="absolute top-4 right-4 flex items-center space-x-2 z-10 transition-opacity opacity-70 hover:opacity-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Switch id="merge-mode" checked={isMergeMode} onCheckedChange={setIsMergeMode} />
+          <Label htmlFor="merge-mode" className="text-xs text-foreground/70 cursor-pointer select-none font-normal">
+            Merge to PDF
+          </Label>
+        </div>
+
         <Upload
           className={cn(
             "h-8 w-8 mx-auto mb-3 transition-colors",
