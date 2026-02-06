@@ -334,9 +334,8 @@ OtterHub/
 
 - [x] 预览与展示
   - [x] 图片瀑布流（支持 GIF）
-  - [x] 视频缩略图（Telegram thumbnail）
-    - [ ] 分片上传的能否也有缩略图？
-    - [ ] 分片文件加载时显示进度条？
+  - [x] 视频缩略图（Telegram thumbnail），仅 20MB 内的视频文件支持
+    - 如果要分片视频文件也支持，需要前端截图第一帧上传，`thumb:`
   - [x] 图片加载策略（默认 / 省流 / 无图）
 
 - [x] 安全与体验
@@ -348,7 +347,6 @@ OtterHub/
 ### High Priority
 - [x] 基于 cookie 实现登录登出
 - [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面）
-  - FAB → Action Sheet / Popover → 操作列表（通过shadcn/ui + 自定义 FAB实现）
 - [x] 随机壁纸（Wallhaven、Bing、Pixabay 等）
 - [x] 全面重构为 Hono 后端（鉴权更灵活，可移植性更好）
 - [x] 前端迁移至 Hono RPC (End-to-end Type Safety)
@@ -369,12 +367,13 @@ OtterHub/
   - [x] 文档：预览支持
     - [x] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
     - [x] 漫画（图片 → 连续阅读 / PDF）
+    - [x] 小说模式？多个txt或者md文件合并为一本小说
 
 ---
 
 ### Low Priority
 
-- [ ] API Token 支持
+- [x] API Token 支持 (通过 `API_TOKEN` 环境变量配置)
 - 其他
   - [ ] Demo 站点上传限制可配置（环境变量）
   - [ ] KV vs D1 数据库评估

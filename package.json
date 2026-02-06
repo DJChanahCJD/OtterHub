@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" ",
     "dev:frontend": "npm run dev --prefix frontend",
-    "dev:backend": "npx wrangler pages dev frontend/out --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding PASSWORD=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data",
+    "dev:backend": "npx wrangler pages dev frontend/out --kv \"oh_file_url\" --r2 \"oh_file_r2\" --binding PASSWORD=123456 --binding API_TOKEN=123456 --ip 0.0.0.0 --port 8080 --persist-to ./data",
     "build": "npm run build --prefix frontend",
     "ci-test": "concurrently -k -s first \"npm run dev:backend\" \"wait-on http://localhost:8080 && mocha --exit\""
   },

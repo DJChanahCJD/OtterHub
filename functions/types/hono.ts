@@ -19,6 +19,7 @@ export type Env = {
   oh_file_r2?: R2Bucket;
   JWT_SECRET?: string;
   PASSWORD?: string;
+  API_TOKEN?: string;
   
   TG_CHAT_ID?: string;
   TG_BOT_TOKEN?: string;

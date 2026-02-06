@@ -21,16 +21,28 @@ rawRoutes.get('/:key', async (c) => {
     const isPrivate = item.metadata?.tags?.includes(FileTag.Private);
 
     if (isPrivate) {
-      const token = getCookie(c, 'auth');
       let authorized = false;
 
-      if (token) {
-        try {
-          // Use JWT_SECRET if available, otherwise fallback to PASSWORD
-          await verifyJWT(token, c.env.JWT_SECRET || c.env.PASSWORD);
+      // 1. 优先检查 API Token (Authorization Header)
+      const authHeader = c.req.header('Authorization');
+      if (authHeader && c.env.API_TOKEN) {
+        const apiToken = authHeader.replace(/Bearer\s+/i, '');
+        if (apiToken === c.env.API_TOKEN) {
           authorized = true;
-        } catch (e) {
-          // Token invalid
+        }
+      }
+
+      // 2. 检查 Cookie (仅在未通过 API Token 授权时)
+      if (!authorized) {
+        const token = getCookie(c, 'auth');
+        if (token) {
+          try {
+            // Use JWT_SECRET if available, otherwise fallback to PASSWORD
+            await verifyJWT(token, c.env.JWT_SECRET || c.env.PASSWORD);
+            authorized = true;
+          } catch (e) {
+            // Token invalid
+          }
         }
       }
 

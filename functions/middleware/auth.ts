@@ -17,10 +17,21 @@ export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next
     return;
   }
 
-  const cookie = c.req.header('Cookie');
-  const authCookie = cookie?.match(/(?:^|;\s*)auth=([^;]+)/)?.[1];
   const env = c.env;
 
+  // 1. 优先检查 API Token (Authorization Header)
+  const authHeader = c.req.header('Authorization');
+  if (authHeader && env.API_TOKEN) {
+    const token = authHeader.replace(/Bearer\s+/i, '');
+    if (token === env.API_TOKEN) {
+      await next();
+      return;
+    }
+  }
+
+  // 2. 检查 Cookie
+  const cookie = c.req.header('Cookie');
+  const authCookie = cookie?.match(/(?:^|;\s*)auth=([^;]+)/)?.[1];
 
   if (!authCookie) {
     return fail(c, `Unauthorized, cookie: ${cookie}`, 401);

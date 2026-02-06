@@ -5,6 +5,7 @@ const FormData = require("form-data");
 
 const API_URL = "http://localhost:8080";
 const PASSWORD = "123456";
+const API_TOKEN = "123456";
 const trashPrefix = "trash:";
 
 describe("API Endpoints", function () {
@@ -36,6 +37,64 @@ describe("API Endpoints", function () {
       const authMatch = setCookieHeader.match(/auth=([^;]+)/);
       assert.ok(authMatch, "No auth cookie found");
       authCookie = `auth=${authMatch[1]}`;
+    });
+  });
+
+  // API Token 鉴权测试
+  describe("API Token Authentication", function () {
+    it("should access protected route with valid API Token", async function () {
+      const response = await fetch(`${API_URL}/file/list`, {
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+        },
+      });
+
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.ok(result.success);
+    });
+
+    it("should fail with invalid API Token", async function () {
+      const response = await fetch(`${API_URL}/file/list`, {
+        headers: {
+          Authorization: "Bearer invalid_token",
+        },
+      });
+
+      assert.equal(response.status, 401);
+    });
+
+    it("should work for file upload using API Token", async function () {
+      const filePath = path.join(__dirname, "../public/otterhub-icon.svg");
+      const fileBuffer = fs.readFileSync(filePath);
+
+      const form = new FormData();
+      form.append("file", fileBuffer, {
+        filename: "token-test.svg",
+        contentType: "image/svg+xml",
+      });
+
+      const response = await fetch(`${API_URL}/upload`, {
+        method: "POST",
+        body: form.getBuffer(),
+        headers: {
+          ...form.getHeaders(),
+          Authorization: `Bearer ${API_TOKEN}`,
+        },
+      });
+
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.ok(result.success);
+      
+      // 清理测试上传的文件
+      const fileKey = result.data;
+      await fetch(`${API_URL}/file/${fileKey}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+        },
+      });
     });
   });
 
