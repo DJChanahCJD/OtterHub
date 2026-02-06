@@ -44,7 +44,18 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-center" richColors />
+          <Toaster
+            position="top-center"
+            richColors
+            expand={true}
+            visibleToasts={5}
+            gap={12}
+            pauseWhenPageIsHidden
+            toastOptions={{
+              duration: 3000,
+              closeButton: true,
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
