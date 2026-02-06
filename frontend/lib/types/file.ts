@@ -31,3 +31,21 @@ export type ListFilesRequest = {
   limit?: string; // 默认且最大为1000
   cursor?: string; // Cloudflare KV的cursor是字符串类型
 };
+
+export const binaryExtensions = [
+  // 文档
+  ".pdf", ".epub", ".mobi", ".azw3",
+  ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+  // 压缩包
+  ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz",
+  // 可执行文件/系统文件
+  ".exe", ".msi", ".apk", ".app", ".dmg", ".pkg",
+  ".iso", ".img", ".bin",
+  // 设计文件
+  ".psd", ".ai", ".sketch", ".fig",
+  // 字体
+  ".ttf", ".otf", ".woff", ".woff2",
+  // 编译/数据库
+  ".pyc", ".pyo", ".pyd", ".class", ".o", ".so", ".dll", ".dylib",
+  ".db", ".sqlite", ".mdb"
+];

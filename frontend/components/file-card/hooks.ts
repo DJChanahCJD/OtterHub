@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
 import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
-import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
+import { MAX_CONCURRENTS, MAX_CHUNK_SIZE, binaryExtensions } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
 import { FileItem, FileType } from "@shared/types";
@@ -26,6 +26,7 @@ export function useFileCardActions(file: FileItem) {
   const [showEdit, setShowEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [showTextReader, setShowTextReader] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -63,21 +64,34 @@ export function useFileCardActions(file: FileItem) {
     const url = getFileUrl(file.name);
     downloadFile(url, file.metadata);
   };
-
+  
   const handleView = () => {
     const url = getFileUrl(file.name);
+    const fileName = file.metadata.fileName?.toLowerCase() || "";
     
-    if (file.metadata.fileName?.toLowerCase().endsWith(".epub")) {
+    // 1. EPUB 专用阅读器
+    if (fileName.endsWith(".epub")) {
       const readerUrl = `/epub-reader?url=${encodeURIComponent(url)}&title=${encodeURIComponent(file.metadata.fileName || "Epub")}`;
       window.open(readerUrl, "_blank", "noopener,noreferrer");
       return;
     }
 
+    // 2. 文本阅读器：如果是文档类型且不是已知的二进制格式
+    if (
+      fileType === FileType.Document && 
+      !binaryExtensions.some(ext => fileName.endsWith(ext))
+    ) {
+      setShowTextReader(true);
+      return;
+    }
+
+    // 3. 视频预览
     if (fileType === FileType.Video) {
       setShowVideoPreview(true);
       return;
     }
     
+    // 4. 其他类型（图片、音频、PDF、压缩包等）直接打开
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -162,6 +176,7 @@ export function useFileCardActions(file: FileItem) {
     showEdit,
     showShare,
     showVideoPreview,
+    showTextReader,
     isResuming,
 
     inputRef,
@@ -171,6 +186,7 @@ export function useFileCardActions(file: FileItem) {
     setShowEdit,
     setShowShare,
     setShowVideoPreview,
+    setShowTextReader,
     handleSelect,
     handleDelete,
     handleCopyLink,

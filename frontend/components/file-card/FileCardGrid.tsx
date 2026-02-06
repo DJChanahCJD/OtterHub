@@ -11,6 +11,7 @@ import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
 import { VideoPreviewDialog } from "./VideoPreviewDialog";
+import { TextReaderDialog } from "./TextReaderDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface FileCardGridProps {
@@ -27,10 +28,12 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
     showDetail,
     showEdit,
     showVideoPreview,
+    showTextReader,
     isResuming,
     setShowDetail,
     setShowEdit,
     setShowVideoPreview,
+    setShowTextReader,
     handleSelect,
     handleDelete,
     handleCopyLink,
@@ -164,6 +167,11 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         file={file}
         open={showVideoPreview}
         onOpenChange={setShowVideoPreview}
+      />
+      <TextReaderDialog
+        file={file}
+        open={showTextReader}
+        onOpenChange={setShowTextReader}
       />
     </>
   );
