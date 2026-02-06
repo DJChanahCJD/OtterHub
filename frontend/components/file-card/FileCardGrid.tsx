@@ -10,6 +10,7 @@ import { useFileCardActions } from "./hooks";
 import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
+import { VideoPreviewDialog } from "./VideoPreviewDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface FileCardGridProps {
@@ -25,9 +26,11 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
     isIncompleteUpload,
     showDetail,
     showEdit,
+    showVideoPreview,
     isResuming,
     setShowDetail,
     setShowEdit,
+    setShowVideoPreview,
     handleSelect,
     handleDelete,
     handleCopyLink,
@@ -156,6 +159,11 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         onOpenChange={actions.setShowShare}
         fileKey={file.name}
         fileName={file.metadata.fileName}
+      />
+      <VideoPreviewDialog
+        file={file}
+        open={showVideoPreview}
+        onOpenChange={setShowVideoPreview}
       />
     </>
   );

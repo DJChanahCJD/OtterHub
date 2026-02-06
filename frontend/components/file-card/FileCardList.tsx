@@ -9,6 +9,7 @@ import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
+import { VideoPreviewDialog } from "./VideoPreviewDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
 interface FileCardListProps {
@@ -24,9 +25,11 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     isIncompleteUpload,
     showDetail,
     showEdit,
+    showVideoPreview,
     isResuming,
     setShowDetail,
     setShowEdit,
+    setShowVideoPreview,
     handleSelect,
     handleDelete,
     handleCopyLink,
@@ -144,6 +147,11 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         onOpenChange={actions.setShowShare}
         fileKey={file.name}
         fileName={file.metadata.fileName}
+      />
+      <VideoPreviewDialog
+        file={file}
+        open={showVideoPreview}
+        onOpenChange={setShowVideoPreview}
       />
     </>
   );

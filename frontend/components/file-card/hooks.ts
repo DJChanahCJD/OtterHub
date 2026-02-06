@@ -5,7 +5,7 @@ import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
 import { MAX_CONCURRENTS, MAX_CHUNK_SIZE } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
-import { FileItem } from "@shared/types";
+import { FileItem, FileType } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
 export function useFileCardActions(file: FileItem) {
@@ -25,6 +25,7 @@ export function useFileCardActions(file: FileItem) {
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -69,6 +70,11 @@ export function useFileCardActions(file: FileItem) {
     if (file.metadata.fileName?.toLowerCase().endsWith(".epub")) {
       const readerUrl = `/epub-reader?url=${encodeURIComponent(url)}&title=${encodeURIComponent(file.metadata.fileName || "Epub")}`;
       window.open(readerUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (fileType === FileType.Video) {
+      setShowVideoPreview(true);
       return;
     }
     
@@ -155,6 +161,7 @@ export function useFileCardActions(file: FileItem) {
     showDetail,
     showEdit,
     showShare,
+    showVideoPreview,
     isResuming,
 
     inputRef,
@@ -163,6 +170,7 @@ export function useFileCardActions(file: FileItem) {
     setShowDetail,
     setShowEdit,
     setShowShare,
+    setShowVideoPreview,
     handleSelect,
     handleDelete,
     handleCopyLink,
