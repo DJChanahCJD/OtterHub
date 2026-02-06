@@ -83,7 +83,7 @@ export function PlayerTrackInfo({
 
       {!isMobile && (
         <div
-          className="flex items-center gap-1 ml-2"
+          className="flex items-center gap-1 ml-2 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           {onToggleFavorite && (

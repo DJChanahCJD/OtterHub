@@ -232,7 +232,7 @@ export function GlobalPlayer({
         {/* 2. Main Controls Area (h-24 for mobile) */}
         <div className="flex items-center justify-between px-4 h-24 gap-4">
           {/* Left: Info - PC Only */}
-          <div className="hidden md:flex flex-1">
+          <div className="hidden md:flex flex-1 min-w-0">
             <PlayerTrackInfo
               track={currentTrack}
               coverUrl={coverUrl}
@@ -246,7 +246,7 @@ export function GlobalPlayer({
 
           {/* Mobile: Left - Album + Song Name (Non-Fullscreen Only) */}
           {!isFullScreen && (
-            <div className="md:hidden flex-1">
+            <div className="md:hidden flex-1 min-w-0">
               <PlayerTrackInfo
                 track={currentTrack}
                 coverUrl={coverUrl}
@@ -290,7 +290,7 @@ export function GlobalPlayer({
           )}
 
           {/* Center: Controls */}
-          <div className="flex-1 flex items-center justify-center gap-4">
+          <div className="flex-none md:flex-1 flex items-center justify-center gap-4">
             {/* PC: Full Controls */}
             <div className="hidden md:flex items-center gap-4">
               <Button
@@ -417,7 +417,7 @@ export function GlobalPlayer({
           </div>
 
           {/* Right: Settings - PC Only */}
-          <div className="hidden md:flex flex-1 items-center justify-end gap-3 text-xs">
+          <div className="hidden md:flex flex-1 min-w-0 items-center justify-end gap-3 text-xs">
             {/* Volume Control */}
             <Popover>
               <PopoverTrigger asChild>
