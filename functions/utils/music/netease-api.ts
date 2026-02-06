@@ -6,6 +6,30 @@ const BASE_URL = 'https://music.163.com';
 const EAPI_BASE_URL = 'https://interface3.music.163.com';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+function cleanCookie(cookieStr: string | null): string {
+    if (!cookieStr) return '';
+    
+    // Split by comma or semicolon to handle multiple cookies and merged headers
+    const parts = cookieStr.split(/[,;]\s*/);
+    const cookieMap = new Map<string, string>();
+    const ignoredKeys = new Set([
+        'expires', 'max-age', 'domain', 'path', 'httponly', 'secure', 'samesite', 'priority'
+    ]);
+
+    for (const part of parts) {
+        const match = part.match(/^([^=]+)=(.*)$/);
+        if (match) {
+            const key = match[1].trim();
+            const value = match[2].trim();
+            if (key && !ignoredKeys.has(key.toLowerCase())) {
+                cookieMap.set(key, value);
+            }
+        }
+    }
+    
+    return Array.from(cookieMap.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+}
+
 async function request(url: string, data: any, cookie: string = '') {
   const encData = weapi(data);
   const params = new URLSearchParams(encData as any).toString();
@@ -13,9 +37,13 @@ async function request(url: string, data: any, cookie: string = '') {
   // Prepare cookie
   const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
   let finalCookie = cookie.trim();
-  if (!finalCookie.includes('=')) {
+  
+  if (finalCookie && !finalCookie.includes('=')) {
       finalCookie = `MUSIC_U=${finalCookie}`;
+  } else {
+      finalCookie = cleanCookie(finalCookie);
   }
+  
   finalCookie = `${baseCookies} ${finalCookie}`;
 
   const headers: Record<string, string> = {
@@ -38,9 +66,10 @@ async function request(url: string, data: any, cookie: string = '') {
   
   // Extract Set-Cookie
   const setCookie = response.headers.get('set-cookie');
+  const cleanedCookie = cleanCookie(setCookie);
   
   const json = await response.json();
-  return { data: json, cookie: setCookie };
+  return { data: json, cookie: cleanedCookie };
 }
 
 async function requestEapi(url: string, path: string, data: any, cookie: string = '') {
@@ -51,9 +80,13 @@ async function requestEapi(url: string, path: string, data: any, cookie: string 
     // 1Listen sets os=pc in cookie for eapi too.
     const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
     let finalCookie = cookie.trim();
+    
     if (finalCookie && !finalCookie.includes('=')) {
         finalCookie = `MUSIC_U=${finalCookie}`;
+    } else {
+        finalCookie = cleanCookie(finalCookie);
     }
+    
     finalCookie = `${baseCookies} ${finalCookie}`;
 
     const headers: Record<string, string> = {
