@@ -1,4 +1,4 @@
-import { GeneralSettings, MusicStoreData, WallpaperConfigs } from "@shared/types";
+import { GeneralSettings, MusicStoreData, NetEaseStoreData, WallpaperConfigs } from "@shared/types";
 
 import { client } from './client';
 import { unwrap } from './config';
@@ -26,6 +26,9 @@ export const generalSettingsApi =
 
 export const musicStoreApi =
   createSettingsApi<MusicStoreData>('music');
+
+export const neteaseStoreApi =
+  createSettingsApi<NetEaseStoreData>('netease');
 
 export const wallpaperConfigsApi =
   createSettingsApi<WallpaperConfigs>('wallpaper');

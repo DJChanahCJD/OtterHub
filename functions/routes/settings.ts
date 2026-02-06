@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { CF } from 'types';
-import { GeneralSettings, MusicStoreData } from '@shared/types';
+import { GeneralSettings, MusicStoreData, NetEaseStoreData } from '@shared/types';
 
 import { ok, fail } from '@utils/response';
 import { kvGetJSON } from '@utils/kv';
@@ -74,5 +74,15 @@ createSettingsRoutes<MusicStoreData>(
   {
     getMessage: '获取音乐数据失败',
     postMessage: '音乐数据已同步',
+  }
+);
+
+createSettingsRoutes<NetEaseStoreData>(
+  settingsRoutes,
+  '/netease',
+  CF.NETEASE_STORE_KEY,
+  {
+    getMessage: '获取网易云账号失败',
+    postMessage: '网易云账号已同步',
   }
 );

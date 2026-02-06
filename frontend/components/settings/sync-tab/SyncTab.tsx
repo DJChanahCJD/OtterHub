@@ -11,6 +11,7 @@ import {
   Cloud,
   RefreshCw,
   AlertTriangle,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,8 @@ import {
 } from "@/components/ui/dialog";
 
 import { useMusicStore, buildCloudPayload } from "@/stores/music-store";
-import { musicStoreApi } from "@/lib/api/settings";
+import { useNetEaseStore } from "@/stores/netease-store";
+import { musicStoreApi, neteaseStoreApi } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -43,7 +45,10 @@ export function SyncTab() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [cloudData, setCloudData] = useState<any>(null);
-  const [pendingAction, setPendingAction] = useState<"merge" | "upload" | null>(null);
+  const [neCloudData, setNeCloudData] = useState<any>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "merge" | "upload" | "ne_upload" | "ne_download" | null
+  >(null);
 
   const isBusy = isMergingMusic || isUploading;
 
@@ -51,6 +56,14 @@ export function SyncTab() {
 
   const favorites = useMusicStore((state) => state.favorites);
   const playlists = useMusicStore((state) => state.playlists);
+  const neState = useNetEaseStore((state) => ({
+    profile: state.profile,
+    userId: state.userId,
+    cookie: state.cookie,
+    setSession: state.setSession,
+  }));
+  const neProfile = neState.profile;
+  const isNeLoggedIn = !!neState.cookie && !!neState.userId;
 
   const localCount = useMemo(
     () => ({
@@ -75,6 +88,9 @@ export function SyncTab() {
     try {
       const data = await musicStoreApi.get();
       setCloudData(data && Object.keys(data).length > 0 ? data : null);
+      
+      const neData = await neteaseStoreApi.get();
+      setNeCloudData(neData && Object.keys(neData).length > 0 ? neData : null);
     } catch (error) {
       console.error("Failed to fetch cloud data", error);
       if (!silent) toast.error("获取云端数据失败");
@@ -119,11 +135,54 @@ export function SyncTab() {
     }
   };
 
+  const executeNeUpload = async () => {
+    setIsUploading(true);
+    try {
+      const { cookie, userId, profile } = useNetEaseStore.getState();
+      if (!cookie || !userId) {
+        throw new Error("本地未登录网易云账号");
+      }
+      await neteaseStoreApi.update({
+        cookie,
+        userId,
+        profile,
+        updatedAt: Date.now(),
+      });
+      await fetchCloudData(true);
+      toast.success("网易云账号已同步到云端");
+    } catch (error: any) {
+      toast.error("同步失败: " + error.message);
+    } finally {
+      setIsUploading(false);
+      setPendingAction(null);
+    }
+  };
+
+  const executeNeDownload = async () => {
+    setIsUploading(true);
+    try {
+      const data = await neteaseStoreApi.get();
+      if (!data || !data.cookie || !data.userId) {
+        throw new Error("云端无有效账号数据");
+      }
+      
+      neState.setSession(data.cookie, data.userId, data.profile as any);
+      toast.success("已从云端恢复网易云账号登录");
+    } catch (error: any) {
+      toast.error("恢复失败: " + error.message);
+    } finally {
+      setIsUploading(false);
+      setPendingAction(null);
+    }
+  };
+
   /* -------------------- 确认执行 -------------------- */
 
   const confirmAction = () => {
     if (pendingAction === "merge") executeMerge();
     if (pendingAction === "upload") executeUpload();
+    if (pendingAction === "ne_upload") executeNeUpload();
+    if (pendingAction === "ne_download") executeNeDownload();
   };
 
   /* -------------------- UI -------------------- */
@@ -158,7 +217,25 @@ export function SyncTab() {
             <div className="flex items-center gap-2">
               <Music className="h-4 w-4 text-pink-500" />
               <CardTitle className="text-base">音乐数据</CardTitle>
-            </div>
+              {pendingAction === "ne_upload" && (
+              <>
+                <p>将当前网易云登录状态上传到云端：</p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground">
+                  <li>覆盖云端的账号信息</li>
+                  <li>其他设备可同步登录</li>
+                </ul>
+              </>
+            )}
+            {pendingAction === "ne_download" && (
+              <>
+                <p>从云端恢复网易云登录状态：</p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground">
+                  <li>恢复账号：{neCloudData?.profile?.nickname}</li>
+                  <li>覆盖本地当前登录状态（如有）</li>
+                </ul>
+              </>
+            )}
+          </div>
             <CardDescription>同步歌单与喜欢</CardDescription>
           </div>
           <Button
@@ -243,6 +320,91 @@ export function SyncTab() {
         </CardContent>
       </Card>
 
+      {/* NetEase Card */}
+      <Card className="rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-red-500" />
+              <CardTitle className="text-base">网易云账号</CardTitle>
+            </div>
+            <CardDescription>同步登录状态与用户信息</CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (isNeLoggedIn) {
+                setPendingAction("ne_upload");
+              } else if (neCloudData) {
+                setPendingAction("ne_download");
+              }
+            }}
+            disabled={isBusy || (!isNeLoggedIn && !neCloudData)}
+            title={isNeLoggedIn ? "上传到云端" : "从云端恢复"}
+          >
+            {isNeLoggedIn ? (
+              <CloudUpload
+                className={cn("h-4 w-4", isUploading && "animate-spin")}
+              />
+            ) : (
+              <CloudDownload
+                className={cn("h-4 w-4", isUploading && "animate-spin")}
+              />
+            )}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden text-sm">
+            {/* Header */}
+            <div className="grid grid-cols-3 bg-muted/30 p-3 border-b border-border/40">
+              <div className="text-muted-foreground font-medium flex items-center">
+                数据对比
+              </div>
+              <div className="font-medium flex items-center gap-1.5 text-primary">
+                <Laptop className="w-3.5 h-3.5" /> 本地
+              </div>
+              <div className="font-medium flex items-center gap-1.5 text-sky-500">
+                <Cloud className="w-3.5 h-3.5" /> 云端
+              </div>
+            </div>
+
+            {/* Rows */}
+            <div className="p-3 grid gap-3">
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-muted-foreground">用户昵称</span>
+                <span className="font-medium truncate pr-2">
+                  {neProfile?.nickname || "-"}
+                </span>
+                <span
+                  className={cn(
+                    "font-medium truncate",
+                    !neCloudData && "text-muted-foreground/50"
+                  )}
+                >
+                  {neCloudData?.profile?.nickname || "-"}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-muted-foreground">最后更新</span>
+                <span className="font-medium">-</span>
+                <span
+                  className={cn(
+                    "font-medium",
+                    !neCloudData && "text-muted-foreground/50"
+                  )}
+                >
+                  {neCloudData?.updatedAt
+                    ? format(neCloudData.updatedAt, "yyyy-MM-dd HH:mm")
+                    : "-"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 确认弹窗 */}
       <Dialog
         open={!!pendingAction}
@@ -274,6 +436,15 @@ export function SyncTab() {
                   <li>覆盖云端的喜欢歌曲</li>
                   <li>覆盖云端的歌单</li>
                   <li>保留本地的所有设置</li>
+                </ul>
+              </>
+            )}
+            {pendingAction === "ne_upload" && (
+              <>
+                <p>将当前网易云登录状态上传到云端：</p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground">
+                  <li>覆盖云端的账号信息</li>
+                  <li>其他设备可同步登录</li>
                 </ul>
               </>
             )}

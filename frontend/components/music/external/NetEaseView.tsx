@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { neteaseApi } from '@/lib/api/music-import';
+import { neteaseStoreApi } from '@/lib/api/settings';
 import { processBatch } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNetEaseStore, NetEaseProfile } from '@/stores/netease-store';
@@ -116,6 +117,19 @@ function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, use
                    signature: profileRes.data.profile.signature,
                };
                onLoginSuccess(cookie, profileRes.data.account.id, profile);
+               
+               // Auto sync to cloud
+               try {
+                   await neteaseStoreApi.update({
+                       cookie,
+                       userId: String(profileRes.data.account.id),
+                       profile,
+                       updatedAt: Date.now(),
+                   });
+                   toast.success('Account synced to cloud');
+               } catch (e) {
+                   console.error('Failed to sync account to cloud', e);
+               }
           } else {
                toast.error('Login verification failed. Please try again.');
                setQrStatus(800);

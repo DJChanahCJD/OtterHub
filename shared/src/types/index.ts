@@ -101,4 +101,16 @@ export interface CreateShareRequest {
 }
 
 
+export interface NetEaseStoreData {
+  cookie: string;
+  userId: string;
+  profile: {
+    nickname: string;
+    avatarUrl: string;
+    backgroundUrl: string;
+    signature: string;
+  } | null;
+  updatedAt: number;
+}
+
 export const MAX_FILENAME_LENGTH = 128; // 最大文件名长度（包括扩展名）
