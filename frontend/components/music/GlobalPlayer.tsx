@@ -290,7 +290,7 @@ export function GlobalPlayer({
           )}
 
           {/* Center: Controls */}
-          <div className="flex-none md:flex-1 flex items-center justify-center gap-4">
+          <div className="flex-1 flex items-center justify-center gap-4">
             {/* PC: Full Controls */}
             <div className="hidden md:flex items-center gap-4">
               <Button
