@@ -29,6 +29,7 @@ interface MusicPlaylistViewProps {
   currentTrackId?: string;
   isPlaying?: boolean;
   action?: React.ReactNode;
+  coverUrl?: string;
 }
 
 export function MusicPlaylistView({
@@ -42,7 +43,8 @@ export function MusicPlaylistView({
   description,
   currentTrackId,
   isPlaying,
-  action
+  action,
+  coverUrl
 }: MusicPlaylistViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
@@ -71,8 +73,12 @@ export function MusicPlaylistView({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b flex items-end gap-6 bg-muted/10">
-        <div className="h-32 w-32 bg-primary/10 rounded-lg flex items-center justify-center shadow-sm border">
-          <Music className="h-12 w-12 text-primary/40" />
+        <div className="h-32 w-32 bg-primary/10 rounded-lg flex items-center justify-center shadow-sm border overflow-hidden shrink-0">
+          {coverUrl ? (
+            <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
+          ) : (
+            <Music className="h-12 w-12 text-primary/40" />
+          )}
         </div>
         <div className="flex-1 space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>

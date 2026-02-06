@@ -35,6 +35,12 @@ export const useNetEaseStore = create<NetEaseState>()(
     }),
     {
       name: 'netease-storage',
+      partialize: (state) => ({
+        cookie: state.cookie,
+        userId: state.userId,
+        playlists: state.playlists,
+        profile: state.profile,
+      }),
     }
   )
 );

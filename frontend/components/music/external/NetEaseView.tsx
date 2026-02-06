@@ -403,6 +403,7 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
                   <MusicPlaylistView 
                     title={currentPlaylist.name}
                     description={currentPlaylist.creator ? `by ${currentPlaylist.creator.nickname}` : (currentPlaylist.copywriter || '')}
+                    coverUrl={currentPlaylist.coverImgUrl || currentPlaylist.picUrl}
                     tracks={playlistDetail}
                     onPlay={handlePlay}
                     action={
