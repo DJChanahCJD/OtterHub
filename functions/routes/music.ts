@@ -6,6 +6,7 @@ import {
   getQrKey,
   checkQrStatus,
   getMyInfo,
+  getRecommendPlaylists,
 } from '../utils/music/netease-api';
 import { handleNeteaseRequest } from '@utils/music/netease-handler';
 
@@ -94,6 +95,16 @@ musicRoutes.post('/netease/playlist', async (c) => {
   const { playlistId, cookie } = await c.req.json();
   try {
     const res = await getPlaylistDetail(playlistId, cookie);
+    return c.json(res);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+musicRoutes.post('/netease/recommend', async (c) => {
+  const { cookie } = await c.req.json();
+  try {
+    const res = await getRecommendPlaylists(cookie);
     return c.json(res);
   } catch (e: any) {
     return c.json({ error: e.message }, 500);

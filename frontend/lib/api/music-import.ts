@@ -47,5 +47,15 @@ export const neteaseApi = {
     });
     if (!res.ok) throw new Error('Failed to fetch user info');
     return res.json();
+  },
+
+  getRecommendPlaylists: async (cookie: string) => {
+    const res = await fetch(`${API_URL}/music-api/netease/recommend`, {
+      method: 'POST',
+      body: JSON.stringify({ cookie }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Failed to fetch recommendations');
+    return res.json();
   }
 };

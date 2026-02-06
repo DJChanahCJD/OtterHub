@@ -1,12 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface NetEaseProfile {
+  nickname: string;
+  avatarUrl: string;
+  backgroundUrl: string;
+  signature: string;
+}
+
 interface NetEaseState {
   cookie: string;
   userId: string;
   playlists: any[];
-  setSession: (cookie: string, userId: string) => void;
+  recommendPlaylists: any[];
+  profile: NetEaseProfile | null;
+  setSession: (cookie: string, userId: string, profile: NetEaseProfile) => void;
   setPlaylists: (playlists: any[]) => void;
+  setRecommendPlaylists: (playlists: any[]) => void;
   clearSession: () => void;
 }
 
@@ -16,9 +26,12 @@ export const useNetEaseStore = create<NetEaseState>()(
       cookie: '',
       userId: '',
       playlists: [],
-      setSession: (cookie, userId) => set({ cookie, userId }),
+      recommendPlaylists: [],
+      profile: null,
+      setSession: (cookie, userId, profile) => set({ cookie, userId, profile }),
       setPlaylists: (playlists) => set({ playlists }),
-      clearSession: () => set({ cookie: '', userId: '', playlists: [] }),
+      setRecommendPlaylists: (recommendPlaylists) => set({ recommendPlaylists }),
+      clearSession: () => set({ cookie: '', userId: '', playlists: [], recommendPlaylists: [], profile: null }),
     }),
     {
       name: 'netease-storage',

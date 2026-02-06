@@ -7,12 +7,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { neteaseApi } from '@/lib/api/music-import';
 import { processBatch } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useNetEaseStore } from '@/stores/netease-store';
+import { useNetEaseStore, NetEaseProfile } from '@/stores/netease-store';
 import { useMusicStore } from '@/stores/music-store';
 import { MusicTrack } from '@shared/types';
-import { LogOut, RefreshCw, Loader2, ChevronLeft, Plus } from 'lucide-react';
+import { LogOut, RefreshCw, Loader2, ChevronLeft, Plus, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function NetEaseView() {
   const { cookie, userId, setSession, clearSession } = useNetEaseStore();
@@ -24,7 +34,7 @@ export function NetEaseView() {
   return <NetEaseBrowser cookie={cookie} userId={userId} onLogout={clearSession} />;
 }
 
-function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, userId: string) => void }) {
+function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, userId: string, profile: NetEaseProfile) => void }) {
   const [loading, setLoading] = useState(false);
   const [cookieInput, setCookieInput] = useState('');
   
@@ -97,9 +107,15 @@ function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, use
       setLoading(true);
       try {
           const profileRes = await neteaseApi.getMyInfo(cookie);
-          if (profileRes.data.account) {
+          if (profileRes.data.account && profileRes.data.profile) {
                toast.success('Login successful');
-               onLoginSuccess(cookie, profileRes.data.account.id);
+               const profile: NetEaseProfile = {
+                   nickname: profileRes.data.profile.nickname,
+                   avatarUrl: profileRes.data.profile.avatarUrl,
+                   backgroundUrl: profileRes.data.profile.backgroundUrl,
+                   signature: profileRes.data.profile.signature,
+               };
+               onLoginSuccess(cookie, profileRes.data.account.id, profile);
           } else {
                toast.error('Login verification failed. Please try again.');
                setQrStatus(800);
@@ -195,8 +211,9 @@ function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, use
 }
 
 function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: string, onLogout: () => void }) {
-  const { playlists, setPlaylists } = useNetEaseStore();
+  const { playlists, setPlaylists, recommendPlaylists, setRecommendPlaylists, profile, setSession } = useNetEaseStore();
   const [loading, setLoading] = useState(false);
+  const [recLoading, setRecLoading] = useState(false);
   
   const [currentPlaylist, setCurrentPlaylist] = useState<any | null>(null);
   const [playlistDetail, setPlaylistDetail] = useState<MusicTrack[]>([]);
@@ -205,11 +222,37 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
 
   const { createPlaylist, addToPlaylist, playContext } = useMusicStore();
 
+  const createdPlaylists = playlists.filter(p => p.userId.toString() === userId.toString());
+  const subscribedPlaylists = playlists.filter(p => p.userId.toString() !== userId.toString());
+
   useEffect(() => {
     if (playlists.length === 0) {
       loadPlaylists();
     }
-  }, [cookie, userId]);
+    if (recommendPlaylists.length === 0) {
+        loadRecommend();
+    }
+    if (!profile && cookie) {
+        loadProfile();
+    }
+  }, [cookie, userId, profile]);
+
+  const loadProfile = async () => {
+      try {
+          const res = await neteaseApi.getMyInfo(cookie);
+          if (res.data.profile) {
+              const newProfile: NetEaseProfile = {
+                   nickname: res.data.profile.nickname,
+                   avatarUrl: res.data.profile.avatarUrl,
+                   backgroundUrl: res.data.profile.backgroundUrl,
+                   signature: res.data.profile.signature,
+              };
+              setSession(cookie, userId, newProfile);
+          }
+      } catch (e) {
+          console.error("Failed to load profile", e);
+      }
+  };
 
   const loadPlaylists = async () => {
     setLoading(true);
@@ -227,11 +270,30 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
     }
   };
 
+  const loadRecommend = async () => {
+      setRecLoading(true);
+      try {
+          const res = await neteaseApi.getRecommendPlaylists(cookie);
+          if (res.data && res.data.code === 200) {
+              setRecommendPlaylists(res.data.result);
+          }
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setRecLoading(false);
+      }
+  };
+
   const handlePlaylistClick = async (playlist: any) => {
       setCurrentPlaylist(playlist);
       setDetailLoading(true);
       try {
           const detail = await neteaseApi.getPlaylistDetail(playlist.id, cookie);
+          // Update current playlist with full details (including creator if it was missing)
+          if (detail) {
+             setCurrentPlaylist((prev: any) => ({ ...prev, ...detail }));
+          }
+
           if (detail.tracks) {
               const tracks: MusicTrack[] = detail.tracks.map((t: any) => ({
                     id: `ne_track_${t.id}`,
@@ -288,6 +350,39 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
       }
   };
 
+  const renderPlaylistGrid = (list: any[], isLoading: boolean) => {
+      if (isLoading && list.length === 0) {
+           return (
+             <div className="flex items-center justify-center h-40 text-muted-foreground">
+                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Loading...
+             </div>
+           );
+      }
+      if (list.length === 0) {
+          return <div className="text-center text-muted-foreground p-8">No playlists found</div>;
+      }
+      return (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {list.map(p => (
+                 <div key={p.id} 
+                      className="flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => handlePlaylistClick(p)}
+                 >
+                     <div className="flex gap-3 overflow-hidden w-full">
+                         <img src={p.coverImgUrl || p.picUrl} className="w-12 h-12 rounded object-cover shrink-0" alt={p.name} />
+                         <div className="flex flex-col min-w-0 flex-1">
+                             <span className="font-medium truncate">{p.name}</span>
+                             <span className="text-xs text-muted-foreground">
+                                {p.trackCount ? `${p.trackCount} tracks` : (p.copywriter || 'Playlist')}
+                             </span>
+                         </div>
+                     </div>
+                 </div>
+             ))}
+         </div>
+      );
+  };
+
   if (currentPlaylist) {
       return (
           <div className="flex flex-col h-full">
@@ -307,7 +402,7 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
               ) : (
                   <MusicPlaylistView 
                     title={currentPlaylist.name}
-                    description={`by ${currentPlaylist.creator?.nickname}`}
+                    description={currentPlaylist.creator ? `by ${currentPlaylist.creator.nickname}` : (currentPlaylist.copywriter || '')}
                     tracks={playlistDetail}
                     onPlay={handlePlay}
                     action={
@@ -329,41 +424,63 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
             <h2 className="text-2xl font-bold tracking-tight">NetEase Cloud Music</h2>
             <p className="text-muted-foreground">Browse and import your playlists</p>
         </div>
-        <div className="flex gap-2">
-            <Button variant="ghost" onClick={loadPlaylists} disabled={loading}>
-                <RefreshCw className={loading ? "animate-spin" : ""} />
+        <div className="flex gap-2 items-center">
+            <Button variant="ghost" size="icon" onClick={() => { loadPlaylists(); loadRecommend(); }} disabled={loading || recLoading}>
+                <RefreshCw className={`h-4 w-4 ${(loading || recLoading) ? "animate-spin" : ""}`} />
             </Button>
-            <Button variant="outline" onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4"/> Logout
-            </Button>
+            
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Avatar className="h-9 w-9 cursor-pointer border hover:opacity-80 transition-opacity">
+                        <AvatarImage src={profile?.avatarUrl} alt={profile?.nickname} />
+                        <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                    </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                        <div className="flex flex-col space-y-1">
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium leading-none">{profile?.nickname || 'User'}</p>
+                            </div>
+                            <p className="text-xs leading-none text-muted-foreground truncate">
+                                {profile?.signature || 'No signature'}
+                            </p>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive cursor-pointer hover:bg-destructive/10" onClick={onLogout}>
+                        <LogOut className="mr-2 h-4 w-4"/> 退出登录
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </div>
 
       <div className="flex-1 min-h-0 border rounded-md">
-        <ScrollArea className="h-full p-4">
-         {loading ? (
-             <div className="flex items-center justify-center h-40 text-muted-foreground">
-                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Loading playlists...
-             </div>
-         ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {playlists.map(p => (
-                     <div key={p.id} 
-                          className="flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors"
-                          onClick={() => handlePlaylistClick(p)}
-                     >
-                         <div className="flex gap-3 overflow-hidden w-full">
-                             <img src={p.coverImgUrl} className="w-12 h-12 rounded object-cover shrink-0" alt={p.name} />
-                             <div className="flex flex-col min-w-0 flex-1">
-                                 <span className="font-medium truncate">{p.name}</span>
-                                 <span className="text-xs text-muted-foreground">{p.trackCount} tracks</span>
-                             </div>
-                         </div>
-                     </div>
-                 ))}
-             </div>
-         )}
-        </ScrollArea>
+        <Tabs defaultValue="created" className="h-full flex flex-col">
+            <div className="px-4 pt-4 border-b">
+                <TabsList>
+                    <TabsTrigger value="created">Created</TabsTrigger>
+                    <TabsTrigger value="subscribed">Subscribed</TabsTrigger>
+                    <TabsTrigger value="recommended">Recommended</TabsTrigger>
+                </TabsList>
+            </div>
+            <div className="flex-1 min-h-0">
+                <ScrollArea className="h-full">
+                    <div className="p-4">
+                        <TabsContent value="created" className="m-0 mt-0">
+                            {renderPlaylistGrid(createdPlaylists, loading)}
+                        </TabsContent>
+                        <TabsContent value="subscribed" className="m-0 mt-0">
+                            {renderPlaylistGrid(subscribedPlaylists, loading)}
+                        </TabsContent>
+                        <TabsContent value="recommended" className="m-0 mt-0">
+                            {renderPlaylistGrid(recommendPlaylists, recLoading)}
+                        </TabsContent>
+                    </div>
+                </ScrollArea>
+            </div>
+        </Tabs>
       </div>
     </div>
   );

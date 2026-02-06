@@ -254,3 +254,13 @@ export async function getSongDetail(id: string, cookie: string = '') {
     const tracks = await getTracksDetail([parseInt(realId)], cookie);
     return tracks[0];
 }
+
+export async function getRecommendPlaylists(cookie: string) {
+    const url = `${BASE_URL}/weapi/personalized/playlist`;
+    const data = {
+        limit: 20,
+        total: true,
+        n: 1000
+    };
+    return request(url, data, cookie);
+}
