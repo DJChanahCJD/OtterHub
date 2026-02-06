@@ -56,14 +56,13 @@ export function SyncTab() {
 
   const favorites = useMusicStore((state) => state.favorites);
   const playlists = useMusicStore((state) => state.playlists);
-  const neState = useNetEaseStore((state) => ({
-    profile: state.profile,
-    userId: state.userId,
-    cookie: state.cookie,
-    setSession: state.setSession,
-  }));
-  const neProfile = neState.profile;
-  const isNeLoggedIn = !!neState.cookie && !!neState.userId;
+  
+  const neProfile = useNetEaseStore((state) => state.profile);
+  const neCookie = useNetEaseStore((state) => state.cookie);
+  const neUserId = useNetEaseStore((state) => state.userId);
+  const setNeSession = useNetEaseStore((state) => state.setSession);
+
+  const isNeLoggedIn = !!neCookie && !!neUserId;
 
   const localCount = useMemo(
     () => ({
@@ -166,7 +165,7 @@ export function SyncTab() {
         throw new Error("云端无有效账号数据");
       }
       
-      neState.setSession(data.cookie, data.userId, data.profile as any);
+      setNeSession(data.cookie, data.userId, data.profile as any);
       toast.success("已从云端恢复网易云账号登录");
     } catch (error: any) {
       toast.error("恢复失败: " + error.message);
@@ -217,25 +216,7 @@ export function SyncTab() {
             <div className="flex items-center gap-2">
               <Music className="h-4 w-4 text-pink-500" />
               <CardTitle className="text-base">音乐数据</CardTitle>
-              {pendingAction === "ne_upload" && (
-              <>
-                <p>将当前网易云登录状态上传到云端：</p>
-                <ul className="list-disc list-inside text-xs text-muted-foreground">
-                  <li>覆盖云端的账号信息</li>
-                  <li>其他设备可同步登录</li>
-                </ul>
-              </>
-            )}
-            {pendingAction === "ne_download" && (
-              <>
-                <p>从云端恢复网易云登录状态：</p>
-                <ul className="list-disc list-inside text-xs text-muted-foreground">
-                  <li>恢复账号：{neCloudData?.profile?.nickname}</li>
-                  <li>覆盖本地当前登录状态（如有）</li>
-                </ul>
-              </>
-            )}
-          </div>
+            </div>
             <CardDescription>同步歌单与喜欢</CardDescription>
           </div>
           <Button
