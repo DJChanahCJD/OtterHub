@@ -1,19 +1,15 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/hono';
-import {
-  getUserPlaylists,
-  getPlaylistDetail,
-  getQrKey,
-  checkQrStatus,
-  getMyInfo,
-  getRecommendPlaylists,
-} from '../utils/music/netease-api';
 import { handleNeteaseRequest } from '@utils/music/netease-handler';
+import { neteaseRoutes } from './music/netease';
 
 export const musicRoutes = new Hono<{ Bindings: Env }>();
 
 const API_BASE = 'https://music-api.gdstudio.xyz/api.php';
 
+/**
+ * 音乐主路由，支持网易云适配器拦截和上游代理
+ */
 musicRoutes.get('/', async (c) => {
   const query = c.req.query();
 
@@ -49,64 +45,4 @@ musicRoutes.get('/', async (c) => {
   }
 });
 
-
-musicRoutes.get('/netease/login/qr/key', async (c) => {
-  try {
-    const res = await getQrKey();
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-musicRoutes.get('/netease/login/qr/check', async (c) => {
-  const key = c.req.query('key');
-  if (!key) return c.json({ error: 'Key required' }, 400);
-
-  try {
-    const res = await checkQrStatus(key);
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-musicRoutes.post('/netease/my-info', async (c) => {
-  const { cookie } = await c.req.json();
-  try {
-    const res = await getMyInfo(cookie);
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-musicRoutes.post('/netease/user-playlists', async (c) => {
-  const { userId, cookie } = await c.req.json();
-  try {
-    const res = await getUserPlaylists(userId, cookie);
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-musicRoutes.post('/netease/playlist', async (c) => {
-  const { playlistId, cookie } = await c.req.json();
-  try {
-    const res = await getPlaylistDetail(playlistId, cookie);
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-musicRoutes.post('/netease/recommend', async (c) => {
-  const { cookie } = await c.req.json();
-  try {
-    const res = await getRecommendPlaylists(cookie);
-    return c.json(res);
-  } catch (e: any) {
-    return c.json({ error: e.message }, 500);
-  }
-});
+musicRoutes.route('/netease', neteaseRoutes);
