@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { UnifiedWallpaper } from '@shared/types';
+import { UnifiedWallpaper, WallpaperSourceId } from '@shared/types';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 
@@ -21,7 +21,7 @@ function mapPeapix(data: any[]): UnifiedWallpaper[] {
     id: img.imageUrl.split("/").pop()?.split(".")[0] || img.imageUrl,
     previewUrl: img.thumbUrl,
     rawUrl: img.fullUrl,
-    source: "bing"
+    source: WallpaperSourceId.Bing
   }));
 }
 
@@ -43,7 +43,7 @@ bingRoutes.get('/bing', async (c) => {
           id: img.hsh,
           previewUrl: `https://cn.bing.com${img.url}`,
           rawUrl: `https://cn.bing.com${img.urlbase}_UHD.jpg`,
-          source: "bing"
+          source: WallpaperSourceId.Bing
         }))
       );
     }
