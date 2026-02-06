@@ -80,8 +80,9 @@ export function useAudioPlayer(audioFiles: FileItem[]) {
     try {
       await audio.play()
       setIsPlaying(true)
-    } catch {
+    } catch (err: any) {
       setIsPlaying(false)
+      toast.error("播放失败:", err.message)
     }
   }, [])
 

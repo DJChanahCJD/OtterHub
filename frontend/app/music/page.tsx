@@ -43,6 +43,8 @@ export default function MusicPage() {
   const isPlayingRef = useRef(state.isPlaying);
   useEffect(() => { isPlayingRef.current = state.isPlaying }, [state.isPlaying]);
 
+  const pendingPlayRef = useRef(false);
+
   /* ---------------- 防止旧请求覆盖新歌 ---------------- */
   const requestIdRef = useRef(0);
 
@@ -75,22 +77,10 @@ export default function MusicPage() {
           audio.load();
         }
 
-        if (!isPlayingRef.current) return;
-
-        try {
-          await audio.play();
+        const shouldAutoPlay = pendingPlayRef.current || isPlayingRef.current;
+        if (shouldAutoPlay) {
+          pendingPlayRef.current = false;
           controls.play();
-        } catch (err: any) {
-          if (cancelled || requestId !== requestIdRef.current) return;
-
-          // 浏览器策略阻止
-          if (err?.name === "NotAllowedError") {
-            toast.info("浏览器阻止自动播放，请点击播放");
-            controls.pause();
-            return;
-          }
-
-          throw err; // 真正播放失败
         }
 
       } catch (err: any) {
@@ -127,11 +117,11 @@ export default function MusicPage() {
     const isSameContext = queue.length === list.length && queue[0]?.id === list[0]?.id;
 
     if (isSameContext) {
+      pendingPlayRef.current = true;
       controls.playTrack(index);
-      controls.play();
     } else {
+      pendingPlayRef.current = true;
       playContext(list, index);
-      controls.play();
     }
   };
 
@@ -147,8 +137,8 @@ export default function MusicPage() {
       ? queue
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
 
+    pendingPlayRef.current = true;
     playContext(list, index);
-    controls.play();
   };
 
   /* ---------------- UI ---------------- */
