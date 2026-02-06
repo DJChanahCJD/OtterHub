@@ -79,7 +79,7 @@ function NetEaseLogin({ onLoginSuccess }: { onLoginSuccess: (cookie: string, use
 }
 
 function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: string, onLogout: () => void }) {
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const { playlists, setPlaylists } = useNetEaseStore();
   const [loading, setLoading] = useState(false);
   
   const [currentPlaylist, setCurrentPlaylist] = useState<any | null>(null);
@@ -90,7 +90,9 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
   const { createPlaylist, addToPlaylist, playContext } = useMusicStore();
 
   useEffect(() => {
-    loadPlaylists();
+    if (playlists.length === 0) {
+      loadPlaylists();
+    }
   }, [cookie, userId]);
 
   const loadPlaylists = async () => {
