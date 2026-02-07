@@ -317,7 +317,7 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
                     pic_id: t.al.picUrl,
                     url_id: String(t.id),
                     lyric_id: String(t.id),
-                    source: 'netease'
+                    source: '_netease'
               }));
               setPlaylistDetail(tracks);
           }

@@ -21,7 +21,7 @@ export async function handleNeteaseRequest(c: any, query: any) {
           artist: s.artists.map((a: any) => a.name),
           album: s.album.name,
           pic: s.album.picUrl, // Direct URL
-          source: 'netease',
+          source: '_netease',
           url_id: s.id,
           pic_id: s.id,
           lyric_id: s.id

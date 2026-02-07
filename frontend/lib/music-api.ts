@@ -25,9 +25,9 @@ export interface SongLyric {
 
 const API_BASE = `${API_URL}/music-api`;
 
-// Helper to get cookie parameter
+// 处理网易云客户端 API 的 Cookie 参数
 const getCookieParam = (source: MusicSource) => {
-  if (source === 'netease') {
+  if (source === '_netease') {
     const cookie = useNetEaseStore.getState().cookie;
     if (cookie) {
       return `&cookie=${encodeURIComponent(cookie)}`;

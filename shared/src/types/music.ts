@@ -3,6 +3,7 @@
 // 音乐轨道信息
 export type MusicSource =
   | 'netease' //  🌟
+  | '_netease'  //  网易云客户端 API 的音乐源
   | 'tencent'
   | 'kugou'
   | 'kuwo' //  🌟

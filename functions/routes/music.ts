@@ -14,7 +14,7 @@ musicRoutes.get('/', async (c) => {
   const query = c.req.query();
 
   // Backend Adapter: Intercept NetEase requests
-  if (query.source === 'netease') {
+  if (query.source === '_netease') {
     return handleNeteaseRequest(c, query);
   }
 
