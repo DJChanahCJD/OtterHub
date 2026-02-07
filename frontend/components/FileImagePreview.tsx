@@ -59,7 +59,7 @@ export function FileImagePreview({
   className,
 }: FileImagePreviewProps) {
   const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
-  const isLoaded = shouldLoad || forceLoadFiles.includes(fileKey);
+  const isLoaded = !shouldBlur && (shouldLoad || forceLoadFiles.includes(fileKey));
 
   const img = isLoaded ? (
     <img
