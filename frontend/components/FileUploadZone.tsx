@@ -121,16 +121,18 @@ export function FileUploadZone() {
           );
 
           const missing = getMissingChunkIndices(totalChunks);
+          let completedChunks = totalChunks - missing.length;
 
           const uploadOne = async (idx: number) => {
             const start = idx * MAX_CHUNK_SIZE;
             const end = Math.min(start + MAX_CHUNK_SIZE, file.size);
             await uploadChunk(key, idx, file.slice(start, end));
 
+            completedChunks++;
             updateProgress(
               uploadProgressMap,
               tmpKey,
-              idx + 1,
+              completedChunks,
               totalChunks,
               setUploadProgress,
             );
