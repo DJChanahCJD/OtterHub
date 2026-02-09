@@ -12,14 +12,15 @@
  */
 export async function createNovelFromTexts(
   files: File[],
-  progressCallback?: (current: number, total: number) => void
+  progressCallback?: (current: number, total: number) => void,
+  sort: boolean = true
 ): Promise<File> {
-  const sortedFiles = sortFilesByName(files);
-  const total = sortedFiles.length;
+  const processedFiles = sort ? sortFilesByName(files) : files;
+  const total = processedFiles.length;
   const contents: string[] = [];
 
   for (let i = 0; i < total; i++) {
-    const file = sortedFiles[i];
+    const file = processedFiles[i];
     try {
       const text = await file.text();
       const fileNameWithoutExt = getFileNameWithoutExt(file.name);
@@ -37,7 +38,7 @@ export async function createNovelFromTexts(
   }
 
   const mergedContent = contents.join('\n');
-  const baseName = getBaseName(sortedFiles);
+  const baseName = getBaseName(processedFiles);
   const fileName = `${baseName}.md`;
 
   return new File([mergedContent], fileName, { type: 'text/markdown' });

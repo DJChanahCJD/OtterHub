@@ -1,10 +1,17 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, ArrowDownAZ, ListOrdered } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
 import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices, scanFiles } from "@/lib/utils";
 import { createPdfFromImages } from "@/lib/pdf";
@@ -22,6 +29,7 @@ export function FileUploadZone() {
   const { nsfwDetection } = useGeneralSettingsStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isMergeMode, setIsMergeMode] = useState(false);
+  const [mergeOrder, setMergeOrder] = useState<'name' | 'order'>('name');
   const [mergeProcessing, setMergeProcessing] = useState<{ processing: boolean; current: number; total: number; type: 'pdf' | 'novel' }>({
     processing: false,
     current: 0,
@@ -213,7 +221,7 @@ export function FileUploadZone() {
                 setMergeProcessing({ processing: true, current: 0, total: images.length, type: 'pdf' });
                 const pdfFile = await createPdfFromImages(images, (c, t) => {
                     setMergeProcessing({ processing: true, current: c, total: t, type: 'pdf' });
-                });
+                }, mergeOrder === 'name');
                 
                 await processFiles([pdfFile]);
                 toast.success("PDF 合并完成并开始上传");
@@ -234,7 +242,7 @@ export function FileUploadZone() {
                 setMergeProcessing({ processing: true, current: 0, total: texts.length, type: 'novel' });
                 const novelFile = await createNovelFromTexts(texts, (c, t) => {
                     setMergeProcessing({ processing: true, current: c, total: t, type: 'novel' });
-                });
+                }, mergeOrder === 'name');
                 
                 await processFiles([novelFile]);
                 toast.success("小说合并完成并开始上传");
@@ -291,13 +299,48 @@ export function FileUploadZone() {
         )}
       >
         <div 
-          className="absolute top-4 right-4 flex items-center space-x-2 z-10 transition-opacity opacity-70 hover:opacity-100"
+          className="absolute top-4 right-4 flex items-center gap-3 z-10 transition-opacity opacity-70 hover:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
-          <Switch id="merge-mode" checked={isMergeMode} onCheckedChange={setIsMergeMode} />
-          <Label htmlFor="merge-mode" className="text-xs text-foreground/70 cursor-pointer select-none font-normal">
-            Merge Mode
-          </Label>
+          {isMergeMode && (
+            <TooltipProvider>
+              <ToggleGroup 
+                type="single" 
+                value={mergeOrder} 
+                onValueChange={(v) => v && setMergeOrder(v as any)}
+                className="bg-background/50 p-0.5 rounded-md border border-glass-border h-7"
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="name" className="h-6 w-8 p-0" aria-label="Sort by name">
+                      <ArrowDownAZ className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">字典序</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="order" className="h-6 w-8 p-0" aria-label="Sort by add order">
+                      <ListOrdered className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">添加顺序</p>
+                  </TooltipContent>
+                </Tooltip>
+              </ToggleGroup>
+            </TooltipProvider>
+          )}
+          
+          <div className="flex items-center space-x-2">
+            <Switch id="merge-mode" checked={isMergeMode} onCheckedChange={setIsMergeMode} />
+            <Label htmlFor="merge-mode" className="text-xs text-foreground/70 cursor-pointer select-none font-normal">
+              Merge Mode
+            </Label>
+          </div>
         </div>
 
         <Upload

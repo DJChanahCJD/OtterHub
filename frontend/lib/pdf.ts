@@ -18,17 +18,18 @@ interface NormalizedImage {
  */
 export async function createPdfFromImages(
   files: File[], 
-  progressCallback?: (current: number, total: number) => void
+  progressCallback?: (current: number, total: number) => void,
+  sort: boolean = true
 ): Promise<File> {
   const pdfDoc = await PDFDocument.create();
-  const sortedFiles = sortFilesByName(files);
-  const total = sortedFiles.length;
+  const processedFiles = sort ? sortFilesByName(files) : files;
+  const total = processedFiles.length;
   
   // 批处理大小：既要利用并发加速解码，又要防止内存爆炸
   const BATCH_SIZE = 5;
 
   for (let i = 0; i < total; i += BATCH_SIZE) {
-    const batchFiles = sortedFiles.slice(i, i + BATCH_SIZE);
+    const batchFiles = processedFiles.slice(i, i + BATCH_SIZE);
     
     // 阶段 1: 并发预处理 (解码/转码)
     // 这一步利用 createImageBitmap 的并行能力
@@ -86,7 +87,7 @@ export async function createPdfFromImages(
 
   const pdfBytes = await pdfDoc.save();
   
-  const baseName = getBaseName(sortedFiles);
+  const baseName = getBaseName(processedFiles);
   const fileName = `${baseName}.pdf`;
 
   return new File([pdfBytes], fileName, { type: 'application/pdf' });
