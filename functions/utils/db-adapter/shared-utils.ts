@@ -135,7 +135,7 @@ export async function streamToBlob(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    chunks.push(value);
+    chunks.push(value as unknown as BlobPart);
   }
 
   return new Blob(chunks);

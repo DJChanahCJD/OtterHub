@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { UnifiedWallpaper } from '@shared/types';
+import { UnifiedWallpaper, WallpaperSourceId } from '@shared/types';
 
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
@@ -42,7 +42,7 @@ picsumRoutes.get(
           id: item.id,
           previewUrl,
           rawUrl,
-          source: "picsum",
+          source: WallpaperSourceId.Picsum,
         };
       });
 
