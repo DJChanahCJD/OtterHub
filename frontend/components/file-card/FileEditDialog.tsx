@@ -30,14 +30,26 @@ export function FileEditDialog({
   onOpenChange,
   onSuccess,
 }: EditMetadataDialogProps) {
-  const [fileName, setFileName] = useState("");
+  const [baseName, setBaseName] = useState("");
+  const [extension, setExtension] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 初始化表单数据
   useEffect(() => {
     if (file) {
-      setFileName(file.metadata.fileName || "");
+      const fullFileName = file.metadata.fileName || "";
+      const lastDotIndex = fullFileName.lastIndexOf(".");
+      
+      // 如果文件名中有点，且不是在开头（如 .gitignore），则分离扩展名
+      if (lastDotIndex > 0) {
+        setBaseName(fullFileName.substring(0, lastDotIndex));
+        setExtension(fullFileName.substring(lastDotIndex));
+      } else {
+        setBaseName(fullFileName);
+        setExtension("");
+      }
+      
       setTags(file.metadata?.tags || []);
     }
   }, [file]);
@@ -47,7 +59,7 @@ export function FileEditDialog({
 
     if (!file) return;
 
-    if (!fileName.trim()) {
+    if (!baseName.trim()) {
       toast.warning("文件名不能为空");
       return;
     }
@@ -56,7 +68,7 @@ export function FileEditDialog({
 
     try {
       const updatedMetadata = {
-        fileName: fileName.trim(),
+        fileName: `${baseName.trim()}${extension}`,
         tags,
       };
 
@@ -89,14 +101,21 @@ export function FileEditDialog({
           {/* 文件名 */}
           <div className="space-y-2">
             <Label className="text-foreground/80">文件名</Label>
-            <Input
-              id="fileName"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              placeholder="输入文件名"
-              className="bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary"
-              disabled={isSubmitting}
-            />
+            <div className="flex gap-2 items-center">
+              <Input
+                id="fileName"
+                value={baseName}
+                onChange={(e) => setBaseName(e.target.value)}
+                placeholder="输入文件名"
+                className="bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary flex-1"
+                disabled={isSubmitting}
+              />
+              {extension && (
+                <span className="text-foreground/60 font-mono text-sm bg-secondary/20 px-2 py-2 rounded-md border border-glass-border whitespace-nowrap">
+                  {extension}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* 标签 */}
