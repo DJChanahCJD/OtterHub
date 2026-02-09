@@ -24,8 +24,7 @@ metaRoutes.patch(
     const kv = c.env.oh_file_url;
 
     try {
-      const value = await kv.getWithMetadata(key);
-      const metadata = value.metadata as FileMetadata;
+      const { value, metadata } = await kv.getWithMetadata(key);
 
       if (!metadata) {
         return fail(c, `File metadata not found for key: ${key}`, 404);
@@ -34,7 +33,7 @@ metaRoutes.patch(
       if (fileName !== undefined) metadata.fileName = fileName;
       if (tags !== undefined) metadata.tags = tags;
 
-      await kv.put(key, "", { metadata });
+      await kv.put(key, value, { metadata });
 
       return ok(c, metadata);
     } catch (e: any) {

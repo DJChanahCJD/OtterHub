@@ -17,15 +17,14 @@ actionRoutes.post(
     const kv = c.env.oh_file_url;
 
     try {
-      const value = await kv.getWithMetadata(key);
-      const metadata = value.metadata as FileMetadata;
+      const { value, metadata } = await kv.getWithMetadata(key);
 
       if (!metadata) {
         return fail(c, `File metadata not found for key: ${key}`, 404);
       }
 
       metadata.liked = !metadata.liked;
-      await kv.put(key, "", { metadata });
+      await kv.put(key, value, { metadata });
 
       return ok(c, { liked: metadata.liked });
     } catch (e: any) {
