@@ -49,7 +49,7 @@ export class TGAdapter extends BaseAdapter {
     } else {
       const extension = fileName.split(".").pop()?.toLowerCase() || "";
       const contentType = getContentTypeByExt(extension);
-      finalFile = new File([file], fileName, { type: contentType });
+      finalFile = new File([file as unknown as BlobPart], fileName, { type: contentType });
     }
 
     const { file: processedFile, fileName: processedFileName } =
@@ -120,13 +120,13 @@ export class TGAdapter extends BaseAdapter {
     if (chunkIndex === 0 && fileName) {
       // 如果是第一个分片且有文件名，使用原文件名以帮助Telegram识别文件类型（如视频）
       const blob =
-        chunkFile instanceof File ? chunkFile : new Blob([chunkFile]);
+        chunkFile instanceof File ? chunkFile : new Blob([chunkFile as unknown as BlobPart]);
       const type = chunkFile instanceof File ? chunkFile.type : undefined;
       fileToUpload = new File([blob], fileName, { type });
     } else if (chunkFile instanceof File) {
       fileToUpload = chunkFile;
     } else {
-      fileToUpload = new File([chunkFile], `part-${chunkIndex}`);
+      fileToUpload = new File([chunkFile as unknown as BlobPart], `part-${chunkIndex}`);
     }
 
     formData.append("document", fileToUpload);
@@ -421,24 +421,30 @@ export class TGAdapter extends BaseAdapter {
     try {
       const response = await fetch(apiUrl, { method: "POST", body: formData });
       const responseData = await response.json();
-      console.log("Telegram response:", responseData);
 
       if (response.ok) {
         return { success: true, data: responseData };
       }
 
+      const attempt = 3 - retryCount;
+      const backoffMs = Math.min(30000, Math.pow(2, attempt) * 1000);
+      const retryAfterSec =
+        typeof responseData?.parameters?.retry_after === "number"
+          ? responseData.parameters.retry_after
+          : undefined;
+      const waitMs =
+        retryAfterSec !== undefined
+          ? Math.max(backoffMs, retryAfterSec * 1000)
+          : backoffMs;
+
       // 所有类型的文件上传失败都重试
       if (retryCount > 0) {
-        console.log(`Retry ${retryCount} times left. Retrying upload...`);
         // 图片类型特殊处理：转为文档方式重试
         if (apiEndpoint === "sendPhoto") {
-          console.log("Retrying image as document...");
           const newFormData = new FormData();
           newFormData.append("chat_id", formData.get("chat_id") as string);
           newFormData.append("document", formData.get("photo") as File);
-          await new Promise((resolve) =>
-            setTimeout(resolve, 1000 * (3 - retryCount)),
-          );
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
           return await this.sendToTelegram(
             newFormData,
             "sendDocument",
@@ -446,9 +452,7 @@ export class TGAdapter extends BaseAdapter {
           );
         }
         // 其他类型直接重试
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (3 - retryCount)),
-        );
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
 
@@ -460,9 +464,9 @@ export class TGAdapter extends BaseAdapter {
       };
     } catch (error: any) {
       if (retryCount > 0) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (3 - retryCount)),
-        );
+        const attempt = 3 - retryCount;
+        const backoffMs = Math.min(30000, Math.pow(2, attempt) * 1000);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
         return await this.sendToTelegram(formData, apiEndpoint, retryCount - 1);
       }
       return {

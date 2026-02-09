@@ -50,6 +50,39 @@ chunkUploadRoutes.get(
   }
 );
 
+chunkUploadRoutes.get(
+  '/chunk/progress',
+  zValidator(
+    'query',
+    z.object({
+      key: z.string().min(1),
+    })
+  ),
+  async (c) => {
+    const { key } = c.req.valid('query');
+
+    try {
+      const kv = c.env.oh_file_url;
+      const item = await kv.getWithMetadata(key);
+      const metadata = item.metadata as FileMetadata | null;
+
+      if (!metadata?.chunkInfo) {
+        return fail(c, 'Not a chunked file', 400);
+      }
+
+      const uploadedIndices = metadata.chunkInfo.uploadedIndices || [];
+      const total = metadata.chunkInfo.total || 0;
+      const uploaded = uploadedIndices.length;
+      const complete = total > 0 && uploaded === total;
+
+      return ok(c, { uploadedIndices, uploaded, total, complete });
+    } catch (error: any) {
+      console.error(`Get chunk progress error: ${error.message}`);
+      return fail(c, error.message, 400);
+    }
+  }
+);
+
 // 上传分片
 chunkUploadRoutes.post(
   '/chunk',

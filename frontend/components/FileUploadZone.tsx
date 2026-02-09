@@ -3,7 +3,12 @@
 import { useCallback, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
+import {
+  getUploadChunkProgress,
+  uploadChunkInit,
+  uploadChunkWithProgress,
+  uploadFileWithProgress,
+} from "@/lib/api";
 import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices, scanFiles } from "@/lib/utils";
 import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
@@ -11,7 +16,6 @@ import { nsfwDetector } from "@/lib/nsfw-detector";
 import { toast } from "sonner";
 import { FileItem, FileTag, MAX_FILENAME_LENGTH } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
-import { updateProgress } from "@/lib/utils/upload";
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);
@@ -59,7 +63,10 @@ export function FileUploadZone() {
           const isUnsafe = nsfwDetection
             ? await nsfwDetector.isUnsafeImg(file)
             : false;
-          const key = await uploadFile(file, isUnsafe);
+          const key = await uploadFileWithProgress(file, isUnsafe, (p) => {
+            uploadProgressMap[tmpKey] = p.percent;
+            setUploadProgress({ ...uploadProgressMap });
+          });
 
           uploadProgressMap[tmpKey] = 100;
           setUploadProgress({ ...uploadProgressMap });
@@ -98,6 +105,8 @@ export function FileUploadZone() {
         uploadProgressMap[tmpKey] = 0;
         setUploadProgress({ ...uploadProgressMap });
 
+        let stopPolling = false;
+
         try {
           const fileType = getFileType(file.type);
           const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
@@ -110,24 +119,95 @@ export function FileUploadZone() {
           );
 
           const missing = getMissingChunkIndices(totalChunks);
-          let completedChunks = totalChunks - missing.length;
+          const uploadedBytesByChunk = new Map<number, number>();
+          let uploadedBytesTotal = 0;
+          let uploadDone = false;
+          let processingComplete = false;
+          let lastProcessingPercent = 0;
+
+          const processingStartAt = Date.now();
+          const maxProcessingMs = Math.max(5 * 60 * 1000, totalChunks * 90 * 1000);
+
+          const pollProcessing = async () => {
+            while (!processingComplete && !stopPolling) {
+              if (uploadDone && Date.now() - processingStartAt > maxProcessingMs) {
+                throw new Error("后端处理超时，请稍后刷新页面查看结果");
+              }
+
+              try {
+                const progress = await getUploadChunkProgress(key);
+                const processingPercent =
+                  progress.total > 0
+                    ? Math.min(
+                        100,
+                        Math.round((progress.uploaded / progress.total) * 100),
+                      )
+                    : 0;
+
+                lastProcessingPercent = processingPercent;
+
+                if (uploadDone) {
+                  uploadProgressMap[tmpKey] = progress.complete
+                    ? 100
+                    : Math.min(99, processingPercent);
+                  setUploadProgress({ ...uploadProgressMap });
+                }
+
+                if (progress.complete) {
+                  processingComplete = true;
+                  return;
+                }
+              } catch {
+              }
+
+              await new Promise((r) => setTimeout(r, 1200));
+            }
+          };
+
+          const pollPromise = pollProcessing();
 
           const uploadOne = async (idx: number) => {
             const start = idx * MAX_CHUNK_SIZE;
             const end = Math.min(start + MAX_CHUNK_SIZE, file.size);
-            await uploadChunk(key, idx, file.slice(start, end));
+            const chunk = file.slice(start, end);
+            const chunkSize = end - start;
 
-            completedChunks++;
-            updateProgress(
-              uploadProgressMap,
-              tmpKey,
-              completedChunks,
-              totalChunks,
-              setUploadProgress,
+            await uploadChunkWithProgress(key, idx, chunk, (p) => {
+              const loaded = Math.min(p.loaded, chunkSize);
+              const prev = uploadedBytesByChunk.get(idx) || 0;
+              if (loaded === prev) return;
+
+              uploadedBytesByChunk.set(idx, loaded);
+              uploadedBytesTotal += loaded - prev;
+
+              uploadProgressMap[tmpKey] = Math.min(
+                99,
+                Math.round((uploadedBytesTotal / file.size) * 100),
+              );
+              setUploadProgress({ ...uploadProgressMap });
+            });
+
+            const prev = uploadedBytesByChunk.get(idx) || 0;
+            if (prev < chunkSize) {
+              uploadedBytesByChunk.set(idx, chunkSize);
+              uploadedBytesTotal += chunkSize - prev;
+            }
+
+            uploadProgressMap[tmpKey] = Math.min(
+              99,
+              Math.round((uploadedBytesTotal / file.size) * 100),
             );
+            setUploadProgress({ ...uploadProgressMap });
           };
 
           await processBatch(missing, uploadOne, undefined, MAX_CONCURRENTS);
+          uploadDone = true;
+
+          uploadProgressMap[tmpKey] = Math.min(99, Math.max(uploadProgressMap[tmpKey] || 0, lastProcessingPercent || 0));
+          setUploadProgress({ ...uploadProgressMap });
+
+          await pollPromise;
+          stopPolling = true;
 
           const fileItem: FileItem = {
             name: key,
@@ -145,6 +225,7 @@ export function FileUploadZone() {
         } catch (err) {
           failed.push(`${file.name}: ${(err as Error).message}`);
         } finally {
+          stopPolling = true;
           setTimeout(() => {
             delete uploadProgressMap[tmpKey];
             setUploadProgress({ ...uploadProgressMap });

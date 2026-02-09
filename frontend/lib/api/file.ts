@@ -1,7 +1,89 @@
 import { client } from "./client";
 import { API_URL, unwrap } from "./config";
-import { FileType, ListFilesResponse } from "@shared/types";
+import { ApiResponse, FileType, ListFilesResponse } from "@shared/types";
 import { ListFilesRequest } from "@/lib/types";
+
+export type UploadProgress = {
+  loaded: number;
+  total: number;
+  percent: number;
+};
+
+export type ChunkProcessingProgress = {
+  uploadedIndices: number[];
+  uploaded: number;
+  total: number;
+  complete: boolean;
+};
+
+function redirectToLoginIfNeeded() {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname.startsWith("/login")) return;
+  const currentUrl = window.location.href;
+  const redirectUrl = `/login?redirect=${encodeURIComponent(currentUrl)}`;
+  window.location.href = redirectUrl;
+}
+
+async function parseApiResponse<T>(raw: string): Promise<T> {
+  let body: ApiResponse<T>;
+  try {
+    body = JSON.parse(raw) as ApiResponse<T>;
+  } catch {
+    throw new Error(raw || "请求失败");
+  }
+
+  if (!body.success) {
+    throw new Error(body.message || "请求失败");
+  }
+
+  return body.data as T;
+}
+
+function xhrPostForm<T>(
+  url: string,
+  form: FormData,
+  onProgress?: (p: UploadProgress) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.withCredentials = true;
+
+    xhr.upload.onprogress = (e) => {
+      if (!onProgress) return;
+      const total = e.total || 0;
+      const loaded = e.loaded || 0;
+      const percent =
+        total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+      onProgress({ loaded, total, percent });
+    };
+
+    xhr.onload = async () => {
+      if (xhr.status === 401) {
+        redirectToLoginIfNeeded();
+        reject(new Error("Unauthorized"));
+        return;
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(xhr.responseText || `HTTP ${xhr.status}`));
+        return;
+      }
+
+      try {
+        const data = await parseApiResponse<T>(xhr.responseText);
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("网络错误"));
+    xhr.onabort = () => reject(new Error("请求已取消"));
+
+    xhr.send(form);
+  });
+}
 
 /**
  * 上传文件
@@ -15,6 +97,19 @@ export async function uploadFile(file: File, nsfw?: boolean): Promise<string> {
       },
     })
   );
+}
+
+export async function uploadFileWithProgress(
+  file: File,
+  nsfw: boolean | undefined,
+  onProgress?: (p: UploadProgress) => void,
+): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("nsfw", nsfw ? "true" : "false");
+
+  const url = `${API_URL}/upload`;
+  return xhrPostForm<string>(url, form, onProgress);
 }
 
 /**
@@ -56,6 +151,32 @@ export async function uploadChunk(
     })
   );
   return res.toString();
+}
+
+export async function uploadChunkWithProgress(
+  key: string,
+  chunkIndex: number,
+  chunkFile: File | Blob,
+  onProgress?: (p: UploadProgress) => void,
+): Promise<string> {
+  const form = new FormData();
+  form.append("key", key);
+  form.append("chunkIndex", chunkIndex.toString());
+  form.append("chunkFile", chunkFile);
+
+  const url = `${API_URL}/upload/chunk`;
+  const res = await xhrPostForm<string | number>(url, form, onProgress);
+  return res.toString();
+}
+
+export async function getUploadChunkProgress(
+  key: string,
+): Promise<ChunkProcessingProgress> {
+  return unwrap<ChunkProcessingProgress>(
+    client.upload.chunk.progress.$get({
+      query: { key },
+    })
+  );
 }
 
 /**
