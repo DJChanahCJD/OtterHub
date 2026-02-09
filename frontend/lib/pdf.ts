@@ -85,6 +85,11 @@ export async function createPdfFromImages(
     await requestIdle();
   }
 
+  // 额外优化：设置元数据
+  pdfDoc.setTitle(getBaseName(processedFiles));
+  pdfDoc.setProducer('Browser Image2PDF');
+  pdfDoc.setCreator('OtterHub');
+
   const pdfBytes = await pdfDoc.save();
   
   const baseName = getBaseName(processedFiles);
@@ -122,51 +127,87 @@ async function normalizeImage(file: File): Promise<NormalizedImage> {
   }
 
   // 路径 B: 需要转码格式 (WebP, GIF, BMP 等)
-  // 使用 OffscreenCanvas (如果支持) 或 Canvas 进行转码
-  return convertToPng(file);
+  // 转码为 JPEG 以节省体积和内存
+  return convertWebpToJpeg(file);
 }
 
 /**
- * 高性能转码：File -> ImageBitmap -> Canvas -> PNG Buffer
+ * WebP → JPEG (保持有损压缩，避免PNG膨胀)
+ * 自动质量控制，目标 ≤ 原大小 1.5x
  */
-async function convertToPng(file: File): Promise<NormalizedImage> {
-  // 1. 解码图像 (在 Worker 线程或后台线程)
+async function convertWebpToJpeg(file: File): Promise<NormalizedImage> {
   const bitmap = await createImageBitmap(file);
   const { width, height } = bitmap;
 
-  let blob: Blob | null;
+  let canvas: OffscreenCanvas | HTMLCanvasElement;
+  let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
 
-  // 2. 绘制并转码
   if (typeof OffscreenCanvas !== 'undefined') {
-    // 现代浏览器路径：使用 OffscreenCanvas 避免阻塞主线程布局
-    const canvas = new OffscreenCanvas(width, height);
-    const ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
-    if (!ctx) throw new Error('OffscreenCanvas context null');
-    
-    ctx.drawImage(bitmap, 0, 0);
-    // 转换回 Blob
-    blob = await canvas.convertToBlob({ type: 'image/png' });
+    canvas = new OffscreenCanvas(width, height);
+    ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
   } else {
-    // 兼容路径：主线程 Canvas
-    const canvas = document.createElement('canvas');
+    canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas context null');
-    
-    ctx.drawImage(bitmap, 0, 0);
-    blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+    ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   }
 
-  bitmap.close(); // 释放位图内存
+  if (!ctx) {
+    bitmap.close();
+    throw new Error('Canvas context null');
+  }
 
-  if (!blob) throw new Error('Canvas to Blob failed');
+  ctx.drawImage(bitmap, 0, 0);
+  bitmap.close();
 
-  const bytes = await blob.arrayBuffer();
-  
+  // 原始大小
+  const originalSize = file.size;
+
+  // 辅助函数：将 canvas 转换为 Blob
+  const getBlob = async (quality: number): Promise<Blob> => {
+    if (canvas instanceof OffscreenCanvas) {
+      return canvas.convertToBlob({
+        type: 'image/jpeg',
+        quality
+      });
+    } else {
+      return new Promise<Blob>((resolve, reject) => {
+        (canvas as HTMLCanvasElement).toBlob(
+          blob => {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas to Blob failed'));
+          },
+          'image/jpeg',
+          quality
+        );
+      });
+    }
+  };
+
+  // 二分搜索最佳质量
+  let qMin = 0.6;
+  let qMax = 0.95;
+  let bestBlob: Blob | null = null;
+
+  // 尝试最多 6 次
+  for (let i = 0; i < 6; i++) {
+    const q = (qMin + qMax) / 2;
+    const blob = await getBlob(q);
+
+    if (blob.size <= originalSize * 1.5) {
+      bestBlob = blob;
+      qMin = q; // 尝试更高质量
+    } else {
+      qMax = q; // 质量太高导致体积过大，降低质量
+    }
+  }
+
+  const finalBlob = bestBlob ?? await getBlob(0.75);
+  const bytes = await finalBlob.arrayBuffer();
+
   return {
     bytes,
-    type: 'png',
+    type: 'jpg',
     width,
     height
   };
