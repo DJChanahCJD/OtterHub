@@ -33,7 +33,7 @@ export function VideoPreviewDialog({
       <DialogContent className="sm:max-w-[80vw] p-0 bg-black border-none overflow-hidden sm:rounded-2xl">
         <DialogHeader className="p-4 absolute top-0 left-0 right-0 z-50 bg-linear-to-b from-black/80 to-transparent pointer-events-none">
           <DialogTitle className="text-white text-sm font-medium truncate pr-8">
-            {file.metadata.fileName}
+            {file.metadata?.fileName}
           </DialogTitle>
         </DialogHeader>
         

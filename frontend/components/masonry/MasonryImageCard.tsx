@@ -24,7 +24,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const shouldLoad = shouldLoadImage({
     fileType: FileType.Image,
     imageLoadMode,
-    fileSize: file.metadata.fileSize,
+    fileSize: file.metadata?.fileSize,
     threshold: dataSaverThreshold * 1024 * 1024,
   });
   
@@ -36,7 +36,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const imgContent = load ? (
     <img
       src={imageUrl}
-      alt={file.metadata.fileName}
+      alt={file.metadata?.fileName}
       loading="lazy"
       decoding="async"
       className={cn(
@@ -72,7 +72,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
 
       {/* 底部文件名悬浮 */}
       <div className="absolute bottom-0 left-0 right-0 p-2 bg-linear-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <p className="text-xs text-white truncate">{file.metadata.fileName}</p>
+        <p className="text-xs text-white truncate">{file.metadata?.fileName}</p>
       </div>
     </div>
   );

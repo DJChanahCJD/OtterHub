@@ -66,9 +66,9 @@ export function FileCardList({ file, actions }: FileCardListProps) {
             safeMode={safeMode}
             canPreview={!blur}
             tags={file.metadata?.tags}
-            fileSize={file.metadata.fileSize}
+            fileSize={file.metadata?.fileSize}
             imageLoadMode={imageLoadMode}
-            thumbUrl={file.metadata.thumbUrl}
+            thumbUrl={file.metadata?.thumbUrl}
             className="h-5 w-5"
           />
         </div>
@@ -76,12 +76,12 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         {/* File Info */}
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <p className="text-sm font-medium truncate leading-tight">
-            {file.metadata.fileName}
+            {file.metadata?.fileName}
           </p>
           <div className="flex items-center gap-2 text-[11px] text-foreground/50 leading-none">
-            <span className="shrink-0">{formatFileSize(file.metadata.fileSize || 0)}</span>
+            <span className="shrink-0">{formatFileSize(file.metadata?.fileSize || 0)}</span>
             <span className="text-foreground/20">•</span>
-            <span className="shrink-0 truncate">{formatTime(file.metadata.uploadedAt || 0)}</span>
+            <span className="shrink-0 truncate">{formatTime(file.metadata?.uploadedAt || 0)}</span>
             {tags.length > 0 && (
               <>
                 <span className="text-foreground/20">•</span>
@@ -149,7 +149,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         open={actions.showShare}
         onOpenChange={actions.setShowShare}
         fileKey={file.name}
-        fileName={file.metadata.fileName}
+        fileName={file.metadata?.fileName}
       />
       <VideoPreviewDialog
         file={file}

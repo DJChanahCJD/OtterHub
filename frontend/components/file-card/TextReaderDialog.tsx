@@ -78,7 +78,7 @@ export function TextReaderDialog({
       <DialogContent className="sm:max-w-4xl w-[90vw] h-[80vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="truncate pr-8">
-            {file.metadata.fileName || "文本查看器"}
+            {file.metadata?.fileName || "文本查看器"}
           </DialogTitle>
         </DialogHeader>
 

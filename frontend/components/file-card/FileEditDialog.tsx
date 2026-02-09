@@ -38,7 +38,7 @@ export function FileEditDialog({
   // 初始化表单数据
   useEffect(() => {
     if (file) {
-      const fullFileName = file.metadata.fileName || "";
+      const fullFileName = file.metadata?.fileName || "";
       const lastDotIndex = fullFileName.lastIndexOf(".");
       
       // 如果文件名中有点，且不是在开头（如 .gitignore），则分离扩展名

@@ -98,7 +98,7 @@ export function BatchRenameDialog({
       await processBatch(
         files,
         async (file) => {
-          const newFileName = renameFileName(file.metadata.fileName, payload);
+          const newFileName = renameFileName(file.metadata?.fileName, payload);
 
           await editMetadata(file.name, { fileName: newFileName });
 

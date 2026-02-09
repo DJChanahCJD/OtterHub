@@ -69,7 +69,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
 
   const handleDeletePermanently = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm(`确定永久删除 ${file.metadata.fileName} ? 此操作不可恢复！`)) return;
+    if (!confirm(`确定永久删除 ${file.metadata?.fileName} ? 此操作不可恢复！`)) return;
 
     setIsDeleting(true);
     try {
@@ -110,7 +110,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
             canPreview={false}
             fileSize={file.metadata?.fileSize || 0}
             imageLoadMode={imageLoadMode}
-            thumbUrl={file.metadata.thumbUrl}
+            thumbUrl={file.metadata?.thumbUrl}
             imgSrc={getTrashFileUrl(file.name)}
           />
       </div>

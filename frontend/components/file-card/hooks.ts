@@ -43,7 +43,7 @@ export function useFileCardActions(file: FileItem) {
   };
 
   const handleDelete = () => {
-    if (!confirm(`确定删除文件 ${file.metadata.fileName} ?`)) return;
+    if (!confirm(`确定删除文件 ${file.metadata?.fileName} ?`)) return;
     moveToTrash(file.name).then(() => {
       moveToTrashLocal(file);
       toast.success("已移入回收站");
@@ -67,11 +67,11 @@ export function useFileCardActions(file: FileItem) {
   
   const handleView = () => {
     const url = getFileUrl(file.name);
-    const fileName = file.metadata.fileName?.toLowerCase() || "";
+    const fileName = file.metadata?.fileName?.toLowerCase() || "";
     
     // 1. EPUB 专用阅读器
     if (fileName.endsWith(".epub")) {
-      const readerUrl = `/epub-reader?url=${encodeURIComponent(url)}&title=${encodeURIComponent(file.metadata.fileName || "Epub")}`;
+      const readerUrl = `/epub-reader?url=${encodeURIComponent(url)}&title=${encodeURIComponent(file.metadata?.fileName || "Epub")}`;
       window.open(readerUrl, "_blank", "noopener,noreferrer");
       return;
     }
@@ -124,8 +124,8 @@ export function useFileCardActions(file: FileItem) {
     if (!selectedFile || !isIncompleteUpload) return;
 
     if (
-      selectedFile.name !== file.metadata.fileName ||
-      selectedFile.size !== file.metadata.fileSize
+      selectedFile.name !== file.metadata?.fileName ||
+      selectedFile.size !== file.metadata?.fileSize
     ) {
       toast.error("文件不匹配");
       return;

@@ -51,7 +51,7 @@ export function FileDetailDialog({
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground/60 mb-1">文件名</p>
               <p className="text-sm font-medium text-foreground break-all">
-                {file.metadata.fileName}
+                {file.metadata?.fileName}
               </p>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function FileDetailDialog({
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground/60 mb-1">文件大小</p>
               <p className="text-sm font-medium text-foreground">
-                {formatFileSize(file.metadata.fileSize)}
+                {formatFileSize(file.metadata?.fileSize)}
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function FileDetailDialog({
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground/60 mb-1">上传时间</p>
               <p className="text-sm font-medium text-foreground">
-                {formatTime(file.metadata.uploadedAt)}
+                {formatTime(file.metadata?.uploadedAt)}
               </p>
             </div>
           </div>

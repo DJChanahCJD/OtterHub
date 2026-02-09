@@ -96,9 +96,9 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
               safeMode={safeMode}
               canPreview={!blur}
               tags={file.metadata?.tags}
-              fileSize={file.metadata.fileSize}
+              fileSize={file.metadata?.fileSize}
               imageLoadMode={imageLoadMode}
-              thumbUrl={file.metadata.thumbUrl}
+              thumbUrl={file.metadata?.thumbUrl}
               className={ICON_DISPLAY_SIZE}
             />
             {blur && <NsfwSign />}
@@ -109,7 +109,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
           <div className="flex items-center gap-2 mb-1">
             <p className="text-sm font-medium text-white truncate">
-              {file.metadata.fileName || file.name}
+              {file.metadata?.fileName || file.name}
             </p>
             <div className="flex gap-1 shrink-0">
               {file.metadata?.tags?.map((tag) => (
@@ -119,7 +119,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
           </div>
           <div className="flex items-center justify-between">
             <p className="text-xs  text-white/50">
-              {formatFileSize(file.metadata.fileSize || 0)}
+              {formatFileSize(file.metadata?.fileSize || 0)}
             </p>
             {isIncompleteUpload && (
               <Button
@@ -161,7 +161,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         open={actions.showShare}
         onOpenChange={actions.setShowShare}
         fileKey={file.name}
-        fileName={file.metadata.fileName}
+        fileName={file.metadata?.fileName}
       />
       <VideoPreviewDialog
         file={file}
