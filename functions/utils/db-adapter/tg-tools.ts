@@ -55,19 +55,28 @@ export async function processGifFile(
   file: File,
   fileName: string
 ): Promise<{ file: File; fileName: string }> {
-  if (file.type !== "image/gif") return { file, fileName };
+  // 仅处理 GIF 类型文件（兼容后缀大写/小写）
+  const isGif = file.type === "image/gif" || /\.gif$/i.test(fileName);
+  if (!isGif) {
+    return { file, fileName };
+  }
 
-  // GIF 转 WebP
-  // 将文件转为 webp, 避免TG存储成 mp4
-  // 利用 OffscreenCanvas + WebP MIME 转换
-  const bitmap = await createImageBitmap(file);
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(bitmap, 0, 0);
-  const blob = await canvas.convertToBlob({ type: "image/webp", quality: 0.9 });
-  const newFileName = fileName.replace(/\.gif$/, ".webp");
+  try {
+    // 核心：直接读取原文件的 Blob 数据，不做任何内容转换
+    const blob = await file.arrayBuffer().then(buffer => new Blob([buffer]));
+    
+    // 替换文件名为 webp 后缀（不区分大小写）
+    const newFileName = fileName.replace(/\.gif$/i, ".webp");
+    
+    // 创建新的 File 对象，仅修改名称和 MIME 类型，内容不变
+    const newFile = new File([blob], newFileName, { type: "image/webp" });
 
-  return { file: new File([blob], newFileName, { type: "image/webp" }), fileName: newFileName };
+    return { file: newFile, fileName: newFileName };
+  } catch (error) {
+    // 异常处理：失败时返回原文件
+    console.error("GIF 文件重命名失败：", error);
+    return { file, fileName };
+  }
 }
 
 export function resolveFileDescriptor(
