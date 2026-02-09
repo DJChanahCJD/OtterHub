@@ -9,7 +9,8 @@ import { SortTypeDropdown } from "@/components/SortTypeDropdown";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { Pagination } from "@/components/Pagination";
 import { ViewMode } from "@/lib/types";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2, CircleAlert, Ellipsis } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { MasonryGrid } from "./masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
 import { PhotoToolbar } from "./FileImagePreview";
@@ -83,7 +84,27 @@ export function FileGallery() {
       toolbarRender={(props) => <PhotoToolbar {...props} />}
     >
       <div className="flex items-center justify-between mb-6">
-        <div className="text-sm text-foreground/50">{files.length} 个文件</div>
+        <div className="flex items-center gap-2 text-sm text-foreground/50">
+          <span>{files.length} 个文件</span>
+          {bucket.hasMore && (
+            <Button
+              onClick={fetchNextPage}
+              disabled={bucket.loading || bucket.error}
+              variant="ghost"
+              size="sm"
+              title={bucket.loading ? "加载中" : bucket.error ? "加载失败" : "加载更多"}
+              className="h-8 w-8 p-0 border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {bucket.loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : bucket.error ? (
+                <CircleAlert className="h-4 w-4" />
+              ) : (
+                <Ellipsis className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <FilterDropdown />
           <SortTypeDropdown />
@@ -100,6 +121,7 @@ export function FileGallery() {
           currentPage={currentPage}
           hasMore={bucket.hasMore}
           loading={bucket.loading}
+          error={bucket.error}
           onPageChange={handlePageChange}
           onLoadMore={fetchNextPage}
           onItemsPerPageChange={handleItemsPerPageChange}

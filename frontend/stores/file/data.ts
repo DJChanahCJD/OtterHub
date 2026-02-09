@@ -16,6 +16,7 @@ type FileBucket = {
   cursor?: string;
   hasMore: boolean;
   loading: boolean;
+  error: boolean;
 };
 
 /**
@@ -50,6 +51,7 @@ const emptyBucket = (): FileBucket => ({
   cursor: undefined,
   hasMore: true,
   loading: false,
+  error: false,
 });
 
 export const useFileDataStore = create<FileDataState>()(
@@ -93,7 +95,7 @@ export const useFileDataStore = create<FileDataState>()(
         set((state) => ({
           buckets: {
             ...state.buckets,
-            [type]: { ...bucket, loading: true },
+            [type]: { ...bucket, loading: true, error: false },
           },
         }));
 
@@ -113,6 +115,7 @@ export const useFileDataStore = create<FileDataState>()(
                   cursor: data.cursor,
                   hasMore: !data.list_complete,
                   loading: false,
+                  error: false,
                 },
               },
             };
@@ -122,7 +125,7 @@ export const useFileDataStore = create<FileDataState>()(
           set((state) => ({
             buckets: {
               ...state.buckets,
-              [type]: { ...bucket, loading: false },
+              [type]: { ...bucket, loading: false, error: true },
             },
           }));
         }
