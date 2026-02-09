@@ -108,7 +108,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
             fileKey={file.name}
             safeMode={false}
             canPreview={false}
-            fileSize={file.metadata.fileSize}
+            fileSize={file.metadata?.fileSize || 0}
             imageLoadMode={imageLoadMode}
             thumbUrl={file.metadata.thumbUrl}
             imgSrc={getTrashFileUrl(file.name)}
@@ -119,7 +119,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className={`text-sm font-medium truncate ${TextColor}`}>
-            {file.metadata.fileName}
+            {file.metadata?.fileName || file.name}
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1">
