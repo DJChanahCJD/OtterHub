@@ -1,14 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { uploadChunk, uploadChunkInit, uploadFile } from "@/lib/api";
 import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices, scanFiles } from "@/lib/utils";
-import { createPdfFromImages } from "@/lib/pdf";
-import { createNovelFromTexts } from "@/lib/novel";
 import { useFileDataStore } from "@/stores/file";
 import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
@@ -21,13 +17,6 @@ export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);
   const { nsfwDetection } = useGeneralSettingsStore();
   const [isDragging, setIsDragging] = useState(false);
-  const [isMergeMode, setIsMergeMode] = useState(false);
-  const [mergeProcessing, setMergeProcessing] = useState<{ processing: boolean; current: number; total: number; type: 'pdf' | 'novel' }>({
-    processing: false,
-    current: 0,
-    total: 0,
-    type: 'pdf'
-  });
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {},
   );
@@ -191,80 +180,11 @@ export function FileUploadZone() {
     const fileArray = Array.isArray(files) ? files : Array.from(files);
     if (!fileArray.length) return;
 
-    if (isMergeMode) {
-        const images = fileArray.filter(f => f.type.startsWith('image/'));
-        const texts = fileArray.filter(f => f.name.endsWith('.txt') || f.name.endsWith('.md'));
-        
-        if (images.length === 0 && texts.length === 0) {
-             if (fileArray.length > 0) {
-                 toast.info("当前为合并模式，但未检测到图片或文本，已转为普通上传");
-                 processFiles(fileArray);
-             }
-             return;
-        }
-
-        // 优先处理图片合并为 PDF
-        if (images.length > 0) {
-            if (images.length < fileArray.length && texts.length === 0) {
-                toast.warning(`已忽略 ${fileArray.length - images.length} 个非图片文件`);
-            }
-
-            try {
-                setMergeProcessing({ processing: true, current: 0, total: images.length, type: 'pdf' });
-                const pdfFile = await createPdfFromImages(images, (c, t) => {
-                    setMergeProcessing({ processing: true, current: c, total: t, type: 'pdf' });
-                }, false);
-                
-                await processFiles([pdfFile]);
-                toast.success("PDF 合并完成并开始上传");
-            } catch (e) {
-                console.error(e);
-                toast.error("PDF 合并失败: " + (e as Error).message);
-            } finally {
-                setMergeProcessing({ processing: false, current: 0, total: 0, type: 'pdf' });
-            }
-        } 
-        // 其次处理文本合并为小说
-        else if (texts.length > 0) {
-            if (texts.length < fileArray.length) {
-                toast.warning(`已忽略 ${fileArray.length - texts.length} 个非文本文件`);
-            }
-
-            try {
-                setMergeProcessing({ processing: true, current: 0, total: texts.length, type: 'novel' });
-                const novelFile = await createNovelFromTexts(texts, (c, t) => {
-                    setMergeProcessing({ processing: true, current: c, total: t, type: 'novel' });
-                }, false);
-                
-                await processFiles([novelFile]);
-                toast.success("小说合并完成并开始上传");
-            } catch (e) {
-                console.error(e);
-                toast.error("小说合并失败: " + (e as Error).message);
-            } finally {
-                setMergeProcessing({ processing: false, current: 0, total: 0, type: 'novel' });
-            }
-        }
-    } else {
-        processFiles(fileArray);
-    }
+    processFiles(fileArray);
   };
 
   return (
     <div className="mb-6">
-      {mergeProcessing.processing && (
-        <div className="mb-4 bg-secondary/30 p-3 rounded-lg border border-glass-border">
-            <div className="flex justify-between text-xs mb-1 text-foreground/80">
-                <div className="flex items-center gap-2">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>{mergeProcessing.type === 'pdf' ? 'Generating PDF...' : 'Generating Novel...'}</span>
-                </div>
-                <span>{mergeProcessing.current} / {mergeProcessing.total}</span>
-            </div>
-            <Progress value={mergeProcessing.total > 0 ? (mergeProcessing.current / mergeProcessing.total) * 100 : 0} className="h-1" />
-        </div>
-      )}
-
       <div
         onDrop={async (e) => {
           e.preventDefault();
@@ -290,18 +210,6 @@ export function FileUploadZone() {
             : "border-glass-border hover:border-primary/50",
         )}
       >
-        <div 
-          className="absolute top-4 right-4 flex items-center gap-3 z-10 transition-opacity opacity-70 hover:opacity-100"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center space-x-2">
-            <Switch id="merge-mode" checked={isMergeMode} onCheckedChange={setIsMergeMode} />
-            <Label htmlFor="merge-mode" className="text-xs text-foreground/70 cursor-pointer select-none font-normal">
-              Merge Mode
-            </Label>
-          </div>
-        </div>
-
         <Upload
           className={cn(
             "h-8 w-8 mx-auto mb-3 transition-colors",
@@ -316,9 +224,7 @@ export function FileUploadZone() {
         >
           {isDragging
             ? "Drop files to upload"
-            : isMergeMode 
-              ? "Drag & drop images (to PDF) or texts (to Novel)" 
-              : "Drag & drop files here, or click to browse"}
+            : "Drag & drop files here, or click to browse"}
         </p>
 
         <input
