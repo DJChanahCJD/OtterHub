@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { FileType, FileMetadata, chunkPrefix, MAX_FILENAME_LENGTH } from '@shared/types';
+import { FileType, FileMetadata, chunkPrefix, MAX_FILENAME_LENGTH, MAX_FILE_SIZE, MAX_CHUNK_NUM } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
-import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from 'types';
+import { TEMP_CHUNK_TTL } from 'types';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 

@@ -6,7 +6,7 @@ import { fail, ok } from '@utils/response';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env, KVNamespace } from '../types/hono';
 import { getFileTypeByName } from '@utils/file';
-import { MAX_CHUNK_SIZE } from 'types';
+import { MAX_CHUNK_SIZE } from '@shared/types';
 import { authMiddleware } from 'middleware/auth';
 
 const app = new Hono<{ Bindings: Env }>();

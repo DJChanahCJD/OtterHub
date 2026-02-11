@@ -21,15 +21,36 @@ import {
   buildTgApiUrl,
   buildTgFileUrl,
   getTgFilePath,
-  getTgFile,
   processGifFile,
 } from "./tg-tools";
-import { MAX_CHUNK_SIZE } from "types";
+import { MAX_CHUNK_SIZE } from "@shared/types";
 
 // Telegram存储适配器实现
 export class TGAdapter extends BaseAdapter {
   constructor(env: any, kvName: string) {
     super(env, kvName);
+  }
+
+  // TODO: 将 tgFilePath 放到file.metadata
+  private async getCachedTgFilePath(fileId: string): Promise<string | null> {
+    const kv = this.env[this.kvName];
+    const cacheKey = `tgpath:${fileId}`;
+
+    try {
+      const cached = await kv.get(cacheKey);
+      if (cached) return cached;
+    } catch {
+    }
+
+    const filePath = await getTgFilePath(fileId, this.env.TG_BOT_TOKEN);
+    if (!filePath) return null;
+
+    try {
+      await kv.put(cacheKey, filePath, { expirationTtl: 60 * 60 * 24 * 30 });
+    } catch {
+    }
+
+    return filePath;
   }
 
   async uploadFile(
@@ -194,51 +215,44 @@ export class TGAdapter extends BaseAdapter {
       const ext = key.substring(key.lastIndexOf(".") + 1);
       const contentType = getContentTypeByExt(ext);
 
-      const file = await getTgFile(fileId, this.env.TG_BOT_TOKEN);
-
       const { metadata } = await this.getFileMetadataWithValue(key);
       if (!metadata) {
         return failResponse(`Metadata not found for key: ${key}`, 404);
       }
+
+      const filePath = await this.getCachedTgFilePath(fileId);
+      if (!filePath) {
+        return failResponse(`File not found for key: ${key}`, 404);
+      }
+
+      const tgUrl = buildTgFileUrl(this.env.TG_BOT_TOKEN, filePath);
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
       headers.set("Cache-Control", "public, max-age=3600");
       headers.set("Accept-Ranges", "bytes");
 
-      // 获取文件大小
-      const contentLength = file.headers.get("Content-Length");
-      const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+      const range = req?.headers.get("Range") || null;
+      if (range) {
+        const tgResp = await fetch(tgUrl, { headers: { Range: range } });
 
-      // 使用通用工具函数处理 Range 请求
-      const rangeResult = parseRangeHeader(
-        req?.headers.get("Range") || null,
-        fileSize,
-      );
-      if (rangeResult && fileSize > 0) {
-        const { start, end } = rangeResult;
+        const contentRange = tgResp.headers.get("Content-Range");
+        const contentLength = tgResp.headers.get("Content-Length");
 
-        // Telegram 不支持 Range，需要下载整个文件然后截取
-        const arrayBuffer = await file.arrayBuffer();
-        const slice = arrayBuffer.slice(start, end + 1);
+        if (contentRange) headers.set("Content-Range", contentRange);
+        if (contentLength) headers.set("Content-Length", contentLength);
 
-        headers.set("Content-Range", `bytes ${start}-${end}/${fileSize}`);
-        headers.set("Content-Length", String(end - start + 1));
-
-        return new Response(slice, {
-          status: 206,
+        return new Response(tgResp.body, {
+          status: tgResp.status,
           headers,
         });
       }
 
-      if (fileSize > 0) {
-        headers.set("Content-Length", String(fileSize));
-      }
+      const tgResp = await fetch(tgUrl);
+      const contentLength = tgResp.headers.get("Content-Length");
+      if (contentLength) headers.set("Content-Length", contentLength);
 
-      return new Response(file.body, {
-        status: file.status,
-        headers,
-      });
+      return new Response(tgResp.body, { status: tgResp.status, headers });
     } catch (error) {
       return failResponse(`File not found for key: ${key}`, 404);
     }
@@ -283,6 +297,7 @@ export class TGAdapter extends BaseAdapter {
 
     // 捕获变量，避免 ReadableStream start 回调中引用丢失
     const botToken = this.env.TG_BOT_TOKEN;
+    const getFilePath = (fileId: string) => this.getCachedTgFilePath(fileId);
 
     // 使用通用工具函数处理 Range 请求
     const rangeResult = parseRangeHeader(
@@ -304,31 +319,47 @@ export class TGAdapter extends BaseAdapter {
               const chunkEnd = byteOffset + chunk.size;
 
               // 跳过不在范围内的分片
-              if (chunkEnd <= start || chunkStart >= targetEnd) {
+              if (chunkEnd <= start) {
                 byteOffset += chunk.size;
                 continue;
+              }
+              if (chunkStart >= targetEnd) {
+                break;
               }
 
               // 计算当前分片需要读取的范围
               const readStart = Math.max(0, start - chunkStart);
               const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
 
-              const filePath = await getTgFilePath(chunk.file_id, botToken);
+              const filePath = await getFilePath(chunk.file_id);
               if (!filePath) {
                 throw new Error(`Missing chunk ${chunk.idx}`);
               }
 
               const url = buildTgFileUrl(botToken, filePath);
-              const res = await fetch(url);
+              const needsPartial = readStart !== 0 || readEnd !== chunk.size;
+              const res = needsPartial
+                ? await fetch(url, {
+                    headers: { Range: `bytes=${readStart}-${readEnd - 1}` },
+                  })
+                : await fetch(url);
 
               if (!res.ok || !res.body) {
                 throw new Error(`Failed to fetch chunk ${chunk.idx}`);
               }
 
-              // 读取整个分片，然后截取需要的部分
-              const arrayBuffer = await res.arrayBuffer();
-              const slice = arrayBuffer.slice(readStart, readEnd);
-              controller.enqueue(new Uint8Array(slice));
+              if (needsPartial && res.status !== 206) {
+                const arrayBuffer = await res.arrayBuffer();
+                const slice = arrayBuffer.slice(readStart, readEnd);
+                controller.enqueue(new Uint8Array(slice));
+              } else {
+                const reader = res.body.getReader();
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  controller.enqueue(value);
+                }
+              }
 
               byteOffset += chunk.size;
             }
@@ -358,7 +389,7 @@ export class TGAdapter extends BaseAdapter {
       async start(controller) {
         try {
           for (const chunk of sortedChunks) {
-            const filePath = await getTgFilePath(chunk.file_id, botToken);
+            const filePath = await getFilePath(chunk.file_id);
             if (!filePath) {
               throw new Error(`Missing chunk ${chunk.idx}`);
             }
