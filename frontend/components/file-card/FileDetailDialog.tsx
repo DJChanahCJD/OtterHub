@@ -61,7 +61,7 @@ export function FileDetailDialog({
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground/60 mb-1">文件大小</p>
               <p className="text-sm font-medium text-foreground">
-                {formatFileSize(file.metadata?.fileSize)}
+                {formatFileSize(file.metadata?.fileSize ?? 0)}
               </p>
             </div>
           </div>

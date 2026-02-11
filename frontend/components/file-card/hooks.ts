@@ -32,7 +32,7 @@ export function useFileCardActions(file: FileItem) {
 
   const isSelected = selectedKeys.includes(file.name);
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
-  const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
+  const blur = shouldBlur({ safeMode, tags: file.metadata?.tags ?? [] });
   const isIncompleteUpload =
     file.metadata?.chunkInfo &&
     file.metadata.chunkInfo.uploadedIndices?.length !== file.metadata.chunkInfo.total;

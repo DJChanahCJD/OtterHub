@@ -20,11 +20,11 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   const { safeMode, imageLoadMode, dataSaverThreshold} = useGeneralSettingsStore()
   const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
   
-  const blur = shouldBlur({ safeMode, tags: file.metadata?.tags });
+  const blur = shouldBlur({ safeMode, tags: file.metadata?.tags ?? [] });
   const shouldLoad = shouldLoadImage({
     fileType: FileType.Image,
     imageLoadMode,
-    fileSize: file.metadata?.fileSize,
+    fileSize: file.metadata?.fileSize ?? 0,
     threshold: dataSaverThreshold * 1024 * 1024,
   });
   
