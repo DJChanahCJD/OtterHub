@@ -9,7 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getFileUrl } from "@/lib/api";
-import { Copy, CopyCheck } from "lucide-react";
+import { downloadFile } from "@/lib/utils";
+import { Copy, CopyCheck, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -71,6 +72,12 @@ export function TextReaderDialog({
     }
   };
 
+  const handleDownload = () => {
+    if (!file) return;
+    const url = getFileUrl(file.name);
+    downloadFile(url, file.metadata);
+  };
+
   if (!file) return null;
 
   return (
@@ -84,19 +91,30 @@ export function TextReaderDialog({
 
         <div className="flex-1 w-full overflow-hidden flex flex-col relative bg-background group">
           {content && !loading && !error && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute top-4 right-6 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm shadow-sm transition-colors"
-              onClick={handleCopy}
-              title="复制内容"
-            >
-              {copied ? (
-                <CopyCheck className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="absolute top-4 right-6 z-10 flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 bg-background/80 backdrop-blur-sm shadow-sm transition-colors"
+                onClick={handleCopy}
+                title="复制内容"
+              >
+                {copied ? (
+                  <CopyCheck className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 bg-background/80 backdrop-blur-sm shadow-sm transition-colors"
+                onClick={handleDownload}
+                title="下载文件"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
           )}
 
           <div className="flex-1 w-full overflow-auto p-6">
