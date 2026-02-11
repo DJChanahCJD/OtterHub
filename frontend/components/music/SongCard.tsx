@@ -5,6 +5,7 @@ import { MusicTrack } from "@shared/types";
 import { musicApi } from "@/lib/music-api";
 import { useMusicStore } from "@/stores/music-store";
 import { cn } from "@/lib/utils";
+import { MusicCover } from "./MusicCover";
 
 interface SongCardProps {
   track: MusicTrack | null;
@@ -60,17 +61,16 @@ export function SongCard({ track }: SongCardProps) {
     <div className="flex flex-col items-center h-full p-6 space-y-6 bg-card/50">
       {/* Album Art */}
       <div className="relative aspect-square w-full max-w-[300px] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/50 bg-muted">
-        {picUrl ? (
-          <img
-            src={picUrl}
-            alt={track.name}
-            className="w-full h-full object-cover animate-in fade-in duration-500"
-          />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full">
-            <Disc className="h-24 w-24 text-muted-foreground/30 animate-spin-slow" />
-          </div>
-        )}
+        <MusicCover
+          src={picUrl}
+          alt={track.name}
+          className="w-full h-full animate-in fade-in duration-500"
+          fallbackIcon={
+            <div className="flex items-center justify-center w-full h-full">
+              <Disc className="h-24 w-24 text-muted-foreground/30 animate-spin-slow" />
+            </div>
+          }
+        />
       </div>
 
       {/* Info */}

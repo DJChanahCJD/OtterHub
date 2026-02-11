@@ -7,6 +7,7 @@ import { ChevronDown, Music2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
 import { LyricsPanel } from "./LyricsPanel";
+import { MusicCover } from "./MusicCover";
 
 interface FullScreenPlayerProps {
   isFullScreen: boolean;
@@ -78,15 +79,12 @@ export function FullScreenPlayer({
         {/* Left: Big Album Art (PC) */}
         <div className="hidden md:flex flex-1 items-center justify-center p-8 min-h-0">
           <div className="aspect-square w-full max-w-[50vh] max-h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden bg-muted/20 flex items-center justify-center">
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={currentTrack?.name || "Album Art"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <Music2 className="h-24 w-24 text-muted-foreground/30" />
-            )}
+            <MusicCover
+              src={coverUrl}
+              alt={currentTrack?.name}
+              className="h-full w-full"
+              iconClassName="h-24 w-24"
+            />
           </div>
         </div>
 
@@ -99,15 +97,12 @@ export function FullScreenPlayer({
         <div className="flex flex-col items-center justify-center w-full h-full md:hidden py-8 gap-6">
           {/* Small Album Art (Mobile) */}
           <div className="aspect-square w-40 h-40 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] overflow-hidden bg-muted/20 flex items-center justify-center">
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={currentTrack?.name || "Album Art"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <Music2 className="h-16 w-16 text-muted-foreground/30" />
-            )}
+            <MusicCover
+              src={coverUrl}
+              alt={currentTrack?.name}
+              className="h-full w-full"
+              iconClassName="h-16 w-16"
+            />
           </div>
 
           {/* Lyrics Panel (Mobile) - Fixed Height */}

@@ -17,6 +17,7 @@ interface MusicSearchViewProps {
 }
 
 const stableSources: Record<string, string> = {
+  all: "全部",
   netease: "网易云音乐",
   kuwo: "酷我音乐",
   joox: "Joox",

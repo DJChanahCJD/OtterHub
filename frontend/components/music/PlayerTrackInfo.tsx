@@ -5,6 +5,7 @@ import { Music2, ChevronUp, ChevronDown, Heart, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MusicCover } from "./MusicCover";
 
 interface PlayerTrackInfoProps {
   track: MusicTrack | null;
@@ -52,15 +53,12 @@ export function PlayerTrackInfo({
       onClick={onToggleFullScreen}
     >
       <div className={`${sizeClasses} rounded bg-muted flex items-center justify-center overflow-hidden shrink-0 relative`}>
-        {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt={track.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <Music2 className={`${iconSize} text-muted-foreground/50`} />
-        )}
+        <MusicCover
+          src={coverUrl}
+          alt={track.name}
+          className="h-full w-full"
+          iconClassName={iconSize}
+        />
         {!isMobile && onToggleFullScreen && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
             {!isFullScreen ? (

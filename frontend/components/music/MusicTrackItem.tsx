@@ -7,10 +7,30 @@ import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { MusicTrackMobileMenu } from "./MusicTrackMobileMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { musicApi } from "@/lib/music-api";
+import { MusicCover } from "./MusicCover";
+
+const sourceLabels: Record<string, string> = {
+  netease: "网易",
+  _netease: "网易",
+  kuwo: "酷我",
+  joox: "Joox",
+  bilibili: "B站",
+};
+
+const sourceBadgeStyles: Record<string, string> = {
+  netease: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+  _netease: "bg-red-60 text-red-700 border-red-300 hover:bg-red-200",
+  kuwo: "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100",
+  joox: "bg-green-50 text-green-600 border-green-200 hover:bg-green-100",
+  bilibili: "bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100",
+  default: "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100",
+};
 
 interface MusicTrackItemProps {
   track: MusicTrack;
@@ -51,15 +71,34 @@ export function MusicTrackItem({
   const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    let active = true;
+    const fetchCover = async () => {
+      if (!track.pic_id) return;
+      try {
+        const url = await musicApi.getPic(track.pic_id, track.source, 200);
+        if (active) setCoverUrl(url);
+      } catch (e) {
+        console.error("Failed to fetch cover in MusicTrackItem:", e);
+      }
+    };
+    fetchCover();
+    return () => {
+      active = false;
+    };
+  }, [track.pic_id, track.source]);
+
   return (
     <div
       style={style}
       onClick={showCheckbox ? onSelect : onPlay}
       className={cn(
         "group grid gap-2 items-center px-3 md:px-4 py-2 rounded-md cursor-pointer transition-colors text-sm",
-        "grid-cols-[3rem_1fr_auto]",
-        "md:grid-cols-[3rem_1.5fr_1fr_auto]",
+        "grid-cols-[3rem_2.5rem_1fr_auto]",
+        "md:grid-cols-[3rem_3rem_1.5fr_1fr_auto]",
         isSelected && showCheckbox
           ? "bg-primary/10" 
           : "hover:bg-muted/50",
@@ -109,10 +148,29 @@ export function MusicTrackItem({
           )}
       </div>
 
-      {/* Column 2: Title & Artist */}
+      {/* Column 2: Album Cover */}
+      <div className="flex justify-center items-center">
+        <MusicCover
+          src={coverUrl}
+          alt={track.name}
+          className="h-8 w-8 rounded-md"
+          iconClassName="h-4 w-4"
+        />
+      </div>
+
+      {/* Column 3: Title & Artist */}
       <div className="min-w-0">
-        <div className={cn("font-medium truncate", isCurrent && "text-primary")}>
-          {track.name}
+        <div className={cn("font-medium flex items-center gap-1.5", isCurrent && "text-primary")}>
+          <span className="truncate" title={track.name}>{track.name}</span>
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "shrink-0 text-[10px] px-1 py-0 h-4 leading-none font-normal border",
+              sourceBadgeStyles[track.source] || sourceBadgeStyles.default
+            )}
+          >
+            {sourceLabels[track.source] || track.source}
+          </Badge>
         </div>
         <div className="text-xs text-muted-foreground truncate">
           {track.artist.join(" / ")}
@@ -120,12 +178,12 @@ export function MusicTrackItem({
         </div>
       </div>
 
-      {/* Column 3: Album (desktop only) */}
+      {/* Column 4: Album (desktop only) */}
       <div className="hidden md:block min-w-0 text-muted-foreground truncate" title={track.album}>
         {track.album}
       </div>
 
-      {/* Column 4: Actions */}
+      {/* Column 5: Actions */}
       <div className="flex items-center justify-end gap-1">
          {!showCheckbox && (
             <>

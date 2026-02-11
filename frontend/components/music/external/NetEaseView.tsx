@@ -14,6 +14,7 @@ import { MusicTrack } from '@shared/types';
 import { LogOut, RefreshCw, Loader2, ChevronLeft, Plus, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
+import { MusicCover } from '@/components/music/MusicCover';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -383,7 +384,12 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
                       onClick={() => handlePlaylistClick(p)}
                  >
                      <div className="flex gap-3 overflow-hidden w-full">
-                         <img src={p.coverImgUrl || p.picUrl} className="w-12 h-12 rounded object-cover shrink-0" alt={p.name} />
+                         <MusicCover 
+                            src={p.coverImgUrl || p.picUrl} 
+                            className="w-12 h-12 rounded object-cover shrink-0" 
+                            alt={p.name} 
+                            iconClassName="h-6 w-6"
+                         />
                          <div className="flex flex-col min-w-0 flex-1">
                              <span className="font-medium truncate">{p.name}</span>
                              <span className="text-xs text-muted-foreground">

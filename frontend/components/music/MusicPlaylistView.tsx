@@ -4,6 +4,7 @@ import { Play, Music, MoreHorizontal, Search } from "lucide-react";
 import { MusicTrackList } from "./MusicTrackList";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
+import { MusicCover } from "./MusicCover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,11 +75,12 @@ export function MusicPlaylistView({
       {/* Header */}
       <div className="p-6 border-b flex items-end gap-6 bg-muted/10">
         <div className="h-32 w-32 bg-primary/10 rounded-lg flex items-center justify-center shadow-sm border overflow-hidden shrink-0">
-          {coverUrl ? (
-            <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
-          ) : (
-            <Music className="h-12 w-12 text-primary/40" />
-          )}
+          <MusicCover
+            src={coverUrl}
+            alt={title}
+            className="h-full w-full"
+            iconClassName="h-12 w-12 text-primary/40"
+          />
         </div>
         <div className="flex-1 space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>

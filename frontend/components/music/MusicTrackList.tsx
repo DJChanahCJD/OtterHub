@@ -239,10 +239,11 @@ export function MusicTrackList({
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
-        <div className="grid items-center gap-2 px-3 md:px-4 text-sm text-muted-foreground grid-cols-[3rem_1fr_auto] md:grid-cols-[3rem_1.5fr_1fr_auto]">
+        <div className="grid items-center gap-2 px-3 md:px-4 text-sm text-muted-foreground grid-cols-[3rem_2.5rem_1fr_auto] md:grid-cols-[3rem_3rem_1.5fr_1fr_auto]">
           {!isSelectionMode ? (
             <>
               <div className="text-center">#</div>
+              <div /> {/* Cover Column Placeholder */}
               <div>标题</div>
               <div className="hidden md:block">专辑</div>
               <Button
@@ -269,6 +270,7 @@ export function MusicTrackList({
                   aria-label="Select all"
                 />
               </div>
+              <div /> {/* Cover Column Placeholder */}
               <div className="md:col-span-2 col-span-1 flex items-center">
                 <span className="text-xs mr-2 text-foreground whitespace-nowrap">
                   已选 {selectedIds.size} 首

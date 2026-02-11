@@ -7,8 +7,11 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
-import { Download, Heart, ListPlus, MoreVertical, Plus, Trash2 } from "lucide-react";
-import { ReactNode } from "react";
+import { Download, Heart, ListPlus, MoreVertical, Plus, Trash2, Moon, Sun } from "lucide-react";
+import { ReactNode, useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { MusicCover } from "./MusicCover";
+import { musicApi } from "@/lib/music-api";
 
 interface MusicTrackMobileMenuProps {
   track: MusicTrack;
@@ -24,6 +27,7 @@ interface MusicTrackMobileMenuProps {
   hideAddToQueue?: boolean;
   hideAddToPlaylist?: boolean;
   customActions?: ReactNode;
+  showThemeToggle?: boolean;
 }
 
 export function MusicTrackMobileMenu({
@@ -40,7 +44,29 @@ export function MusicTrackMobileMenu({
   hideAddToQueue,
   hideAddToPlaylist,
   customActions,
+  showThemeToggle,
 }: MusicTrackMobileMenuProps) {
+  const { theme, setTheme } = useTheme();
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    const fetchCover = async () => {
+      if (!track.pic_id) return;
+      try {
+        const url = await musicApi.getPic(track.pic_id, track.source, 200);
+        if (active) setCoverUrl(url);
+      } catch (e) {
+        console.error("Failed to fetch cover in MusicTrackMobileMenu:", e);
+      }
+    };
+    fetchCover();
+    return () => {
+      active = false;
+    };
+  }, [track.pic_id, track.source, open]);
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
@@ -58,6 +84,22 @@ export function MusicTrackMobileMenu({
       </DrawerTrigger>
       <DrawerContent onClick={(e) => e.stopPropagation()}>
         <div className="p-4 flex flex-col gap-2">
+          {/* Header with Cover and Info */}
+          <div className="flex items-center gap-4 px-2 py-4 border-b mb-2">
+            <MusicCover
+              src={coverUrl}
+              alt={track.name}
+              className="h-16 w-16 rounded-lg shadow-md"
+              iconClassName="h-8 w-8"
+            />
+            <div className="min-w-0">
+              <div className="font-bold truncate text-lg">{track.name}</div>
+              <div className="text-sm text-muted-foreground truncate">
+                {track.artist.join(" / ")}
+              </div>
+            </div>
+          </div>
+
           {!hideAddToQueue && (
             <Button
               variant="ghost"
@@ -114,7 +156,7 @@ export function MusicTrackMobileMenu({
             </Button>
           )}
 
-          {(onRemove || customActions) && <div className="my-1 border-t" />}
+          {(onRemove || customActions || showThemeToggle) && <div className="my-1 border-t" />}
 
           {onRemove && (
             <Button
@@ -128,6 +170,24 @@ export function MusicTrackMobileMenu({
               }}
             >
               <Trash2 className="mr-2 h-4 w-4" /> 移除
+            </Button>
+          )}
+
+          {showThemeToggle && (
+            <Button
+              variant="ghost"
+              className="justify-start w-full"
+              onClick={() => {
+                setTheme(theme === "dark" ? "light" : "dark");
+                onOpenChange(false);
+              }}
+            >
+              {theme === "dark" ? (
+                <Sun className="mr-2 h-4 w-4" />
+              ) : (
+                <Moon className="mr-2 h-4 w-4" />
+              )}
+              {theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
             </Button>
           )}
 

@@ -46,6 +46,8 @@ import { musicApi } from "@/lib/music-api";
 import { PlayerQueuePopover } from "./PlayerQueuePopover";
 import { PlayerControls } from "./PlayerControls";
 import { PlayerTrackInfo } from "./PlayerTrackInfo";
+import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
+import { MusicTrackMobileMenu } from "./MusicTrackMobileMenu";
 
 interface GlobalPlayerProps {
   state: AudioPlayerState;
@@ -119,6 +121,9 @@ export function GlobalPlayer({
 
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+  const { addToQueue } = useMusicStore()
 
   useEffect(() => {
     if (!currentTrack) {
@@ -256,39 +261,6 @@ export function GlobalPlayer({
             </div>
           )}
 
-          {/* Mobile: Center - Favorite and Download Buttons (Non-Fullscreen Only) */}
-          {!isFullScreen && (
-            <div className="md:hidden flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                onClick={handleToggleFavorite}
-                title="喜欢"
-                disabled={!currentTrack}
-              >
-                <Heart
-                  className={cn(
-                    "h-4 w-4",
-                    currentTrack &&
-                      isFavorite(currentTrack.id) &&
-                      "fill-primary text-primary",
-                  )}
-                />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                onClick={handleDownload}
-                title="下载"
-                disabled={!currentTrack}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
           {/* Center: Controls */}
           <div className="flex-1 flex items-center justify-center gap-4">
             {/* PC: Full Controls */}
@@ -367,7 +339,30 @@ export function GlobalPlayer({
                     </Button>
                   }
                 />
-                <ThemeToggle />
+                
+                {currentTrack && (
+                   <>
+                     <MusicTrackMobileMenu 
+                        track={currentTrack}
+                        open={isMobileMenuOpen}
+                        onOpenChange={setIsMobileMenuOpen}
+                        onAddToQueue={() => {
+                           addToQueue(currentTrack);
+                           toast.success("已加入播放列表");
+                        }}
+                        onAddToPlaylistTrigger={() => setIsAddToPlaylistOpen(true)}
+                        onDownload={handleDownload}
+                        onToggleLike={handleToggleFavorite}
+                        isFavorite={isFavorite(currentTrack.id)}
+                        showThemeToggle={true}
+                     />
+                     <AddToPlaylistDialog 
+                        open={isAddToPlaylistOpen}
+                        onOpenChange={setIsAddToPlaylistOpen}
+                        track={currentTrack}
+                     />
+                   </>
+                )}
               </div>
             )}
 

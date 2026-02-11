@@ -20,9 +20,8 @@ export type MusicSource =
   | 'lizhi'
   | 'qingting'
   | 'ximalaya'
-  | 'kg'
   // Common sources mentioned in doc: netease, tencent, tidal, spotify, ytmusic, qobuz, joox, deezer, migu, kugou, kuwo, ximalaya, apple
-  | 'tidal' | 'spotify' | 'ytmusic' | 'qobuz' | 'joox' | 'deezer' | 'apple';
+  | 'tidal' | 'spotify' | 'ytmusic' | 'qobuz' | 'joox' | 'deezer' | 'apple' | 'all';
 
 export interface MusicTrack {
   id: string;
