@@ -100,7 +100,11 @@ export const useFileDataStore = create<FileDataState>()(
         }));
 
         try {
-          const params: ListFilesRequest = { fileType: type };
+          const { itemsPerPage } = useFileUIStore.getState();
+          const params: ListFilesRequest = { 
+            fileType: type,
+            limit: itemsPerPage.toString()
+          };
           if (bucket.cursor) params.cursor = bucket.cursor;
 
           const data = await getFileList(params);
