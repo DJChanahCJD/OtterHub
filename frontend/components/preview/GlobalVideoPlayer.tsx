@@ -20,6 +20,19 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
   const [bufferedPercent, setBufferedPercent] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const updateBufferedPercent = useCallback(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const duration = el.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    if (!el.buffered || el.buffered.length === 0) return;
+
+    const lastBufferedEnd = el.buffered.end(el.buffered.length - 1);
+    const percent = Math.max(0, Math.min(100, (lastBufferedEnd / duration) * 100));
+    setBufferedPercent(percent);
+  }, []);
+
   // Pause on minimize
   useEffect(() => {
     if (viewState === 'minimized' && videoRef.current && !videoRef.current.paused) {
@@ -34,19 +47,6 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
     typeof activeFile.metadata?.thumbUrl === "string" && activeFile.metadata.thumbUrl.length > 0
       ? `${API_URL}${activeFile.metadata.thumbUrl}`
       : undefined;
-
-  const updateBufferedPercent = useCallback(() => {
-    const el = videoRef.current;
-    if (!el) return;
-
-    const duration = el.duration;
-    if (!Number.isFinite(duration) || duration <= 0) return;
-    if (!el.buffered || el.buffered.length === 0) return;
-
-    const lastBufferedEnd = el.buffered.end(el.buffered.length - 1);
-    const percent = Math.max(0, Math.min(100, (lastBufferedEnd / duration) * 100));
-    setBufferedPercent(percent);
-  }, []);
 
   return (
     <>
