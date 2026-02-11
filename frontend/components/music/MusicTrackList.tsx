@@ -82,24 +82,8 @@ const Row = ({
         showCheckbox={isSelectionMode}
         isSelected={selectedIds.has(track.id)}
         onSelect={() => toggleSelect(track.id)}
-        customActions={
-          !isSelectionMode &&
-          onRemove && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm(`确定移除歌曲「${track.name}」吗？`)) {
-                  onRemove(track);
-                }
-              }}
-              title="移除"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )
+        onRemove={
+          !isSelectionMode && onRemove ? () => onRemove(track) : undefined
         }
       />
     );

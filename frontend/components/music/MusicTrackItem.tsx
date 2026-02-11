@@ -1,13 +1,16 @@
 import { MusicTrack } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Heart, Plus, ListPlus, ListMusic, Download, MoreVertical } from "lucide-react";
+import { Play, Pause, Heart, Plus, ListPlus, ListMusic, Download, Trash2 } from "lucide-react";
 import { downloadMusicTrack } from "@/lib/utils/download";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
+import { MusicTrackMobileMenu } from "./MusicTrackMobileMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MusicTrackItemProps {
   track: MusicTrack;
@@ -23,7 +26,7 @@ interface MusicTrackItemProps {
   hideAddToQueue?: boolean;
   hideAddToPlaylist?: boolean;
   // Custom actions to render (e.g. Delete button)
-  customActions?: React.ReactNode;
+  onRemove?: () => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -40,14 +43,15 @@ export function MusicTrackItem({
   hideLike,
   hideAddToQueue,
   hideAddToPlaylist,
-  customActions,
+  onRemove,
   className,
   style,
 }: MusicTrackItemProps) {
   const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToPlaylist, createPlaylist } = useMusicStore();
   const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false);
-  const [isActionsPopoverOpen, setIsActionsPopoverOpen] = useState(false);
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+  const isMobile = useIsMobile();
   return (
     <div
       style={style}
@@ -112,6 +116,7 @@ export function MusicTrackItem({
         </div>
         <div className="text-xs text-muted-foreground truncate">
           {track.artist.join(" / ")}
+          {isMobile && ` - ${track.album}`}
         </div>
       </div>
 
@@ -226,80 +231,60 @@ export function MusicTrackItem({
                         </PopoverContent>
                     </Popover>
                     )}
-                    {customActions}
+
+                    {onRemove && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`确定移除歌曲「${track.name}」吗？`)) {
+                            onRemove();
+                          }
+                        }}
+                        title="移除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                 </div>
 
                 {/* 移动端：折叠到 MoreVertical 按钮 */}
                 <div className="md:hidden flex items-center">
-                    <Popover open={isActionsPopoverOpen} onOpenChange={setIsActionsPopoverOpen}>
-                        <PopoverTrigger asChild>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={(e) => e.stopPropagation()}
-                            title="更多操作"
-                            >
-                            <MoreVertical className="h-4 w-4" />
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent side="bottom" align="end" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">更多操作</div>
-                        {!hideAddToQueue && (
-                            <div 
-                                className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                                onClick={() => {
-                                    addToQueue(track);
-                                    toast.success("已加入播放列表");
-                                    setIsActionsPopoverOpen(false);
-                                }}
-                            >
-                                <Plus className="mr-2 h-4 w-4" /> 添加到播放列表
-                            </div>
-                        )}
-                        {!hideAddToPlaylist && (
-                            <>
-                                <div className="border-t my-1" />
-                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
-                                {playlists.map(p => (
-                                    <div 
-                                        key={p.id} 
-                                        className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                                        onClick={() => {
-                                            addToPlaylist(p.id, track);
-                                            toast.success(`已添加到歌单「${p.name}」`);
-                                            setIsActionsPopoverOpen(false);
-                                        }}
-                                    >
-                                        <ListMusic className="mr-2 h-4 w-4 opacity-50" />
-                                        <span className="truncate">{p.name}</span>
-                                    </div>
-                                ))}
-                                <div 
-                                    className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
-                                    onClick={() => {
-                                        const name = window.prompt("请输入新歌单名称");
-                                        if (name) {
-                                            createPlaylist(name);
-                                            toast.success("已创建歌单");
-                                        }
-                                    }}
-                                >
-                                    <Plus className="mr-2 h-4 w-4" /> 新建歌单
-                                </div>
-                            </>
-                        )}
-                        {customActions && (
-                            <>
-                                <div className="border-t my-1" />
-                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">其他操作</div>
-                                <div className="px-2 py-2">
-                                    {customActions}
-                                </div>
-                            </>
-                        )}
-                        </PopoverContent>
-                    </Popover>
+                    <MusicTrackMobileMenu
+                        track={track}
+                        open={isMobileMenuOpen}
+                        onOpenChange={setIsMobileMenuOpen}
+                        onAddToQueue={() => {
+                            addToQueue(track);
+                            toast.success("已加入播放列表");
+                        }}
+                        onAddToPlaylistTrigger={() => {
+                            setIsAddToPlaylistOpen(true);
+                        }}
+                        onDownload={() => downloadMusicTrack(track)}
+                        onToggleLike={() => {
+                            if (isFavorite(track.id)) {
+                                removeFromFavorites(track.id);
+                                toast.success("已取消喜欢");
+                            } else {
+                                addToFavorites(track);
+                                toast.success("已喜欢");
+                            }
+                        }}
+                        isFavorite={isFavorite(track.id)}
+                        onRemove={onRemove}
+                        hideLike={hideLike}
+                        hideAddToQueue={hideAddToQueue}
+                        hideAddToPlaylist={hideAddToPlaylist}
+                    />
+                    
+                    <AddToPlaylistDialog 
+                        open={isAddToPlaylistOpen} 
+                        onOpenChange={setIsAddToPlaylistOpen} 
+                        track={track} 
+                    />
                 </div>
             </>
          )}

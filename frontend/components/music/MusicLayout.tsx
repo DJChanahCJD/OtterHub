@@ -23,7 +23,7 @@ export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* Mobile Header (Only visible on small screens) */}
-      <div className="md:hidden flex items-center p-4 border-b">
+      <div className="md:hidden flex items-center p-4 border-b h-14">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
