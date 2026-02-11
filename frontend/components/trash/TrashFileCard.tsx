@@ -110,7 +110,7 @@ export function TrashFileCard({ file }: TrashFileCardProps) {
             canPreview={false}
             fileSize={file.metadata?.fileSize || 0}
             imageLoadMode={imageLoadMode}
-            thumbUrl={file.metadata?.thumbUrl}
+            thumbUrl={file.metadata?.thumbUrl || ""}
             imgSrc={getTrashFileUrl(file.name)}
           />
       </div>

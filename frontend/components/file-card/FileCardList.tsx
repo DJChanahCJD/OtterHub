@@ -68,7 +68,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
             tags={file.metadata?.tags}
             fileSize={file.metadata?.fileSize}
             imageLoadMode={imageLoadMode}
-            thumbUrl={file.metadata?.thumbUrl}
+            thumbUrl={file.metadata?.thumbUrl || ""}
             className="h-5 w-5"
           />
         </div>
