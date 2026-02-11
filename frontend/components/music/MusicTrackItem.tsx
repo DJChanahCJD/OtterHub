@@ -45,13 +45,13 @@ export function MusicTrackItem({
   style,
 }: MusicTrackItemProps) {
   const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToPlaylist, createPlaylist } = useMusicStore();
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false);
+  const [isActionsPopoverOpen, setIsActionsPopoverOpen] = useState(false);
 
   return (
     <div
       style={style}
-      onClick={showCheckbox ? onSelect : undefined}
-      onDoubleClick={!showCheckbox ? onPlay : undefined}
+      onClick={showCheckbox ? onSelect : onPlay}
       className={cn(
         "group grid gap-2 items-center px-3 md:px-4 py-2 rounded-md cursor-pointer transition-colors text-sm",
         "grid-cols-[3rem_1fr_auto]",
@@ -183,15 +183,12 @@ export function MusicTrackItem({
                     )}
 
                     {!hideAddToPlaylist && (
-                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
                         <PopoverTrigger asChild>
                         <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
                             title="添加到歌单"
                             >
                             <ListPlus className="h-4 w-4" />
@@ -206,7 +203,7 @@ export function MusicTrackItem({
                                 onClick={() => {
                                 addToPlaylist(p.id, track);
                                 toast.success(`已添加到歌单「${p.name}」`);
-                                setIsPopoverOpen(false);
+                                setIsPlaylistPopoverOpen(false);
                                 }}
                             >
                                 <ListMusic className="mr-2 h-4 w-4 opacity-50" />
@@ -234,21 +231,19 @@ export function MusicTrackItem({
 
                 {/* 移动端：折叠到 MoreVertical 按钮 */}
                 <div className="md:hidden flex items-center">
-                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <Popover open={isActionsPopoverOpen} onOpenChange={setIsActionsPopoverOpen}>
                         <PopoverTrigger asChild>
                         <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
+                            onClick={(e) => e.stopPropagation()}
                             title="更多操作"
                             >
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                         </PopoverTrigger>
-                        <PopoverContent side="left" align="center" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
+                        <PopoverContent side="bottom" align="end" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
                         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">更多操作</div>
                         {!hideAddToQueue && (
                             <div 
@@ -256,7 +251,7 @@ export function MusicTrackItem({
                                 onClick={() => {
                                     addToQueue(track);
                                     toast.success("已加入播放列表");
-                                    setIsPopoverOpen(false);
+                                    setIsActionsPopoverOpen(false);
                                 }}
                             >
                                 <Plus className="mr-2 h-4 w-4" /> 添加到播放列表
@@ -273,7 +268,7 @@ export function MusicTrackItem({
                                         onClick={() => {
                                             addToPlaylist(p.id, track);
                                             toast.success(`已添加到歌单「${p.name}」`);
-                                            setIsPopoverOpen(false);
+                                            setIsActionsPopoverOpen(false);
                                         }}
                                     >
                                         <ListMusic className="mr-2 h-4 w-4 opacity-50" />
