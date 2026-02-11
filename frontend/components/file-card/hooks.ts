@@ -26,6 +26,7 @@ export function useFileCardActions(file: FileItem) {
   const [showEdit, setShowEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [showAudioPreview, setShowAudioPreview] = useState(false);
   const [showTextReader, setShowTextReader] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -90,8 +91,14 @@ export function useFileCardActions(file: FileItem) {
       setShowVideoPreview(true);
       return;
     }
+
+    // 4. 音频预览
+    if (fileType === FileType.Audio) {
+      setShowAudioPreview(true);
+      return;
+    }
     
-    // 4. 其他类型（图片、音频、PDF、压缩包等）直接打开
+    // 5. 其他类型（图片、PDF、压缩包等）直接打开
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -176,6 +183,7 @@ export function useFileCardActions(file: FileItem) {
     showEdit,
     showShare,
     showVideoPreview,
+    showAudioPreview,
     showTextReader,
     isResuming,
 
@@ -186,6 +194,7 @@ export function useFileCardActions(file: FileItem) {
     setShowEdit,
     setShowShare,
     setShowVideoPreview,
+    setShowAudioPreview,
     setShowTextReader,
     handleSelect,
     handleDelete,

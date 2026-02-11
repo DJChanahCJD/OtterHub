@@ -11,6 +11,7 @@ import { NsfwSign } from "./NsfwSign";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
 import { VideoPreviewDialog } from "./VideoPreviewDialog";
+import { AudioPreviewDialog } from "./AudioPreviewDialog";
 import { TextReaderDialog } from "./TextReaderDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
@@ -28,11 +29,13 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
     showDetail,
     showEdit,
     showVideoPreview,
+    showAudioPreview,
     showTextReader,
     isResuming,
     setShowDetail,
     setShowEdit,
     setShowVideoPreview,
+    setShowAudioPreview,
     setShowTextReader,
     handleSelect,
     handleDelete,
@@ -167,6 +170,11 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         file={file}
         open={showVideoPreview}
         onOpenChange={setShowVideoPreview}
+      />
+      <AudioPreviewDialog
+        file={file}
+        open={showAudioPreview}
+        onOpenChange={setShowAudioPreview}
       />
       <TextReaderDialog
         file={file}

@@ -10,6 +10,7 @@ import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
 import { VideoPreviewDialog } from "./VideoPreviewDialog";
+import { AudioPreviewDialog } from "./AudioPreviewDialog";
 import { TextReaderDialog } from "./TextReaderDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 
@@ -27,11 +28,13 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     showDetail,
     showEdit,
     showVideoPreview,
+    showAudioPreview,
     showTextReader,
     isResuming,
     setShowDetail,
     setShowEdit,
     setShowVideoPreview,
+    setShowAudioPreview,
     setShowTextReader,
     handleSelect,
     handleDelete,
@@ -155,6 +158,11 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         file={file}
         open={showVideoPreview}
         onOpenChange={setShowVideoPreview}
+      />
+      <AudioPreviewDialog
+        file={file}
+        open={showAudioPreview}
+        onOpenChange={setShowAudioPreview}
       />
       <TextReaderDialog
         file={file}
