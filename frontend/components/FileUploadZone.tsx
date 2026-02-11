@@ -11,11 +11,11 @@ import {
 } from "@/lib/api";
 import { buildTmpFileKey, formatFileSize, getFileType, cn, processBatch, getMissingChunkIndices, scanFiles } from "@/lib/utils";
 import { useFileDataStore } from "@/stores/file";
-import { MAX_CHUNK_SIZE, MAX_CONCURRENTS, MAX_FILE_SIZE } from "@/lib/types";
 import { nsfwDetector } from "@/lib/nsfw-detector";
 import { toast } from "sonner";
-import { FileItem, FileTag, MAX_FILENAME_LENGTH } from "@shared/types";
+import { FileItem, FileTag, MAX_CHUNK_SIZE, MAX_FILENAME_LENGTH, MAX_FILE_SIZE } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
+import { MAX_CONCURRENTS } from "@/lib/types";
 
 export function FileUploadZone() {
   const addFileLocal = useFileDataStore((s) => s.addFileLocal);

@@ -2,13 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   ListFilesRequest,
-  TRASH_EXPIRATION_TTL,
   ViewMode,
 } from "@/lib/types";
 import { getFileList } from "@/lib/api";
 import { getFileTypeFromKey } from "@/lib/utils/file";
 import { useFileUIStore } from "./ui";
-import { FileItem, FileMetadata, trashPrefix, FileType } from "@shared/types";
+import { FileItem, FileMetadata, trashPrefix, FileType, TRASH_EXPIRATION_TTL } from "@shared/types";
 import { storeKey } from "..";
 
 type FileBucket = {
