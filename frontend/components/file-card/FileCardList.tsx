@@ -9,10 +9,8 @@ import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
-import { VideoPreviewDialog } from "./VideoPreviewDialog";
-import { AudioPreviewDialog } from "./AudioPreviewDialog";
-import { TextReaderDialog } from "./TextReaderDialog";
 import { useGeneralSettingsStore } from "@/stores/general-store";
+
 
 interface FileCardListProps {
   file: FileItem;
@@ -27,15 +25,9 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     isIncompleteUpload,
     showDetail,
     showEdit,
-    showVideoPreview,
-    showAudioPreview,
-    showTextReader,
     isResuming,
     setShowDetail,
     setShowEdit,
-    setShowVideoPreview,
-    setShowAudioPreview,
-    setShowTextReader,
     handleSelect,
     handleDelete,
     handleCopyLink,
@@ -153,21 +145,6 @@ export function FileCardList({ file, actions }: FileCardListProps) {
         onOpenChange={actions.setShowShare}
         fileKey={file.name}
         fileName={file.metadata?.fileName}
-      />
-      <VideoPreviewDialog
-        file={file}
-        open={showVideoPreview}
-        onOpenChange={setShowVideoPreview}
-      />
-      <AudioPreviewDialog
-        file={file}
-        open={showAudioPreview}
-        onOpenChange={setShowAudioPreview}
-      />
-      <TextReaderDialog
-        file={file}
-        open={showTextReader}
-        onOpenChange={setShowTextReader}
       />
     </>
   );

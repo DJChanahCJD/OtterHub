@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
 import { FileItem, FileType } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
+import { usePreviewStore } from "@/stores/preview-store";
+
 
 export function useFileCardActions(file: FileItem) {
   const {
@@ -20,16 +22,16 @@ export function useFileCardActions(file: FileItem) {
   
   const { safeMode } = useGeneralSettingsStore();
 
+  const { openPreview } = usePreviewStore();
+
   const selectedKeys = useActiveSelectedKeys();
 
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [showVideoPreview, setShowVideoPreview] = useState(false);
-  const [showAudioPreview, setShowAudioPreview] = useState(false);
-  const [showTextReader, setShowTextReader] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
 
   const isSelected = selectedKeys.includes(file.name);
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
@@ -82,19 +84,19 @@ export function useFileCardActions(file: FileItem) {
       fileType === FileType.Document && 
       !binaryExtensions.some(ext => fileName.endsWith(ext))
     ) {
-      setShowTextReader(true);
+      openPreview(file, 'text');
       return;
     }
 
     // 3. 视频预览
     if (fileType === FileType.Video) {
-      setShowVideoPreview(true);
+      openPreview(file, 'video');
       return;
     }
 
     // 4. 音频预览
     if (fileType === FileType.Audio) {
-      setShowAudioPreview(true);
+      openPreview(file, 'audio');
       return;
     }
     
@@ -182,9 +184,6 @@ export function useFileCardActions(file: FileItem) {
     showDetail,
     showEdit,
     showShare,
-    showVideoPreview,
-    showAudioPreview,
-    showTextReader,
     isResuming,
 
     inputRef,
@@ -193,9 +192,6 @@ export function useFileCardActions(file: FileItem) {
     setShowDetail,
     setShowEdit,
     setShowShare,
-    setShowVideoPreview,
-    setShowAudioPreview,
-    setShowTextReader,
     handleSelect,
     handleDelete,
     handleCopyLink,
