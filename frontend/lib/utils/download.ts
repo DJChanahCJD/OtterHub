@@ -17,7 +17,7 @@ export async function downloadMusicTrack(track: MusicTrack) {
     // The app.ts mounts proxy at /proxy.
     const baseUrl = API_URL || '';
     const filename = `${track.name} - ${track.artist.join(',')}.mp3`;
-    const proxyUrl = `${baseUrl}/proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    const proxyUrl = `${baseUrl}/proxy/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
     
     // Trigger download
     const a = document.createElement('a');
