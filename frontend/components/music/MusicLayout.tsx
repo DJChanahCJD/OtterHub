@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import { 
   ResizablePanelGroup, 
   ResizablePanel, 
@@ -20,11 +20,13 @@ interface MusicLayoutProps {
 }
 
 export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* Mobile Header (Only visible on small screens) */}
       <div className="md:hidden flex items-center p-4 border-b h-12">
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
@@ -34,7 +36,11 @@ export function MusicLayout({ sidebar, children, player }: MusicLayoutProps) {
             <div className="sr-only">
               <SheetTitle>Navigation Menu</SheetTitle>
             </div>
-            {sidebar}
+            {React.isValidElement(sidebar) 
+              ? React.cloneElement(sidebar as React.ReactElement<any>, { 
+                  onItemClick: () => setOpen(false) 
+                }) 
+              : sidebar}
           </SheetContent>
         </Sheet>
         <span className="ml-2 font-semibold">Otter Music</span>

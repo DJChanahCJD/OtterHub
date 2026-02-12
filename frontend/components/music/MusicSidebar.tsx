@@ -33,6 +33,7 @@ interface MusicSidebarProps {
     view: "search" | "favorites" | "playlist" | "queue" | "netease",
     playlistId?: string,
   ) => void;
+  onItemClick?: () => void;
   className?: string;
 }
 
@@ -40,6 +41,7 @@ export const MusicSidebar = memo(function MusicSidebar({
   currentView,
   currentPlaylistId,
   onViewChange,
+  onItemClick,
   className,
 }: MusicSidebarProps) {
   const { playlists, createPlaylist, queue, currentIndex, clearQueue } = useMusicStore(
@@ -109,7 +111,10 @@ export const MusicSidebar = memo(function MusicSidebar({
         active && "bg-primary/80",
       )}
       title={label}
-      onClick={onClick}
+      onClick={() => {
+        onClick();
+        onItemClick?.();
+      }}
     >
       <Icon className="h-4 w-4 shrink-0" />
       <span className="truncate flex-1 text-left">{label}</span>
