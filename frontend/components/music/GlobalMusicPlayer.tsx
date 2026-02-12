@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useMusicStore } from "@/stores/music-store";
 import { musicApi } from "@/lib/music-api";
 import { retry } from "@/lib/utils";
@@ -25,9 +25,7 @@ export function GlobalMusicPlayer() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentTrack = queue[currentIndex];
-  
-  // Ref to track if we should auto-play after load
-  const shouldPlayRef = useRef(false);
+
   // Ref to track current request to avoid race conditions
   const requestIdRef = useRef(0);
   // Ref to throttle time updates
@@ -78,17 +76,14 @@ export function GlobalMusicPlayer() {
     const load = async () => {
       const audio = audioRef.current!;
       setIsLoading(true);
-      
-      // If we are already playing this track (e.g. mounting), don't reload unless src missing
-      // But usually this effect runs when currentIndex changes.
-      
+
       try {
         // Pause current
         audio.pause();
         
         // 1. Get URL
         const url = await retry(
-          () => musicApi.getUrl(currentTrack.id, currentTrack.source, parseInt(quality)),
+          () => musicApi.getUrl(currentTrack.id, currentTrack.source, parseInt(quality, 10)),
           2,
           600
         );
@@ -98,34 +93,24 @@ export function GlobalMusicPlayer() {
 
         // 2. Set Source
         if (audio.src !== url) {
-            audio.src = url;
-            audio.load();
-            
-            // Restore time if needed (only on initial load of the track if savedTime > 0)
-            // But usually we start from 0 unless restoring session.
-            // For now, let's start from 0 or savedTime if just mounted?
-            // Since we handle page navigation, component stays mounted. 
-            // So if currentIndex changed, we start from 0.
-            // If we just refreshed page, persistence might have saved time.
-            if (currentAudioTime > 0 && Math.abs(audio.currentTime - currentAudioTime) > 1) {
-                // Only if significant difference (avoid conflict with seek)
-                // But wait, if we switch track, currentAudioTime in store is reset to 0 by store action?
-                // Yes, store.playNext sets currentAudioTime: 0.
-                // So this only applies if we reload page.
-                audio.currentTime = currentAudioTime;
-            }
+          audio.src = url;
+          audio.load();
+
+          if (currentAudioTime > 0 && Math.abs(audio.currentTime - currentAudioTime) > 1) {
+            audio.currentTime = currentAudioTime;
+          }
         }
 
         // 3. Play if needed
         // If isPlaying was true, we continue playing.
         if (isPlaying) {
-             const playPromise = audio.play();
-             if (playPromise !== undefined) {
-                 playPromise.catch(error => {
-                     console.error("Auto-play failed:", error);
-                     setIsPlaying(false);
-                 });
-             }
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+              console.error("Auto-play failed:", error);
+              setIsPlaying(false);
+            });
+          }
         }
 
       } catch (err: any) {
@@ -252,23 +237,12 @@ export function GlobalMusicPlayer() {
          }
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
-        // Logic for previous: restart if > 3s, else go to previous.
-        // store doesn't have playPrevious yet?
-        // useAudioPlayer had it. Store has currentIndex.
-        // We can implement simple logic here or add to store.
-        // Let's just implement simple prev logic.
         const audio = audioRef.current;
         if (audio && audio.currentTime > 3) {
             audio.currentTime = 0;
             setAudioCurrentTime(0);
         } else {
-             // Go to previous index
-             // Store handles this? No.
-             // We need playPrevious in store or manipulate index.
-             // Let's use simple index manipulation.
              const prevIndex = currentIndex - 1;
-             // Handle loop if needed
-             // For now just set index.
              useMusicStore.getState().setCurrentIndex(prevIndex < 0 ? queue.length - 1 : prevIndex);
         }
     });
@@ -286,7 +260,7 @@ export function GlobalMusicPlayer() {
       navigator.mediaSession.setActionHandler("previoustrack", null);
       navigator.mediaSession.setActionHandler("seekto", null);
     };
-  }, [currentTrack, setIsPlaying, playNext, currentIndex, queue.length]);
+  }, [currentTrack, setIsPlaying, currentIndex, queue.length]);
 
   return (
     <audio
