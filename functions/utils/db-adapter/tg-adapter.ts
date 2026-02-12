@@ -202,26 +202,34 @@ export class TGAdapter extends BaseAdapter {
 
   async get(key: string, req?: Request): Promise<Response> {
     const { fileId, isChunk } = getFileIdFromKey(key);
-    // 检查是否为分片文件
-    if (isChunk) {
-      return await this.getMergedFile(key, req);
+    const kv = this.env[this.kvName];
+    // 优先获取 Metadata 判断文件类型
+    const { value, metadata } = await kv.getWithMetadata(key);
+
+    if (!metadata) {
+      return failResponse(`Metadata not found for key: ${key}`, 404);
     }
-    return await this.getSingleFile(key, req);
+
+    // 检查是否为分片合并文件（依据 metadata.chunkInfo）
+    if (metadata.chunkInfo && isChunk) {
+      return await this.getMergedFile(key, req, metadata, value);
+    }
+
+    return await this.getSingleFile(key, req, metadata);
   }
 
   /**
    * 获取单个文件
    */
-  private async getSingleFile(key: string, req?: Request): Promise<Response> {
+  private async getSingleFile(
+    key: string,
+    req: Request | undefined,
+    metadata: FileMetadata
+  ): Promise<Response> {
     try {
       const { fileId } = getFileIdFromKey(key);
       const ext = key.substring(key.lastIndexOf(".") + 1);
       const contentType = getContentTypeByExt(ext);
-
-      const { metadata } = await this.getFileMetadataWithValue(key);
-      if (!metadata) {
-        return failResponse(`Metadata not found for key: ${key}`, 404);
-      }
 
       const filePath = await this.getCachedTgFilePath(fileId);
       if (!filePath) {
@@ -264,153 +272,162 @@ export class TGAdapter extends BaseAdapter {
   /**
    * 合并分片文件
    */
-  private async getMergedFile(key: string, req?: Request): Promise<Response> {
+  private async getMergedFile(
+    key: string,
+    req: Request | undefined,
+    metadata: FileMetadata,
+    value: string | ReadableStream | ArrayBuffer | null
+  ): Promise<Response> {
     const ext = key.substring(key.lastIndexOf(".") + 1);
     const contentType = getContentTypeByExt(ext);
 
-    const { metadata, value } = await this.env[this.kvName].getWithMetadata(key);
-    if (!metadata) {
-      return failResponse(`Metadata not found for key: ${key}`, 404);
-    }
     if (!metadata.chunkInfo) {
       return failResponse("Invalid metadata: not a chunked file", 400);
     }
 
 
-    // 解析 chunks（从 value 中获取，而非 metadata.chunkInfo.chunks）
+    // 解析 chunks
     let chunks: Chunk[] = [];
     try {
       if (value) {
-        chunks = JSON.parse(value);
+        chunks = JSON.parse(value as string);
       }
     } catch (e) {
       console.error(`[TGAdapter] Failed to parse chunks for ${key}:`, e);
       return failResponse("Failed to parse chunks metadata", 500);
     }
 
-    // 使用通用工具函数验证分片完整性
+    // 验证分片完整性
     const validation = validateChunksForMerge(chunks, metadata.chunkInfo.total);
     if (!validation.valid) {
       console.error(`[getMergedFile] ${validation.reason}`);
       return failResponse(validation.reason || "Invalid metadata", 425);
     }
 
-    // 使用通用工具函数排序并计算总大小
+    // 排序并计算总大小
     const { sortedChunks, totalSize } = sortChunksAndCalculateSize(chunks);
 
-    // 捕获变量，避免 ReadableStream start 回调中引用丢失
+    // 解析 Range 请求
+    const rangeResult = parseRangeHeader(
+      req?.headers.get("Range") || null,
+      totalSize
+    );
+
+    // 计算实际响应的字节范围
+    const start = rangeResult ? rangeResult.start : 0;
+    const end = rangeResult ? rangeResult.end : totalSize - 1;
+
+    // 准备上下文
     const botToken = this.env.TG_BOT_TOKEN;
     const getFilePath = (fileId: string) => this.getCachedTgFilePath(fileId);
 
-    // 使用通用工具函数处理 Range 请求
-    const rangeResult = parseRangeHeader(
-      req?.headers.get("Range") || null,
-      totalSize,
-    );
-    if (rangeResult) {
-      const { start, end } = rangeResult;
-
-      // 创建 Range 流
-      const rangeStream = new ReadableStream({
-        async start(controller) {
-          try {
-            let byteOffset = 0;
-            const targetEnd = end + 1;
-
-            for (const chunk of sortedChunks) {
-              const chunkStart = byteOffset;
-              const chunkEnd = byteOffset + chunk.size;
-
-              // 跳过不在范围内的分片
-              if (chunkEnd <= start) {
-                byteOffset += chunk.size;
-                continue;
-              }
-              if (chunkStart >= targetEnd) {
-                break;
-              }
-
-              // 计算当前分片需要读取的范围
-              const readStart = Math.max(0, start - chunkStart);
-              const readEnd = Math.min(chunk.size, targetEnd - chunkStart);
-
-              const filePath = await getFilePath(chunk.file_id);
-              if (!filePath) {
-                throw new Error(`Missing chunk ${chunk.idx}`);
-              }
-
-              const url = buildTgFileUrl(botToken, filePath);
-              const needsPartial = readStart !== 0 || readEnd !== chunk.size;
-              const res = needsPartial
-                ? await fetch(url, {
-                  headers: { Range: `bytes=${readStart}-${readEnd - 1}` },
-                })
-                : await fetch(url);
-
-              if (!res.ok || !res.body) {
-                throw new Error(`Failed to fetch chunk ${chunk.idx}`);
-              }
-
-              if (needsPartial && res.status !== 206) {
-                const arrayBuffer = await res.arrayBuffer();
-                const slice = arrayBuffer.slice(readStart, readEnd);
-                controller.enqueue(new Uint8Array(slice));
-              } else {
-                const reader = res.body.getReader();
-                while (true) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-                  controller.enqueue(value);
-                }
-              }
-
-              byteOffset += chunk.size;
-            }
-
-            controller.close();
-          } catch (err) {
-            controller.error(err);
-          }
-        },
-      });
-
-      return new Response(rangeStream, {
-        status: 206,
-        headers: {
-          "Content-Type": contentType,
-          "Content-Range": `bytes ${start}-${end}/${totalSize}`,
-          "Content-Length": String(end - start + 1),
-          "Content-Disposition": encodeContentDisposition(metadata.fileName),
-          "Cache-Control": "public, max-age=3600",
-          "Accept-Ranges": "bytes",
-        },
-      });
-    }
-
-    // 使用 stream 合并分片，避免内存占用过大
+    // 创建连续流
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for (const chunk of sortedChunks) {
-            const filePath = await getFilePath(chunk.file_id);
-            if (!filePath) {
-              throw new Error(`Missing chunk ${chunk.idx}`);
+          let currentOffset = 0;
+          let fetchPromise: Promise<Response> | null = null;
+          let nextChunkIdx = -1;
+
+          // 找到起始分片索引
+          let startChunkIdx = 0;
+          for (let i = 0; i < sortedChunks.length; i++) {
+            const chunk = sortedChunks[i];
+            const chunkEnd = currentOffset + chunk.size;
+            if (chunkEnd > start) {
+              startChunkIdx = i;
+              break;
+            }
+            currentOffset += chunk.size;
+          }
+
+          // 预读取第一个分片
+          if (startChunkIdx < sortedChunks.length) {
+            nextChunkIdx = startChunkIdx;
+          }
+
+          // 循环处理分片
+          for (let i = startChunkIdx; i < sortedChunks.length; i++) {
+            const chunk = sortedChunks[i];
+            const chunkStart = currentOffset;
+            const chunkEnd = currentOffset + chunk.size;
+
+            // 如果当前分片已经超出请求范围，停止
+            if (chunkStart > end) break;
+
+            // 触发当前分片的请求（如果还没触发）
+            // 或者如果已经有预读取的 promise，使用它
+            let response: Response;
+            
+            // 预读取逻辑：始终保持 fetchPromise 是 "下一个要处理的请求"
+            // 当循环开始时，fetchPromise 应该是当前分片的请求（如果是第一次）或者上一轮预读取的
+            
+            // 修正逻辑：
+            // 我们需要处理当前分片 chunk[i]。
+            // 如果 fetchPromise 存在且对应当前分片（实际上我们在循环尾部预读 i+1），则 await 它。
+            // 但第一次进入循环时，fetchPromise 是 null。
+            
+            // 让我们使用更清晰的预读取模型：
+            // 在处理 chunk[i] 之前，确保 chunk[i] 正在请求中。
+            // 在处理 chunk[i] 的过程中，启动 chunk[i+1] 的请求。
+
+            const fetchChunk = async (c: Chunk) => {
+               const filePath = await getFilePath(c.file_id);
+               if (!filePath) throw new Error(`Missing chunk ${c.idx}`);
+               const url = buildTgFileUrl(botToken, filePath);
+               
+               // 计算在该分片内的请求范围
+               // 分片范围: [chunkStart, chunkEnd)
+               // 请求范围: [start, end + 1)
+               // 交集: [max(chunkStart, start), min(chunkEnd, end + 1))
+               
+               const reqStart = Math.max(chunkStart, start);
+               const reqEnd = Math.min(chunkEnd, end + 1);
+               
+               // 转换为相对于分片的 Range
+               const relativeStart = reqStart - chunkStart;
+               const relativeEnd = reqEnd - chunkStart;
+               
+               // 如果请求的是整个分片，且分片很大，TG 可能支持 Range
+               // 这里我们总是使用 Range 以减少带宽（如果只需要部分）
+               // TG API range 是 inclusive
+               const headers: HeadersInit = {
+                   "Range": `bytes=${relativeStart}-${relativeEnd - 1}`
+               };
+               
+               return fetch(url, { headers });
+            };
+
+            if (!fetchPromise) {
+                fetchPromise = fetchChunk(chunk);
+            }
+            
+            response = await fetchPromise;
+            fetchPromise = null; // 消费掉
+
+            // 立即启动下一个分片的预读取
+            if (i + 1 < sortedChunks.length) {
+                const nextChunk = sortedChunks[i + 1];
+                const nextChunkStart = chunkEnd;
+                // 仅当下一个分片在请求范围内时才预读
+                if (nextChunkStart <= end) {
+                    fetchPromise = fetchChunk(nextChunk);
+                }
             }
 
-            const url = buildTgFileUrl(botToken, filePath);
-            const res = await fetch(url);
-
-            if (!res.ok || !res.body) {
+            if (!response.ok || !response.body) {
               throw new Error(`Failed to fetch chunk ${chunk.idx}`);
             }
 
-            // 直接 pipe 到 controller，不落内存
-            const reader = res.body.getReader();
+            // 流式传输当前分片数据
+            const reader = response.body.getReader();
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
               controller.enqueue(value);
             }
+
+            currentOffset += chunk.size;
           }
 
           controller.close();
@@ -421,13 +438,14 @@ export class TGAdapter extends BaseAdapter {
     });
 
     return new Response(stream, {
-      status: 200,
+      status: 206, // 始终返回 206 Partial Content
       headers: {
         "Content-Type": contentType,
+        "Content-Range": `bytes ${start}-${end}/${totalSize}`,
+        "Content-Length": String(end - start + 1),
         "Content-Disposition": encodeContentDisposition(metadata.fileName),
         "Cache-Control": "public, max-age=3600",
         "Accept-Ranges": "bytes",
-        "Content-Length": String(totalSize),
       },
     });
   }
