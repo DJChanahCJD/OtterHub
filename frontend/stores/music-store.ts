@@ -181,7 +181,7 @@ export const useMusicStore = create<MusicState>()(
 
       addToFavorites: (track) => set((state) => {
         if (state.favorites.some(t => t.id === track.id)) return state;
-        return { favorites: [...state.favorites, track] };
+        return { favorites: [track, ...state.favorites] };
       }),
       removeFromFavorites: (trackId) => set((state) => ({
         favorites: state.favorites.filter(t => t.id !== trackId)
@@ -191,13 +191,13 @@ export const useMusicStore = create<MusicState>()(
       createPlaylist: (name) => {
         const id = uuidv4();
         set((state) => ({
-        playlists: [
-          ...state.playlists,
-          { id, name, tracks: [], createdAt: Date.now() }
-        ]
-      }));
-      return id;
-    },
+          playlists: [
+            { id, name, tracks: [], createdAt: Date.now() },
+            ...state.playlists
+          ]
+        }));
+        return id;
+      },
       deletePlaylist: (id) => set((state) => ({
         playlists: state.playlists.filter(p => p.id !== id)
       })),
@@ -211,7 +211,7 @@ export const useMusicStore = create<MusicState>()(
       addToPlaylist: (pid, track) => set((state) => ({
         playlists: state.playlists.map(p =>
           p.id === pid
-            ? { ...p, tracks: p.tracks.some(t => t.id === track.id) ? p.tracks : [...p.tracks, track] }
+            ? { ...p, tracks: p.tracks.some(t => t.id === track.id) ? p.tracks : [track, ...p.tracks] }
             : p
         )
       })),
