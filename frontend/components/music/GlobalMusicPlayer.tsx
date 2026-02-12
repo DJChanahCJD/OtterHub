@@ -31,6 +31,30 @@ export function GlobalMusicPlayer() {
   // Ref to throttle time updates
   const lastSaveTimeRef = useRef(0);
 
+  const setMediaSessionPlaybackState = (state: "none" | "paused" | "playing") => {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = state;
+    } catch {}
+  };
+
+  const setMediaSessionPositionState = () => {
+    if (!("mediaSession" in navigator)) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const mediaSession = navigator.mediaSession as any;
+    if (typeof mediaSession?.setPositionState !== "function") return;
+
+    const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+    const position = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+    const playbackRate = Number.isFinite(audio.playbackRate) ? audio.playbackRate : 1;
+
+    try {
+      mediaSession.setPositionState({ duration, position, playbackRate });
+    } catch {}
+  };
+
   // Sync volume
   useEffect(() => {
     if (audioRef.current) {
@@ -61,6 +85,7 @@ export function GlobalMusicPlayer() {
     // Check if valid time
     if (Number.isFinite(currentAudioTime)) {
        audio.currentTime = currentAudioTime;
+       setMediaSessionPositionState();
     }
   }, [seekTimestamp]); 
   // Dependency on seekTimestamp ensures we only seek when explicit action happens
@@ -137,6 +162,9 @@ export function GlobalMusicPlayer() {
   // If isPlaying toggles, the other effect handles it.
   // But if we load a new track, we check isPlaying to decide auto-play.
 
+  useEffect(() => {
+    setMediaSessionPlaybackState(isPlaying ? "playing" : "paused");
+  }, [isPlaying]);
 
   // Event Handlers
   useEffect(() => {
@@ -148,12 +176,14 @@ export function GlobalMusicPlayer() {
       // Throttle store updates to every 1s
       if (now - lastSaveTimeRef.current > 1000) {
         setAudioCurrentTime(audio.currentTime);
+        setMediaSessionPositionState();
         lastSaveTimeRef.current = now;
       }
     };
 
     const onDurationChange = () => {
       setDuration(audio.duration || 0);
+      setMediaSessionPositionState();
     };
 
     const onEnded = () => {
@@ -212,7 +242,9 @@ export function GlobalMusicPlayer() {
   useEffect(() => {
     if (!("mediaSession" in navigator) || !currentTrack) return;
 
-    navigator.mediaSession.metadata = new MediaMetadata({
+    const mediaSession = navigator.mediaSession;
+
+    mediaSession.metadata = new MediaMetadata({
       title: currentTrack.name,
       artist: currentTrack.artist?.join("/") ?? "Unknown",
       album: currentTrack.album ?? "",
@@ -220,52 +252,66 @@ export function GlobalMusicPlayer() {
     });
 
     // We can fetch cover async and update metadata
+    let cancelled = false;
     if (currentTrack.pic_id) {
         musicApi.getPic(currentTrack.pic_id, currentTrack.source).then(url => {
-            if (url && navigator.mediaSession.metadata) {
-                navigator.mediaSession.metadata.artwork = [{ src: url, sizes: "300x300", type: "image/jpeg" }];
+            if (cancelled) return;
+            if (url && mediaSession.metadata) {
+                mediaSession.metadata.artwork = [{ src: url, sizes: "300x300", type: "image/jpeg" }];
             }
         });
     }
 
-    navigator.mediaSession.setActionHandler("play", () => setIsPlaying(true));
-    navigator.mediaSession.setActionHandler("pause", () => setIsPlaying(false));
-    navigator.mediaSession.setActionHandler("nexttrack", () => {
+    const safeSetActionHandler = (
+      action: MediaSessionAction,
+      handler: MediaSessionActionHandler | null
+    ) => {
+      try {
+        mediaSession.setActionHandler(action, handler);
+      } catch {}
+    };
+
+    safeSetActionHandler("play", () => setIsPlaying(true));
+    safeSetActionHandler("pause", () => setIsPlaying(false));
+    safeSetActionHandler("nexttrack", () => {
          if (queue.length > 0) {
             const nextIndex = (currentIndex + 1) % queue.length;
             useMusicStore.getState().setCurrentIndex(nextIndex);
          }
     });
-    navigator.mediaSession.setActionHandler("previoustrack", () => {
+    safeSetActionHandler("previoustrack", () => {
         const audio = audioRef.current;
         if (audio && audio.currentTime > 3) {
             audio.currentTime = 0;
             setAudioCurrentTime(0);
+            setMediaSessionPositionState();
         } else {
              const prevIndex = currentIndex - 1;
              useMusicStore.getState().setCurrentIndex(prevIndex < 0 ? queue.length - 1 : prevIndex);
         }
     });
-    navigator.mediaSession.setActionHandler("seekto", (e) => {
+    safeSetActionHandler("seekto", (e) => {
         if (e.seekTime != null && audioRef.current) {
             audioRef.current.currentTime = e.seekTime;
             setAudioCurrentTime(e.seekTime);
+            setMediaSessionPositionState();
         }
     });
 
     return () => {
-      navigator.mediaSession.setActionHandler("play", null);
-      navigator.mediaSession.setActionHandler("pause", null);
-      navigator.mediaSession.setActionHandler("nexttrack", null);
-      navigator.mediaSession.setActionHandler("previoustrack", null);
-      navigator.mediaSession.setActionHandler("seekto", null);
+      cancelled = true;
+      safeSetActionHandler("play", null);
+      safeSetActionHandler("pause", null);
+      safeSetActionHandler("nexttrack", null);
+      safeSetActionHandler("previoustrack", null);
+      safeSetActionHandler("seekto", null);
     };
-  }, [currentTrack, setIsPlaying, currentIndex, queue.length]);
+  }, [currentTrack, setIsPlaying, currentIndex, queue.length, setAudioCurrentTime]);
 
   return (
     <audio
       ref={audioRef}
-      className="hidden"
+      className="sr-only"
       preload="auto"
       playsInline // Important for mobile
     />

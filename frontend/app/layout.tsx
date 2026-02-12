@@ -50,7 +50,7 @@ export default function RootLayout({
           <Toaster
             position="top-center"
             richColors
-            expand={true}
+            expand={false}
             visibleToasts={5}
             gap={12}
             pauseWhenPageIsHidden
