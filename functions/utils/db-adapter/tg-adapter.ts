@@ -31,14 +31,13 @@ export class TGAdapter extends BaseAdapter {
     super(env, kvName);
   }
 
-  // TODO: 将 tgFilePath 放到file.metadata
   private async getCachedTgFilePath(fileId: string): Promise<string | null> {
     const kv = this.env[this.kvName];
     const cacheKey = `tgpath:${fileId}`;
 
     try {
-      const cached = await kv.get(cacheKey);
-      if (cached) return cached;
+      const { metadata } = await kv.getWithMetadata(cacheKey);
+      if (metadata?.tgFilePath) return metadata.tgFilePath;
     } catch {
     }
 
@@ -46,7 +45,12 @@ export class TGAdapter extends BaseAdapter {
     if (!filePath) return null;
 
     try {
-      await kv.put(cacheKey, filePath, { expirationTtl: 60 * 60 * 24 * 30 });
+      await kv.put(cacheKey, '', {
+        expirationTtl: 60 * 60 * 24 * 7,
+        metadata: {
+          tgFilePath: filePath,
+        }
+      });
     } catch {
     }
 
@@ -170,8 +174,7 @@ export class TGAdapter extends BaseAdapter {
 
       if (!result.ok) {
         throw new Error(
-          `Chunk ${chunkIndex} upload failed: ${
-            result.description || "Unknown error"
+          `Chunk ${chunkIndex} upload failed: ${result.description || "Unknown error"
           }`,
         );
       }
@@ -340,8 +343,8 @@ export class TGAdapter extends BaseAdapter {
               const needsPartial = readStart !== 0 || readEnd !== chunk.size;
               const res = needsPartial
                 ? await fetch(url, {
-                    headers: { Range: `bytes=${readStart}-${readEnd - 1}` },
-                  })
+                  headers: { Range: `bytes=${readStart}-${readEnd - 1}` },
+                })
                 : await fetch(url);
 
               if (!res.ok || !res.body) {
@@ -489,9 +492,8 @@ export class TGAdapter extends BaseAdapter {
 
       return {
         success: false,
-        message: `Upload to Telegram failed: ${
-          responseData.description || "Unknown error"
-        }`,
+        message: `Upload to Telegram failed: ${responseData.description || "Unknown error"
+          }`,
       };
     } catch (error: any) {
       if (retryCount > 0) {
@@ -502,9 +504,8 @@ export class TGAdapter extends BaseAdapter {
       }
       return {
         success: false,
-        message: `Network error occurred: ${
-          error.message || "Unknown network error"
-        }`,
+        message: `Network error occurred: ${error.message || "Unknown network error"
+          }`,
       };
     }
   }
