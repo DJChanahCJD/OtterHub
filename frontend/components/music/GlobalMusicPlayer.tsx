@@ -236,7 +236,7 @@ export function GlobalMusicPlayer() {
 
     // We can fetch cover async and update metadata
     if (currentTrack.pic_id) {
-        musicApi.getPic(currentTrack.pic_id, currentTrack.source, 300).then(url => {
+        musicApi.getPic(currentTrack.pic_id, currentTrack.source).then(url => {
             if (url && navigator.mediaSession.metadata) {
                 navigator.mediaSession.metadata.artwork = [{ src: url, sizes: "300x300", type: "image/jpeg" }];
             }

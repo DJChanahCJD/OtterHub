@@ -8,3 +8,4 @@ export * from "./file-rename";
 export * from "./file-tag";
 export * from "./directory-scanner";
 export * from "./music-helpers";
+export * from "./cache";

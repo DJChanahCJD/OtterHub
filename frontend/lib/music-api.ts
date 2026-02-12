@@ -3,8 +3,12 @@ import { API_URL } from './api/config';
 import { useNetEaseStore } from '@/stores/netease-store';
 import { MergedMusicTrack, SearchPageResult, SongLyric } from './types/music';
 import { mergeAndSortTracks } from './utils/music-helpers';
+import { cachedFetch } from './utils/cache';
 
 const API_BASE = `${API_URL}/music-api`;
+
+const TTL_SHORT = 60 * 60 * 1000; // 60 minutes
+const TTL_LONG = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const isAbort = (e: unknown) => (e as any)?.name === 'AbortError';
 
@@ -18,7 +22,43 @@ const normalizeTrack = (t: any, source: MusicSource): MusicTrack => ({
   artist: Array.isArray(t.artist) ? t.artist : [t.artist],
 });
 
-const picCache = new Map<string, string>();
+/* -------------------------------------------------- */
+/* URL Builder */
+
+const buildUrl = (
+  params: Record<string, string | number | undefined>,
+  source?: MusicSource
+) => {
+  const search = new URLSearchParams();
+
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) search.set(k, String(v));
+  }
+
+  if (source) {
+    search.set('source', source);
+    const cookie = cookieOf(source);
+    if (cookie) search.set('cookie', cookie);
+  }
+
+  return `${API_BASE}?${search.toString()}`;
+};
+
+/* -------------------------------------------------- */
+/* fetch wrapper */
+
+async function requestJSON<T>(url: string, signal?: AbortSignal): Promise<T | null> {
+  try {
+    const res = await fetch(url, { signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    if (!isAbort(e)) console.error('Request failed:', url, e);
+    return null;
+  }
+}
+
+/* ================================================== */
 
 export const musicApi = {
 
@@ -32,30 +72,17 @@ export const musicApi = {
     signal?: AbortSignal
   ): Promise<SearchPageResult<MusicTrack>> {
 
-    if (source === 'all') return await this.searchAll(query, page, count, signal);
+    if (source === 'all') return this.searchAll(query, page, count, signal);
 
-    try {
-      const cookie = cookieOf(source);
-      const res = await fetch(
-        `${API_BASE}?types=search&source=${source}&name=${encodeURIComponent(query)}&count=${count}&pages=${page}${cookie ? `&cookie=${encodeURIComponent(cookie)}` : ''}`,
-        { signal }
-      );
+    const json = await requestJSON<any[]>(
+      buildUrl({ types: 'search', name: query, count, pages: page }, source),
+      signal
+    );
 
-      if (!res.ok) return { items: [], hasMore: false };
+    if (!json) return { items: [], hasMore: false };
 
-      const json = await res.json();
-      if (!Array.isArray(json)) return { items: [], hasMore: false };
-
-      const items = json.map(t => normalizeTrack(t, source));
-      return {
-        items,
-        hasMore: items.length >= count  //  当返回结果 < 请求数count时，则认为没有更多了
-      };
-
-    } catch (e) {
-      if (!isAbort(e)) console.error('Search failed', e);
-      return { items: [], hasMore: false };
-    }
+    const items = json.map(t => normalizeTrack(t, source));
+    return { items, hasMore: items.length >= count };
   },
 
   /* ---------------- 全网搜索 ---------------- */
@@ -67,97 +94,75 @@ export const musicApi = {
     signal?: AbortSignal
   ): Promise<SearchPageResult<MergedMusicTrack>> {
 
-    try {
-      const sources: MusicSource[] = ['kuwo', 'joox', 'netease'];
+    const sources: MusicSource[] = ['kuwo', 'joox', 'netease'];
 
-      const results = await Promise.all(
-        sources.map(s => this.search(query, s, page, count, signal))
-      );
+    const results = await Promise.all(
+      sources.map(s => this.search(query, s, page, count, signal))
+    );
 
-      if (signal?.aborted) return { items: [], hasMore: false };
+    if (signal?.aborted) return { items: [], hasMore: false };
 
-      const flat = results.flatMap(r => r.items);
-      const merged = mergeAndSortTracks(flat);
+    const merged = mergeAndSortTracks(results.flatMap(r => r.items));
 
-      return {
-        items: merged,
-        hasMore: results.some(r => r.hasMore)
-      };
-
-    } catch (e) {
-      if (!isAbort(e)) console.error('Search All failed', e);
-      return { items: [], hasMore: false };
-    }
+    return {
+      items: merged,
+      hasMore: results.some(r => r.hasMore)
+    };
   },
 
   /* ---------------- URL ---------------- */
 
   async getUrl(id: string, source: MusicSource, br = 320): Promise<string | null> {
-    try {
-      const cookie = cookieOf(source);
-      const res = await fetch(
-        `${API_BASE}?types=url&source=${source}&id=${id}&br=${br}${cookie ? `&cookie=${encodeURIComponent(cookie)}` : ''}`
-      );
+    const key = `url:${source}:${id}:${br}`;
 
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json?.url ?? null;
+    const res = await cachedFetch<{ url: string }>(
+      key,
+      async () => {
+        const json = await requestJSON<{ url?: string }>(
+          buildUrl({ types: 'url', id, br }, source)
+        );
+        return json?.url ? { url: json.url } : null;
+      },
+      TTL_SHORT,
+    );
 
-    } catch (e) {
-      if (!isAbort(e)) console.error('Get URL failed', e);
-      return null;
-    }
+    return res?.url ?? null;
   },
 
   /* ---------------- 封面 ---------------- */
 
-  async getPic(id: string, source: MusicSource, size: 200 | 300 | 500 = 300) {
-    const cacheKey = `${source}:${id}`;
-    if (picCache.has(cacheKey)) {
-      return picCache.get(cacheKey)!;
-    }
+  async getPic(id: string, source: MusicSource, size: number = 300): Promise<string | null> {
+    const key = `pic:${source}:${id}`;
 
-    try {
-      const cookie = cookieOf(source);
-      const res = await fetch(
-        `${API_BASE}?types=pic&source=${source}&id=${encodeURIComponent(id)}&size=${size}${cookie ? `&cookie=${encodeURIComponent(cookie)}` : ''}`
-      );
+    const res = await cachedFetch<{ url: string }>(
+      key,
+      async () => {
+        const json = await requestJSON<{ url?: string }>(
+          buildUrl({ types: 'pic', id, size }, source)
+        );
+        return json?.url ? { url: json.url } : null;
+      },
+      TTL_LONG,
+    );
 
-      if (!res.ok) return null;
-      const json = await res.json();
-      const url = json?.url ?? null;
-      
-      if (url) {
-        picCache.set(cacheKey, url);
-      }
-      return url;
-
-    } catch (e) {
-      if (!isAbort(e)) console.error('Get Pic failed', e);
-      return null;
-    }
+    return res?.url ?? null;
   },
 
   /* ---------------- 歌词 ---------------- */
 
   async getLyric(id: string, source: MusicSource): Promise<SongLyric | null> {
-    try {
-      const cookie = cookieOf(source);
-      const res = await fetch(
-        `${API_BASE}?types=lyric&source=${source}&id=${id}${cookie ? `&cookie=${encodeURIComponent(cookie)}` : ''}`
-      );
+    const key = `lyric:${source}:${id}`;
 
-      if (!res.ok) return null;
-      const json = await res.json();
-
-      return {
-        lyric: json?.lyric ?? '',
-        tlyric: json?.tlyric ?? ''
-      };
-
-    } catch (e) {
-      if (!isAbort(e)) console.error('Get Lyric failed', e);
-      return null;
-    }
+    return cachedFetch<SongLyric>(
+      key,
+      async () => {
+        const json = await requestJSON<any>(
+          buildUrl({ types: 'lyric', id }, source)
+        );
+        if (!json) return null;
+        return { lyric: json.lyric ?? '', tlyric: json.tlyric ?? '' };
+      },
+      TTL_LONG,
+    );
   }
 };

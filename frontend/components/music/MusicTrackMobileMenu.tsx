@@ -57,7 +57,7 @@ export function MusicTrackMobileMenu({
     const fetchCover = async () => {
       if (!track.pic_id) return;
       try {
-        const url = await musicApi.getPic(track.pic_id, track.source, 200);
+        const url = await musicApi.getPic(track.pic_id, track.source);
         if (active) setCoverUrl(url);
       } catch (e) {
         console.error("Failed to fetch cover in MusicTrackMobileMenu:", e);
