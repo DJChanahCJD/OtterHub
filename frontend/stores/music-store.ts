@@ -156,6 +156,9 @@ interface MusicState {
   /** Add a single track to the end of the queue */
   addToQueue: (track: MusicTrack) => void;
 
+  /** Insert a track next to current and switch to it */
+  playNext: (track: MusicTrack) => void;
+
   /** Remove a track from the current queue */
   removeFromQueue: (trackId: string) => void;
 
@@ -323,6 +326,57 @@ export const useMusicStore = create<MusicState>()(
         return { 
           queue: newQueue,
           originalQueue: state.isShuffle ? newOriginalQueue : state.originalQueue
+        };
+      }),
+
+      playNext: (track) => set((state) => {
+        // 如果队列为空，直接播放
+        if (state.queue.length === 0) {
+          return {
+            queue: [track],
+            originalQueue: [track],
+            currentIndex: 0,
+            currentAudioTime: 0,
+          };
+        }
+
+        const newQueue = [...state.queue];
+        const existingIndex = newQueue.findIndex((t) => t.id === track.id);
+        
+        // 如果这首歌已经在当前播放，只需重置时间
+        if (existingIndex === state.currentIndex) {
+          return { currentAudioTime: 0 };
+        }
+
+        let targetIndex = state.currentIndex + 1;
+
+        if (existingIndex !== -1) {
+          // 移除已存在的
+          newQueue.splice(existingIndex, 1);
+          // 如果移除的位置在当前位置之前，targetIndex 需要减 1
+          if (existingIndex < state.currentIndex) {
+            targetIndex--;
+          }
+        }
+
+        // 插入到 targetIndex
+        newQueue.splice(targetIndex, 0, track);
+
+        // 处理 originalQueue (随机模式下同步更新)
+        let newOriginalQueue = state.originalQueue;
+        if (state.isShuffle) {
+          const oQueue = [...(state.originalQueue || [])];
+          if (!oQueue.some(t => t.id === track.id)) {
+            oQueue.push(track);
+          }
+          newOriginalQueue = oQueue;
+        }
+
+        return {
+          queue: newQueue,
+          currentIndex: targetIndex,
+          currentAudioTime: 0,
+          originalQueue: newOriginalQueue,
         };
       }),
 

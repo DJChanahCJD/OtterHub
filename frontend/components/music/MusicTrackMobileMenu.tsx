@@ -28,6 +28,7 @@ interface MusicTrackMobileMenuProps {
   hideAddToPlaylist?: boolean;
   customActions?: ReactNode;
   showThemeToggle?: boolean;
+  triggerClassName?: string;
 }
 
 export function MusicTrackMobileMenu({
@@ -45,6 +46,7 @@ export function MusicTrackMobileMenu({
   hideAddToPlaylist,
   customActions,
   showThemeToggle,
+  triggerClassName,
 }: MusicTrackMobileMenuProps) {
   const { theme, setTheme } = useTheme();
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function MusicTrackMobileMenu({
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8"
+          className={cn("h-8 w-8", triggerClassName)}
           onClick={(e) => {
             e.stopPropagation();
           }}

@@ -3,3 +3,4 @@
 export * from "./wallpaper";
 export * from "./const";
 export * from "./file";
+export * from "./music";

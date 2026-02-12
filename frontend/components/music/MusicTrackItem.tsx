@@ -1,4 +1,5 @@
 import { MusicTrack } from "@shared/types";
+import { MergedMusicTrack, sourceBadgeStyles, sourceLabels } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Heart, Plus, ListPlus, ListMusic, Download, Trash2 } from "lucide-react";
@@ -8,32 +9,14 @@ import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { MusicTrackMobileMenu } from "./MusicTrackMobileMenu";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { musicApi } from "@/lib/music-api";
-import { MusicCover } from "./MusicCover";
-
-const sourceLabels: Record<string, string> = {
-  netease: "网易",
-  _netease: "网易",
-  kuwo: "酷我",
-  joox: "Joox",
-  bilibili: "B站",
-};
-
-const sourceBadgeStyles: Record<string, string> = {
-  netease: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
-  _netease: "bg-red-60 text-red-700 border-red-300 hover:bg-red-200",
-  kuwo: "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100",
-  joox: "bg-green-50 text-green-600 border-green-200 hover:bg-green-100",
-  bilibili: "bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100",
-  default: "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100",
-};
+import { MusicTrackVariants } from "./MusicTrackVariants";
+import { useShallow } from "zustand/react/shallow";
 
 interface MusicTrackItemProps {
-  track: MusicTrack;
+  track: MusicTrack | MergedMusicTrack;
   index: number;
   isCurrent?: boolean;
   isPlaying?: boolean;
@@ -67,38 +50,40 @@ export function MusicTrackItem({
   className,
   style,
 }: MusicTrackItemProps) {
-  const { addToFavorites, removeFromFavorites, isFavorite, addToQueue, playlists, addToPlaylist, createPlaylist } = useMusicStore();
+  const { 
+    addToFavorites, 
+    removeFromFavorites, 
+    isFavorite, 
+    addToQueue, 
+    playlists, 
+    addToPlaylist, 
+    createPlaylist,
+    playNext
+  } = useMusicStore(
+    useShallow((state) => ({
+      addToFavorites: state.addToFavorites,
+      removeFromFavorites: state.removeFromFavorites,
+      isFavorite: state.isFavorite,
+      addToQueue: state.addToQueue,
+      playlists: state.playlists,
+      addToPlaylist: state.addToPlaylist,
+      createPlaylist: state.createPlaylist,
+      playNext: state.playNext
+    }))
+  );
+  
   const [isPlaylistPopoverOpen, setIsPlaylistPopoverOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    let active = true;
-    const fetchCover = async () => {
-      if (!track.pic_id) return;
-      try {
-        const url = await musicApi.getPic(track.pic_id, track.source, 200);
-        if (active) setCoverUrl(url);
-      } catch (e) {
-        console.error("Failed to fetch cover in MusicTrackItem:", e);
-      }
-    };
-    fetchCover();
-    return () => {
-      active = false;
-    };
-  }, [track.pic_id, track.source]);
+  const variants = (track as MergedMusicTrack).variants || [];
 
   return (
     <div
       style={style}
       onClick={showCheckbox ? onSelect : onPlay}
       className={cn(
-        "group grid gap-2 items-center px-3 md:px-4 py-2 rounded-md cursor-pointer transition-colors text-sm",
-        "grid-cols-[3rem_2.5rem_1fr_auto]",
-        "md:grid-cols-[3rem_3rem_1.5fr_1fr_auto]",
+        "group grid gap-4 items-center px-4 py-2.5 rounded-md cursor-pointer transition-all text-sm",
+        "grid-cols-[3rem_1fr_auto]",
         isSelected && showCheckbox
           ? "bg-primary/10" 
           : "hover:bg-muted/50",
@@ -148,18 +133,8 @@ export function MusicTrackItem({
           )}
       </div>
 
-      {/* Column 2: Album Cover */}
-      <div className="flex justify-center items-center">
-        <MusicCover
-          src={coverUrl}
-          alt={track.name}
-          className="h-8 w-8 rounded-md"
-          iconClassName="h-4 w-4"
-        />
-      </div>
-
-      {/* Column 3: Title & Artist */}
-      <div className="min-w-0">
+      {/* Column 2: Title & Artist & Album */}
+      <div className="min-w-0 flex flex-col gap-0.5">
         <div className={cn("font-medium flex items-center gap-1.5", isCurrent && "text-primary")}>
           <span className="truncate" title={track.name}>{track.name}</span>
           <Badge 
@@ -171,181 +146,176 @@ export function MusicTrackItem({
           >
             {sourceLabels[track.source] || track.source}
           </Badge>
+          
+          <MusicTrackVariants variants={variants} />
         </div>
-        <div className="text-xs text-muted-foreground truncate">
+        <div className="text-xs text-muted-foreground truncate opacity-70">
           {track.artist.join(" / ")}
-          {isMobile && ` - ${track.album}`}
+          {track.album && ` • ${track.album}`}
         </div>
       </div>
 
-      {/* Column 4: Album (desktop only) */}
-      <div className="hidden md:block min-w-0 text-muted-foreground truncate" title={track.album}>
-        {track.album}
-      </div>
+      {/* Column 3: Actions */}
+      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <>
+              {/* 常用功能按钮 - 始终显示 */}
+              {!hideLike && (
+              <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      if (isFavorite(track.id)) {
+                        removeFromFavorites(track.id);
+                        toast.success("已取消喜欢");
+                      } else {
+                        addToFavorites(track);
+                        toast.success("已喜欢");
+                      }
+                  }}
+                  title={isFavorite(track.id) ? "取消喜欢" : "喜欢"}
+                  >
+                  <Heart 
+                    className={cn(
+                      "h-4 w-4",
+                      isFavorite(track.id) && "fill-primary text-primary"
+                    )} 
+                  />
+              </Button>
+              )}
 
-      {/* Column 5: Actions */}
-      <div className="flex items-center justify-end gap-1">
-         {!showCheckbox && (
-            <>
-                {/* 常用功能按钮 - 始终显示 */}
-                {!hideLike && (
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (isFavorite(track.id)) {
-                          removeFromFavorites(track.id);
-                          toast.success("已取消喜欢");
-                        } else {
-                          addToFavorites(track);
-                          toast.success("已喜欢");
-                        }
-                    }}
-                    title={isFavorite(track.id) ? "取消喜欢" : "喜欢"}
-                    >
-                    <Heart 
-                      className={cn(
-                        "h-4 w-4",
-                        isFavorite(track.id) && "fill-primary text-primary"
-                      )} 
-                    />
-                </Button>
-                )}
+              <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      downloadMusicTrack(track);
+                  }}
+                  title="下载"
+                  >
+                  <Download className="h-4 w-4" />
+              </Button>
 
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:bg-transparent hover:text-primary"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        downloadMusicTrack(track);
-                    }}
-                    title="下载"
-                    >
-                    <Download className="h-4 w-4" />
-                </Button>
-
-                {/* 桌面端：显示所有按钮 */}
-                <div className="hidden md:flex items-center gap-1">
-                    {!hideAddToQueue && (
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            addToQueue(track);
-                            toast.success("已加入播放列表");
-                        }}
-                        title="添加到播放列表"
-                        >
-                        <Plus className="h-4 w-4" />
-                    </Button>
-                    )}
-
-                    {!hideAddToPlaylist && (
-                    <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
-                        <PopoverTrigger asChild>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            title="添加到歌单"
-                            >
-                            <ListPlus className="h-4 w-4" />
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent side="left" align="center" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
-                        {playlists.map(p => (
-                            <div 
-                                key={p.id} 
-                                className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
-                                onClick={() => {
-                                addToPlaylist(p.id, track);
-                                toast.success(`已添加到歌单「${p.name}」`);
-                                setIsPlaylistPopoverOpen(false);
-                                }}
-                            >
-                                <ListMusic className="mr-2 h-4 w-4 opacity-50" />
-                                <span className="truncate">{p.name}</span>
-                            </div>
-                        ))}
-                        <div className="border-t my-1" />
-                        <div 
-                            className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
-                            onClick={() => {
-                                const name = window.prompt("请输入新歌单名称");
-                                if (name) {
-                                createPlaylist(name);
-                                toast.success("已创建歌单");
-                                }
-                            }}
-                        >
-                            <Plus className="mr-2 h-4 w-4" /> 新建歌单
-                        </div>
-                        </PopoverContent>
-                    </Popover>
-                    )}
-
-                    {onRemove && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
+              {/* 桌面端：显示所有按钮 */}
+              <div className="hidden md:flex items-center gap-1">
+                  {!hideAddToQueue && (
+                  <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={(e) => {
                           e.stopPropagation();
-                          if (window.confirm(`确定移除歌曲「${track.name}」吗？`)) {
-                            onRemove();
-                          }
-                        }}
-                        title="移除"
+                          addToQueue(track);
+                          toast.success("已加入播放列表");
+                      }}
+                      title="添加到播放列表"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                </div>
+                      <Plus className="h-4 w-4" />
+                  </Button>
+                  )}
 
-                {/* 移动端：折叠到 MoreVertical 按钮 */}
-                <div className="md:hidden flex items-center">
-                    <MusicTrackMobileMenu
-                        track={track}
-                        open={isMobileMenuOpen}
-                        onOpenChange={setIsMobileMenuOpen}
-                        onAddToQueue={() => {
-                            addToQueue(track);
-                            toast.success("已加入播放列表");
-                        }}
-                        onAddToPlaylistTrigger={() => {
-                            setIsAddToPlaylistOpen(true);
-                        }}
-                        onDownload={() => downloadMusicTrack(track)}
-                        onToggleLike={() => {
-                            if (isFavorite(track.id)) {
-                                removeFromFavorites(track.id);
-                                toast.success("已取消喜欢");
-                            } else {
-                                addToFavorites(track);
-                                toast.success("已喜欢");
-                            }
-                        }}
-                        isFavorite={isFavorite(track.id)}
-                        onRemove={onRemove}
-                        hideLike={hideLike}
-                        hideAddToQueue={hideAddToQueue}
-                        hideAddToPlaylist={hideAddToPlaylist}
-                    />
-                    
-                    <AddToPlaylistDialog 
-                        open={isAddToPlaylistOpen} 
-                        onOpenChange={setIsAddToPlaylistOpen} 
-                        track={track} 
-                    />
-                </div>
-            </>
-         )}
+                  {!hideAddToPlaylist && (
+                  <Popover open={isPlaylistPopoverOpen} onOpenChange={setIsPlaylistPopoverOpen}>
+                      <PopoverTrigger asChild>
+                      <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          title="添加到歌单"
+                          >
+                          <ListPlus className="h-4 w-4" />
+                      </Button>
+                      </PopoverTrigger>
+                      <PopoverContent side="left" align="center" className="w-48 p-1" onClick={(e) => e.stopPropagation()}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">添加到歌单</div>
+                      {playlists.map(p => (
+                          <div 
+                              key={p.id} 
+                              className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer"
+                              onClick={() => {
+                              addToPlaylist(p.id, track);
+                              toast.success(`已添加到歌单「${p.name}」`);
+                              setIsPlaylistPopoverOpen(false);
+                              }}
+                          >
+                              <ListMusic className="mr-2 h-4 w-4 opacity-50" />
+                              <span className="truncate">{p.name}</span>
+                          </div>
+                      ))}
+                      <div className="border-t my-1" />
+                      <div 
+                          className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
+                          onClick={() => {
+                              const name = window.prompt("请输入新歌单名称");
+                              if (name) {
+                              createPlaylist(name);
+                              toast.success("已创建歌单");
+                              }
+                          }}
+                      >
+                          <Plus className="mr-2 h-4 w-4" /> 新建歌单
+                      </div>
+                      </PopoverContent>
+                  </Popover>
+                  )}
+
+                  {onRemove && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`确定移除歌曲「${track.name}」吗？`)) {
+                          onRemove();
+                        }
+                      }}
+                      title="移除"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+              </div>
+
+              {/* 移动端：折叠到 MoreVertical 按钮 */}
+              <div className="md:hidden flex items-center">
+                  <MusicTrackMobileMenu
+                      track={track}
+                      open={isMobileMenuOpen}
+                      onOpenChange={setIsMobileMenuOpen}
+                      onAddToQueue={() => {
+                          addToQueue(track);
+                          toast.success("已加入播放列表");
+                      }}
+                      onAddToPlaylistTrigger={() => {
+                          setIsAddToPlaylistOpen(true);
+                      }}
+                      onDownload={() => downloadMusicTrack(track)}
+                      onToggleLike={() => {
+                          if (isFavorite(track.id)) {
+                              removeFromFavorites(track.id);
+                              toast.success("已取消喜欢");
+                          } else {
+                              addToFavorites(track);
+                              toast.success("已喜欢");
+                          }
+                      }}
+                      isFavorite={isFavorite(track.id)}
+                      onRemove={onRemove}
+                      hideLike={hideLike}
+                      hideAddToQueue={hideAddToQueue}
+                      hideAddToPlaylist={hideAddToPlaylist}
+                  />
+                  
+                  <AddToPlaylistDialog 
+                      open={isAddToPlaylistOpen} 
+                      onOpenChange={setIsAddToPlaylistOpen} 
+                      track={track} 
+                  />
+              </div>
+          </>
       </div>
     </div>
   );

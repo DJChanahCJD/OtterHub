@@ -1,16 +1,13 @@
-import { Loader2, RotateCw } from "lucide-react";
+import { Loader2, RotateCw, Music, Video, FileText, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
-import { FileContent } from "./FileContent";
-import { FileItem } from "@shared/types";
+import { FileItem, FileType } from "@shared/types";
 import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
 import { ShareDialog } from "../file/share-dialog";
-import { useGeneralSettingsStore } from "@/stores/general-store";
-
 
 interface FileCardListProps {
   file: FileItem;
@@ -21,7 +18,6 @@ export function FileCardList({ file, actions }: FileCardListProps) {
   const {
     isSelected,
     fileType,
-    blur,
     isIncompleteUpload,
     showDetail,
     showEdit,
@@ -38,34 +34,33 @@ export function FileCardList({ file, actions }: FileCardListProps) {
     handleToggleLike,
     handleResumeUpload,
   } = actions;
-  const { safeMode, imageLoadMode } = useGeneralSettingsStore();
 
   const tags = file.metadata?.tags ?? [];
+  
+  // 根据文件类型获取对应的图标
+  const getFileIcon = () => {
+    switch (fileType) {
+      case FileType.Audio: return <Music className="h-4 w-4 text-emerald-400" />;
+      case FileType.Video: return <Video className="h-4 w-4 text-purple-400" />;
+      case FileType.Image: return <ImageIcon className="h-4 w-4 text-blue-400" />;
+      default: return <FileText className="h-4 w-4 text-amber-400" />;
+    }
+  };
+
   return (
     <>
       <div
         className={cn(
-          "group flex items-center gap-3 px-3 py-2.5 rounded-md backdrop-blur-xl border transition-all cursor-pointer",
+          "group flex items-center gap-4 px-4 py-3 rounded-md backdrop-blur-xl border transition-all cursor-pointer",
           isSelected
             ? "bg-primary/20 border-primary/50"
             : "bg-glass-bg border-glass-border hover:border-primary/30 hover:bg-secondary/20",
         )}
         onClick={handleSelect}
       >
-
-        {/* File Icon/Preview */}
-        <div className="w-9 h-9 rounded bg-secondary/30 flex items-center justify-center shrink-0 relative overflow-hidden border border-glass-border">
-          <FileContent
-            fileType={fileType}
-            fileKey={file.name}
-            safeMode={safeMode}
-            canPreview={!blur}
-            tags={file.metadata?.tags ?? []}
-            fileSize={file.metadata?.fileSize ?? 0}
-            imageLoadMode={imageLoadMode}
-            thumbUrl={file.metadata?.thumbUrl || ""}
-            className="h-5 w-5"
-          />
+        {/* File Icon */}
+        <div className="flex items-center justify-center shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+          {getFileIcon()}
         </div>
 
         {/* File Info */}

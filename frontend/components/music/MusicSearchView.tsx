@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2 } from "lucide-react";
 import { MusicTrack, MusicSource } from "@shared/types";
 import { musicApi } from "@/lib/music-api";
+import { getExactKey } from "@/lib/utils";
 import { toast } from "sonner";
 import { MusicTrackList } from "./MusicTrackList";
 import { useMusicStore } from "@/stores/music-store";
@@ -16,65 +17,77 @@ interface MusicSearchViewProps {
   isPlaying?: boolean;
 }
 
-const stableSources: Record<string, string> = {
-  all: "全部",
-  netease: "网易云音乐",
-  kuwo: "酷我音乐",
+export const stableSources: Record<string, string> = {
+  all: "聚合搜索",
   joox: "Joox",
-  bilibili: "B站",
+  kuwo: "酷我音乐",
+  netease: "网易云音乐",
 };
 
 export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSearchViewProps) {
-  // Store
   const { source, setSource } = useMusicStore(
-    useShallow((state) => ({
-      source: state.searchSource,
-      setSource: state.setSearchSource,
-    }))
+    useShallow(s => ({ source: s.searchSource, setSource: s.setSearchSource }))
   );
 
-  // Search State
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
 
-  const handleSearch = async (isNew = true) => {
+  const abortRef = useRef<AbortController | null>(null);
+  const versionRef = useRef(0);
+  const seenRef = useRef(new Set<string>());
+
+  /* ---------------- 请求核心 ---------------- */
+
+  const fetchPage = async (nextPage: number, reset = false) => {
     if (!query.trim()) return;
-    
-    if (isNew) {
-      setLoading(true);
-      setPage(1);
+    if (loading) return;
+
+    const version = ++versionRef.current;
+
+    if (reset) {
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      seenRef.current.clear();
       setResults([]);
-    } else {
-      setIsLoadingMore(true);
+      setPage(0);
     }
 
+    setLoading(true);
+
     try {
-      const p = isNew ? 1 : page + 1;
-      const data = await musicApi.search(query, source, p);
-      
-      if (isNew) {
-        setResults(data);
-        setHasMore(data.length >= 20);
-      } else {
-        setResults(prev => [...prev, ...data]);
-        setHasMore(data.length >= 20);
-        setPage(p);
-      }
-    } catch (error) {
-      toast.error("搜索失败，请重试");
+      const signal = abortRef.current?.signal;
+      const res =
+        source === "all"
+          ? await musicApi.searchAll(query, nextPage, 20, signal)
+          : await musicApi.search(query, source, nextPage, 20, signal);
+
+      if (version !== versionRef.current) return; // 过期响应
+
+      const filtered = res.items.filter(t => {
+        const key = getExactKey(t);
+        if (seenRef.current.has(key)) return false;
+        seenRef.current.add(key);
+        return true;
+      });
+
+      setResults(prev => (reset ? filtered : [...prev, ...filtered]));
+      setHasMore(res.hasMore);
+      setPage(nextPage);
+
+    } catch (e) {
+      if ((e as any)?.name !== "AbortError") toast.error("搜索失败，请重试");
     } finally {
-      setLoading(false);
-      setIsLoadingMore(false);
+      if (version === versionRef.current) setLoading(false);
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Search Header */}
       <div className="p-4 border-b space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -82,40 +95,42 @@ export function MusicSearchView({ onPlay, currentTrackId, isPlaying }: MusicSear
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch(true)}
+              onKeyDown={(e) => e.key === "Enter" && fetchPage(1, true)}
               placeholder="搜索歌曲 / 歌手 / 专辑"
               className="pl-9"
             />
           </div>
+
           <Select value={source} onValueChange={(v) => setSource(v as MusicSource)}>
             <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(stableSources).map(([k, v]) => (
+              {Object.entries(stableSources).map(([k, v]) =>
                 <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
-          <Button onClick={() => handleSearch(true)} disabled={loading}>
+
+          <Button onClick={() => fetchPage(1, true)} disabled={loading}>
             {loading ? <Loader2 className="animate-spin" /> : <Search />}
           </Button>
         </div>
       </div>
 
-      {/* Results List */}
       <div className="flex-1 min-h-0">
-        <MusicTrackList 
+        <MusicTrackList
           tracks={results}
           onPlay={(track) => onPlay(track, results)}
           currentTrackId={currentTrackId}
           isPlaying={isPlaying}
-          loading={isLoadingMore || loading}
+          loading={loading}
           hasMore={hasMore}
-          onLoadMore={() => handleSearch(false)}
+          onLoadMore={() => fetchPage(page + 1)}
           emptyMessage={loading ? "搜索中..." : "输入关键词开始搜索"}
         />
       </div>
     </div>
   );
 }
+

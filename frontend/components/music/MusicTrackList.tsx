@@ -26,7 +26,8 @@ import {
 import { MusicTrackItem } from "./MusicTrackItem";
 import { downloadMusicTrack } from "@/lib/utils/download";
 import { List } from "react-window";
-import { AutoSizer, Size } from "react-virtualized-auto-sizer";
+import { AutoSizer } from "react-virtualized-auto-sizer";
+import { useShallow } from "zustand/react/shallow";
 
 interface MusicTrackListProps {
   tracks: MusicTrack[];
@@ -133,7 +134,15 @@ export function MusicTrackList({
     playlists,
     addToPlaylist,
     createPlaylist,
-  } = useMusicStore();
+  } = useMusicStore(
+    useShallow((state) => ({
+      addToQueue: state.addToQueue,
+      addToFavorites: state.addToFavorites,
+      playlists: state.playlists,
+      addToPlaylist: state.addToPlaylist,
+      createPlaylist: state.createPlaylist,
+    }))
+  );
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -239,25 +248,25 @@ export function MusicTrackList({
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
-        <div className="grid items-center gap-2 px-3 md:px-4 text-sm text-muted-foreground grid-cols-[3rem_2.5rem_1fr_auto] md:grid-cols-[3rem_3rem_1.5fr_1fr_auto]">
+        <div className="grid items-center gap-4 px-4 text-sm text-muted-foreground grid-cols-[3rem_1fr_auto]">
           {!isSelectionMode ? (
             <>
               <div className="text-center">#</div>
-              <div /> {/* Cover Column Placeholder */}
               <div>标题</div>
-              <div className="hidden md:block">专辑</div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hover:bg-transparent hover:text-foreground"
-                onClick={() => {
-                  setIsSelectionMode(true);
-                  setSelectedIds(new Set());
-                }}
-                title="批量操作"
-              >
-                <ListChecks className="h-4 w-4" />
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-transparent hover:text-foreground"
+                  onClick={() => {
+                    setIsSelectionMode(true);
+                    setSelectedIds(new Set());
+                  }}
+                  title="批量操作"
+                >
+                  <ListChecks className="h-4 w-4" />
+                </Button>
+              </div>
             </>
           ) : (
             <>
@@ -270,8 +279,7 @@ export function MusicTrackList({
                   aria-label="Select all"
                 />
               </div>
-              <div /> {/* Cover Column Placeholder */}
-              <div className="md:col-span-2 col-span-1 flex items-center">
+              <div className="flex items-center min-w-0">
                 <span className="text-xs mr-2 text-foreground whitespace-nowrap">
                   已选 {selectedIds.size} 首
                 </span>
@@ -452,18 +460,20 @@ export function MusicTrackList({
                   </Popover>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-xs"
-                onClick={() => {
-                  setIsSelectionMode(false);
-                  setSelectedIds(new Set());
-                }}
-                title="退出批量操作"
-              >
-                <Check className="w-4 h-4" />
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setIsSelectionMode(false);
+                    setSelectedIds(new Set());
+                  }}
+                  title="退出批量操作"
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
+              </div>
             </>
           )}
         </div>
