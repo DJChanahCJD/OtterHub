@@ -18,6 +18,8 @@ const normalizeTrack = (t: any, source: MusicSource): MusicTrack => ({
   artist: Array.isArray(t.artist) ? t.artist : [t.artist],
 });
 
+const picCache = new Map<string, string>();
+
 export const musicApi = {
 
   /* ---------------- 搜索 ---------------- */
@@ -110,6 +112,11 @@ export const musicApi = {
   /* ---------------- 封面 ---------------- */
 
   async getPic(id: string, source: MusicSource, size: 200 | 300 | 500 = 300) {
+    const cacheKey = `${source}:${id}`;
+    if (picCache.has(cacheKey)) {
+      return picCache.get(cacheKey)!;
+    }
+
     try {
       const cookie = cookieOf(source);
       const res = await fetch(
@@ -118,7 +125,12 @@ export const musicApi = {
 
       if (!res.ok) return null;
       const json = await res.json();
-      return json?.url ?? null;
+      const url = json?.url ?? null;
+      
+      if (url) {
+        picCache.set(cacheKey, url);
+      }
+      return url;
 
     } catch (e) {
       if (!isAbort(e)) console.error('Get Pic failed', e);

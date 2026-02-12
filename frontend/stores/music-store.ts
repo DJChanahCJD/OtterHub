@@ -136,11 +136,20 @@ interface MusicState {
   isRepeat: boolean;
   isShuffle: boolean;
   currentAudioTime: number; // Persisted playback progress
+  isPlaying: boolean;
+  isLoading: boolean;
+  seekTimestamp: number; // Used to trigger seek
+  duration: number;
 
   setVolume: (volume: number) => void;
   toggleRepeat: () => void;
   toggleShuffle: () => void;
   setAudioCurrentTime: (time: number) => void;
+  setDuration: (duration: number) => void;
+  setIsPlaying: (isPlaying: boolean) => void;
+  togglePlay: () => void;
+  setIsLoading: (isLoading: boolean) => void;
+  seek: (time: number) => void;
 
   // --- Playback (Queue) ---
   queue: MusicTrack[];
@@ -232,6 +241,10 @@ export const useMusicStore = create<MusicState>()(
       isRepeat: false,
       isShuffle: false,
       currentAudioTime: 0,
+      isPlaying: false,
+      isLoading: false,
+      seekTimestamp: 0,
+      duration: 0,
 
       setVolume: (volume) => set({ volume }),
       toggleRepeat: () => set((state) => ({ isRepeat: !state.isRepeat })),
@@ -275,6 +288,11 @@ export const useMusicStore = create<MusicState>()(
         }
       }),
       setAudioCurrentTime: (currentTime) => set({ currentAudioTime: currentTime }),
+      setDuration: (duration) => set({ duration }),
+      setIsPlaying: (isPlaying) => set({ isPlaying }),
+      togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+      setIsLoading: (isLoading) => set({ isLoading }),
+      seek: (time) => set({ currentAudioTime: time, seekTimestamp: Date.now() }),
 
       queue: [],
       originalQueue: [],
@@ -302,6 +320,7 @@ export const useMusicStore = create<MusicState>()(
             originalQueue,
             currentIndex: 0,
             currentAudioTime: 0,
+            isPlaying: true,
           };
         }
 
@@ -310,6 +329,7 @@ export const useMusicStore = create<MusicState>()(
           originalQueue,
           currentIndex: actualIndex,
           currentAudioTime: 0,
+          isPlaying: true,
         };
       }),
 
@@ -337,6 +357,7 @@ export const useMusicStore = create<MusicState>()(
             originalQueue: [track],
             currentIndex: 0,
             currentAudioTime: 0,
+            isPlaying: true,
           };
         }
 

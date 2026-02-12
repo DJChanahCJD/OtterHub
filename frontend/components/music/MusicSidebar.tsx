@@ -108,6 +108,7 @@ export const MusicSidebar = memo(function MusicSidebar({
         "w-full justify-start gap-2 cursor-pointer group pr-1",
         active && "bg-primary/80",
       )}
+      title={label}
       onClick={onClick}
     >
       <Icon className="h-4 w-4 shrink-0" />

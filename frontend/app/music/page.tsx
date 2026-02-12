@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useMusicStore } from '@/stores/music-store';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
 import { MusicTrack } from '@shared/types';
-import { musicApi } from '@/lib/music-api';
 import { toast } from 'sonner';
 import { format } from "date-fns";
 
@@ -14,7 +12,6 @@ import { MusicSearchView } from '@/components/music/MusicSearchView';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
 import { NetEaseView } from '@/components/music/external/NetEaseView';
 import { GlobalPlayer } from '@/components/music/GlobalPlayer';
-import { retry } from '@/lib/utils';
 
 export default function MusicPage() {
 
@@ -28,86 +25,23 @@ export default function MusicPage() {
     renamePlaylist,
     deletePlaylist,
     clearQueue,
-    quality,
     currentIndex,
-    currentAudioTime: savedTime
+    isPlaying,
+    setIsPlaying,
+    togglePlay,
+    setCurrentIndex
   } = useMusicStore();
 
   const [currentView, setCurrentView] = useState<"search" | "favorites" | "playlist" | "queue" | "netease">("search");
   const [activePlaylistId, setActivePlaylistId] = useState<string>();
 
-  const { state, controls, audioRef } = useAudioPlayer(queue as any[]);
   const currentTrack = queue[currentIndex];
-
-  /* ---------------- 自动播放状态锁 ---------------- */
-  const isPlayingRef = useRef(state.isPlaying);
-  useEffect(() => { isPlayingRef.current = state.isPlaying }, [state.isPlaying]);
-
-  const pendingPlayRef = useRef(false);
-
-  /* ---------------- 防止旧请求覆盖新歌 ---------------- */
-  const requestIdRef = useRef(0);
-
-  useEffect(() => {
-    if (!currentTrack || !audioRef.current) return;
-
-    const trackSnapshot = currentTrack; // 锁定歌曲
-    const requestId = ++requestIdRef.current;
-    let cancelled = false;
-
-    const load = async () => {
-      const audio = audioRef.current!;
-      controls.setLoading(true);
-      audio.pause();
-
-      try {
-        const url = await retry(
-          () => musicApi.getUrl(trackSnapshot.id, trackSnapshot.source, parseInt(quality)),
-          2,
-          600
-        );
-
-        if (!url) throw new Error("EMPTY_URL");
-        if (cancelled || requestId !== requestIdRef.current) return;
-
-        if (audio.src !== url) {
-          audio.src = url;
-
-          if (savedTime > 0) audio.currentTime = savedTime;
-          audio.load();
-        }
-
-        const shouldAutoPlay = pendingPlayRef.current || isPlayingRef.current;
-        if (shouldAutoPlay) {
-          pendingPlayRef.current = false;
-          controls.play();
-        }
-
-      } catch (err: any) {
-        if (cancelled || requestId !== requestIdRef.current) return;
-
-        console.error("audio load failed:", err);
-
-        toast.error("该歌曲无法播放，已跳过");
-        controls.next();
-      } finally {
-        if (!cancelled && requestId === requestIdRef.current) {
-          controls.setLoading(false);
-        }
-      }
-    };
-
-    load();
-    return () => { cancelled = true };
-
-  }, [currentTrack?.id, quality]);
-
 
   /* ---------------- 播放逻辑 ---------------- */
 
   const handlePlayContext = (track: MusicTrack, list: MusicTrack[]) => {
     if (currentTrack?.id === track.id) {
-      controls.togglePlay();
+      togglePlay();
       return;
     }
 
@@ -117,17 +51,17 @@ export default function MusicPage() {
     const isSameContext = queue.length === list.length && queue[0]?.id === list[0]?.id;
 
     if (isSameContext) {
-      pendingPlayRef.current = true;
-      controls.playTrack(index);
+      setCurrentIndex(index);
+      setIsPlaying(true);
     } else {
-      pendingPlayRef.current = true;
       playContext(list, index);
+      // playContext now sets isPlaying: true
     }
   };
 
   const handlePlayInPlaylist = (track: MusicTrack | null, index?: number) => {
     if (track && index !== undefined && currentTrack?.id === track.id) {
-      controls.togglePlay();
+      togglePlay();
       return;
     }
 
@@ -137,7 +71,6 @@ export default function MusicPage() {
       ? queue
       : playlists.find(p => p.id === activePlaylistId)?.tracks || [];
 
-    pendingPlayRef.current = true;
     playContext(list, index);
   };
 
@@ -150,7 +83,7 @@ export default function MusicPage() {
         <MusicSearchView 
           onPlay={handlePlayContext} 
           currentTrackId={currentTrack?.id}
-          isPlaying={state.isPlaying}
+          isPlaying={isPlaying}
         />
       </div>
 
@@ -165,7 +98,7 @@ export default function MusicPage() {
           onPlay={handlePlayInPlaylist}
           onRemove={(t) => removeFromFavorites(t.id)}
           currentTrackId={currentTrack?.id}
-          isPlaying={state.isPlaying}
+          isPlaying={isPlaying}
         />
       )}
 
@@ -186,7 +119,7 @@ export default function MusicPage() {
             }
           }}
           currentTrackId={currentTrack?.id}
-          isPlaying={state.isPlaying}
+          isPlaying={isPlaying}
         />
       )}
 
@@ -207,7 +140,7 @@ export default function MusicPage() {
             }
           }}
           currentTrackId={currentTrack?.id}
-          isPlaying={state.isPlaying}
+          isPlaying={isPlaying}
         />
       )}
     </div>
@@ -226,15 +159,10 @@ export default function MusicPage() {
 
   return (
     <>
-      <audio ref={audioRef} className="hidden" />
       <MusicLayout
         sidebar={sidebar}
         player={
-          <GlobalPlayer 
-            state={state} 
-            controls={controls}
-            currentTrack={currentTrack}
-          />
+          <GlobalPlayer />
         }
       >
         {renderContent()}

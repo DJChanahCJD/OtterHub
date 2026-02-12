@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider"
 import "react-photo-view/dist/react-photo-view.css"
 import { APP_DESC_CN, APP_DESC_EN, APP_NAME } from "@/lib/ui-text";
 import { GlobalPreviewLayer } from "@/components/preview/GlobalPreviewLayer"
+import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 
 export const metadata: Metadata = {
   title: `${APP_NAME} - ${APP_DESC_EN}`,
@@ -45,6 +46,7 @@ export default function RootLayout({
         >
           {children}
           <GlobalPreviewLayer />
+          <GlobalMusicPlayer />
           <Toaster
             position="top-center"
             richColors

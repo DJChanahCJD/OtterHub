@@ -2,7 +2,7 @@
 
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Shuffle,
   Repeat,
@@ -14,14 +14,8 @@ import {
   ListPlus,
   Plus,
   ListVideo,
-  Heart,
-  Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import {
-  AudioPlayerState,
-  AudioPlayerControls,
-} from "@/hooks/use-audio-player";
 import { downloadMusicTrack } from "@/lib/utils/download";
 import { cn } from "@/lib/utils";
 import {
@@ -36,7 +30,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MusicTrack } from "@shared/types";
 import { useMusicStore } from "@/stores/music-store";
 import { toast } from "sonner";
 import { PlayerProgressBar } from "./PlayerProgressBar";
@@ -50,39 +43,27 @@ import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { MusicTrackMobileMenu } from "./MusicTrackMobileMenu";
 
 interface GlobalPlayerProps {
-  state: AudioPlayerState;
-  controls: AudioPlayerControls;
-  currentTrack: MusicTrack | null;
   onTogglePlaylist?: () => void;
 }
 
 export function GlobalPlayer({
-  state,
-  controls,
-  currentTrack,
   onTogglePlaylist,
 }: GlobalPlayerProps) {
   const {
     isPlaying,
-    currentTime,
+    currentAudioTime: currentTime,
     duration,
     volume,
     isRepeat,
     isShuffle,
     isLoading,
-  } = state;
-  const {
     togglePlay,
-    next,
-    previous,
+    setIsPlaying,
     seek,
-    setVolumeValue,
+    setVolume,
     toggleRepeat,
     toggleShuffle,
-    playTrack,
-  } = controls;
-
-  const {
+    
     isFavorite,
     addToFavorites,
     removeFromFavorites,
@@ -91,12 +72,28 @@ export function GlobalPlayer({
     createPlaylist,
     queue,
     currentIndex,
+    setCurrentIndex,
     clearQueue,
     quality,
     setQuality,
     reshuffle,
+    addToQueue
   } = useMusicStore(
     useShallow((state) => ({
+      isPlaying: state.isPlaying,
+      currentAudioTime: state.currentAudioTime,
+      duration: state.duration,
+      volume: state.volume,
+      isRepeat: state.isRepeat,
+      isShuffle: state.isShuffle,
+      isLoading: state.isLoading,
+      togglePlay: state.togglePlay,
+      setIsPlaying: state.setIsPlaying,
+      seek: state.seek,
+      setVolume: state.setVolume,
+      toggleRepeat: state.toggleRepeat,
+      toggleShuffle: state.toggleShuffle,
+      
       isFavorite: state.isFavorite,
       addToFavorites: state.addToFavorites,
       removeFromFavorites: state.removeFromFavorites,
@@ -105,12 +102,37 @@ export function GlobalPlayer({
       createPlaylist: state.createPlaylist,
       queue: state.queue,
       currentIndex: state.currentIndex,
+      setCurrentIndex: state.setCurrentIndex,
       clearQueue: state.clearQueue,
       quality: state.quality,
       setQuality: state.setQuality,
       reshuffle: state.reshuffle,
-    })),
+      addToQueue: state.addToQueue
+    }))
   );
+
+  const currentTrack = queue[currentIndex] || null;
+
+  // Controls Implementation
+  const next = useCallback(() => {
+    if (queue.length === 0) return;
+    setCurrentIndex((currentIndex + 1) % queue.length);
+  }, [queue.length, currentIndex, setCurrentIndex]);
+
+  const previous = useCallback(() => {
+    if (queue.length === 0) return;
+    setCurrentIndex((currentIndex - 1 + queue.length) % queue.length);
+  }, [queue.length, currentIndex, setCurrentIndex]);
+
+  const playTrack = useCallback((index: number) => {
+    setCurrentIndex(index);
+    setIsPlaying(true);
+  }, [setCurrentIndex, setIsPlaying]);
+  
+  const setVolumeValue = useCallback((val: number[]) => {
+      setVolume(val[0]);
+  }, [setVolume]);
+
 
   const handleClearQueue = () => {
     if (confirm("确定要清空播放列表吗？")) {
@@ -123,7 +145,6 @@ export function GlobalPlayer({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
-  const { addToQueue } = useMusicStore()
 
   useEffect(() => {
     if (!currentTrack) {
@@ -231,7 +252,7 @@ export function GlobalPlayer({
         <PlayerProgressBar
           currentTime={currentTime}
           duration={duration}
-          onSeek={seek}
+          onSeek={(val) => seek(val[0])}
         />
 
         {/* 2. Main Controls Area (h-24 for mobile) */}
@@ -289,10 +310,7 @@ export function GlobalPlayer({
                 currentIndex={currentIndex}
                 isPlaying={isPlaying}
                 isShuffle={isShuffle}
-                onPlay={(index) => {
-                  playTrack(index);
-                  controls.play();
-                }}
+                onPlay={playTrack}
                 onClear={handleClearQueue}
                 onReshuffle={reshuffle}
                 trigger={
