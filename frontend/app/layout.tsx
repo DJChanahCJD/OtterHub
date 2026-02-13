@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -7,6 +7,13 @@ import "react-photo-view/dist/react-photo-view.css"
 import { APP_DESC_CN, APP_DESC_EN, APP_NAME } from "@/lib/ui-text";
 import { GlobalPreviewLayer } from "@/components/preview/GlobalPreviewLayer"
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
   title: `${APP_NAME} - ${APP_DESC_EN}`,
@@ -51,7 +58,7 @@ export default function RootLayout({
             position="top-center"
             richColors
             expand={true}
-            visibleToasts={5}
+            visibleToasts={3}
             gap={12}
             pauseWhenPageIsHidden
             toastOptions={{
