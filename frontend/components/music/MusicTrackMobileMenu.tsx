@@ -8,10 +8,10 @@ import {
 import { cn } from "@/lib/utils";
 import { MusicTrack } from "@shared/types";
 import { Download, Heart, ListPlus, MoreVertical, Plus, Trash2, Moon, Sun } from "lucide-react";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { MusicCover } from "./MusicCover";
-import { musicApi } from "@/lib/music-api";
+import { useMusicCover } from "@/hooks/useMusicCover";
 
 interface MusicTrackMobileMenuProps {
   track: MusicTrack;
@@ -49,25 +49,7 @@ export function MusicTrackMobileMenu({
   triggerClassName,
 }: MusicTrackMobileMenuProps) {
   const { theme, setTheme } = useTheme();
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    let active = true;
-    const fetchCover = async () => {
-      if (!track.pic_id) return;
-      try {
-        const url = await musicApi.getPic(track.pic_id, track.source);
-        if (active) setCoverUrl(url);
-      } catch (e) {
-        console.error("Failed to fetch cover in MusicTrackMobileMenu:", e);
-      }
-    };
-    fetchCover();
-    return () => {
-      active = false;
-    };
-  }, [track.pic_id, track.source, open]);
+  const coverUrl = useMusicCover(track, open);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>

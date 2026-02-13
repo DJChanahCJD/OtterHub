@@ -5,6 +5,7 @@ import { useMusicStore } from "@/stores/music-store";
 import { musicApi } from "@/lib/music-api";
 import { retry } from "@/lib/utils";
 import { toast } from "sonner";
+import { useMusicCover } from "@/hooks/useMusicCover";
 
 export function GlobalMusicPlayer() {
   const {
@@ -25,6 +26,7 @@ export function GlobalMusicPlayer() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentTrack = queue[currentIndex];
+  const coverUrl = useMusicCover(currentTrack);
 
   // Ref to track current request to avoid race conditions
   const requestIdRef = useRef(0);
@@ -248,19 +250,8 @@ export function GlobalMusicPlayer() {
       title: currentTrack.name,
       artist: currentTrack.artist?.join("/") ?? "Unknown",
       album: currentTrack.album ?? "",
-      artwork: []
+      artwork: coverUrl ? [{ src: coverUrl, sizes: "300x300", type: "image/jpeg" }] : [],
     });
-
-    // We can fetch cover async and update metadata
-    let cancelled = false;
-    if (currentTrack.pic_id) {
-        musicApi.getPic(currentTrack.pic_id, currentTrack.source).then(url => {
-            if (cancelled) return;
-            if (url && mediaSession.metadata) {
-                mediaSession.metadata.artwork = [{ src: url, sizes: "300x300", type: "image/jpeg" }];
-            }
-        });
-    }
 
     const safeSetActionHandler = (
       action: MediaSessionAction,
@@ -299,14 +290,13 @@ export function GlobalMusicPlayer() {
     });
 
     return () => {
-      cancelled = true;
       safeSetActionHandler("play", null);
       safeSetActionHandler("pause", null);
       safeSetActionHandler("nexttrack", null);
       safeSetActionHandler("previoustrack", null);
       safeSetActionHandler("seekto", null);
     };
-  }, [currentTrack, setIsPlaying, currentIndex, queue.length, setAudioCurrentTime]);
+  }, [currentTrack, setIsPlaying, currentIndex, queue.length, setAudioCurrentTime, coverUrl]);
 
   return (
     <audio

@@ -35,7 +35,7 @@ import { toast } from "sonner";
 import { PlayerProgressBar } from "./PlayerProgressBar";
 import { useShallow } from "zustand/react/shallow";
 import { FullScreenPlayer } from "./FullScreenPlayer";
-import { musicApi } from "@/lib/music-api";
+import { useMusicCover } from "@/hooks/useMusicCover";
 import { PlayerQueuePopover } from "./PlayerQueuePopover";
 import { PlayerControls } from "./PlayerControls";
 import { PlayerTrackInfo } from "./PlayerTrackInfo";
@@ -141,46 +141,10 @@ export function GlobalPlayer({
     }
   };
 
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const coverUrl = useMusicCover(currentTrack);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
-
-  useEffect(() => {
-    if (!currentTrack) {
-      setCoverUrl(null);
-      return;
-    }
-
-    let isActive = true;
-
-    const fetchCover = async () => {
-      if (!currentTrack.pic_id) {
-        if (isActive) setCoverUrl(null);
-        return;
-      }
-
-      try {
-        const url = await musicApi.getPic(
-          currentTrack.pic_id,
-          currentTrack.source,
-        );
-        if (isActive) {
-          setCoverUrl(url);
-        }
-      } catch (error) {
-        console.error("Failed to fetch album art:", error);
-        if (isActive) setCoverUrl(null);
-      }
-    };
-
-    setCoverUrl(null);
-    fetchCover();
-
-    return () => {
-      isActive = false;
-    };
-  }, [currentTrack]);
 
   const handleToggleFavorite = () => {
     if (!currentTrack) return;
