@@ -250,8 +250,10 @@ export function MusicTrackItem({
                           onClick={() => {
                               const name = window.prompt("请输入新歌单名称");
                               if (name) {
-                              createPlaylist(name);
-                              toast.success("已创建歌单");
+                                  const id = createPlaylist(name);
+                                  addToPlaylist(id, track);
+                                  toast.success(`已创建并添加到歌单「${name}」`);
+                                  setIsPlaylistPopoverOpen(false);
                               }
                           }}
                       >

@@ -7,8 +7,6 @@ import {
   Heart,
   Music2,
   SquarePlus,
-  RefreshCw,
-  CloudSync,
   ListVideo,
   Cloud,
 } from "lucide-react";
@@ -44,20 +42,15 @@ export const MusicSidebar = memo(function MusicSidebar({
   onItemClick,
   className,
 }: MusicSidebarProps) {
-  const { playlists, createPlaylist, queue, currentIndex, clearQueue } = useMusicStore(
+  const { playlists, createPlaylist, queue } = useMusicStore(
     useShallow((state) => ({
       playlists: state.playlists,
       createPlaylist: state.createPlaylist,
       queue: state.queue,
-      currentIndex: state.currentIndex,
-      clearQueue: state.clearQueue,
     })),
   );
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isSyncConfirmOpen, setIsSyncConfirmOpen] = useState(false);
-
 
   const handleCreatePlaylist = () => {
     if (!newPlaylistName.trim()) {
@@ -68,28 +61,6 @@ export const MusicSidebar = memo(function MusicSidebar({
     setNewPlaylistName("");
     setIsCreateOpen(false);
     toast.success("歌单创建成功");
-  };
-
-  const handleSyncMerge = () => {
-    setIsSyncConfirmOpen(true);
-  };
-
-  const executeSyncMerge = async () => {
-    setIsSyncConfirmOpen(false);
-    setIsSyncing(true);
-    try {
-      const result = await useMusicStore.getState().syncWithCloud();
-
-      if (result === "uploaded") toast.success("本地数据已上传到云端");
-      else toast.success("数据合并同步成功");
-    } catch (error: any) {
-      // 认证失败会自动跳转到登录页面
-      if (error.message !== "Failed to fetch") {
-        toast.error("同步失败: " + error.message);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
   };
 
   const NavItem = ({
@@ -169,18 +140,6 @@ export const MusicSidebar = memo(function MusicSidebar({
             我的歌单
           </h3>
           <div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:bg-transparent hover:text-primary"
-              onClick={handleSyncMerge}
-              disabled={isSyncing}
-              title="同步合并音乐数据"
-            >
-              <CloudSync
-                className={cn("h-4 w-4", isSyncing && "animate-spin")}
-              />
-            </Button>
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
                 {/* 图标按钮模板 */}
@@ -237,42 +196,6 @@ export const MusicSidebar = memo(function MusicSidebar({
           </div>
         </ScrollArea>
       </div>
-
-      {/* 同步确认对话框 */}
-      <Dialog open={isSyncConfirmOpen} onOpenChange={setIsSyncConfirmOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-500">
-              <RefreshCw className="h-4 w-4" />
-              确认同步合并
-            </DialogTitle>
-          </DialogHeader>
-          <div className="text-sm space-y-2">
-            <p>将智能合并本地和云端音乐数据：</p>
-            <ul className="list-disc list-inside text-xs text-muted-foreground">
-              <li>去重合并喜欢歌曲</li>
-              <li>按ID匹配合并歌单</li>
-              <li>保留两边的新数据</li>
-              <li>自动处理认证</li>
-            </ul>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsSyncConfirmOpen(false)}
-            >
-              取消
-            </Button>
-            <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={executeSyncMerge}
-              disabled={isSyncing}
-            >
-              确认同步
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 });

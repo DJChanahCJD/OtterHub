@@ -352,8 +352,15 @@ export function MusicTrackList({
                         onClick={() => {
                           const name = window.prompt("请输入新歌单名称");
                           if (name) {
-                            createPlaylist(name);
-                            toast.success("已创建歌单");
+                            const id = createPlaylist(name);
+                            if (selectedIds.size > 0) {
+                              handleBatch(
+                                (t) => addToPlaylist(id, t),
+                                `已创建并添加到歌单「${name}」`
+                              );
+                            } else {
+                              toast.success("已创建歌单");
+                            }
                           }
                         }}
                       >
@@ -438,8 +445,15 @@ export function MusicTrackList({
                         onClick={() => {
                           const name = window.prompt("请输入新歌单名称");
                           if (name) {
-                            createPlaylist(name);
-                            toast.success("已创建歌单");
+                            const id = createPlaylist(name);
+                            if (selectedIds.size > 0) {
+                              handleBatch(
+                                (t) => addToPlaylist(id, t),
+                                `已创建并添加到歌单「${name}」`
+                              );
+                            } else {
+                              toast.success("已创建歌单");
+                            }
                           }
                         }}
                       >

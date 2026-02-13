@@ -60,16 +60,6 @@ export function MusicPlaylistView({
     );
   }, [tracks, searchQuery]);
 
-  if (!tracks || tracks.length === 0) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
-        <Music className="h-12 w-12 mb-4 opacity-20" />
-        <h3 className="text-lg font-medium">{title}</h3>
-        <p className="text-sm opacity-60">暂无歌曲</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
       {/* Header */}

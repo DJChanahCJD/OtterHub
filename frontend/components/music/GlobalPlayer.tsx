@@ -476,7 +476,11 @@ export function GlobalPlayer({
                   className="flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer text-muted-foreground"
                   onClick={() => {
                     const name = window.prompt("请输入新歌单名称");
-                    if (name) {
+                    if (name && currentTrack) {
+                      const id = createPlaylist(name);
+                      addToPlaylist(id, currentTrack);
+                      toast.success(`已创建并添加到歌单「${name}」`);
+                    } else if (name) {
                       createPlaylist(name);
                       toast.success("已创建歌单");
                     }
