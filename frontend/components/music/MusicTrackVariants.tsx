@@ -73,8 +73,8 @@ export function MusicTrackVariants({ variants }: MusicTrackVariantsProps) {
                   {sourceLabels[variant.source] || variant.source}
                 </Badge>
                 <div className="flex-1 min-w-0 flex flex-col">
-                   <span className="text-sm font-medium truncate">{variant.name}</span>
-                   <span className="text-xs text-muted-foreground truncate">
+                   <span className="text-sm font-medium truncate" title={variant.name}>{variant.name}</span>
+                   <span className="text-xs text-muted-foreground truncate" title={variant.artist.join(" / ") + (variant.album ? ` • ${variant.album}` : "")}>
                      {variant.artist.join(" / ")}
                      {variant.album && ` • ${variant.album}`}
                    </span>

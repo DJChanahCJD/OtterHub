@@ -3,6 +3,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
@@ -67,9 +68,9 @@ export function MusicTrackMobileMenu({
         </Button>
       </DrawerTrigger>
       <DrawerContent onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 flex flex-col gap-2">
+        <DrawerTitle>
           {/* Header with Cover and Info */}
-          <div className="flex items-center gap-4 px-2 py-4 border-b mb-2">
+          <div className="flex items-center gap-4 px-6 py-4">
             <MusicCover
               src={coverUrl}
               alt={track.name}
@@ -83,7 +84,8 @@ export function MusicTrackMobileMenu({
               </div>
             </div>
           </div>
-
+        </DrawerTitle>
+        <div className="p-4 flex flex-col gap-2">
           {!hideAddToQueue && (
             <Button
               variant="ghost"

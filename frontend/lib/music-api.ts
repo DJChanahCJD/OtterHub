@@ -102,7 +102,7 @@ export const musicApi = {
 
     if (signal?.aborted) return { items: [], hasMore: false };
 
-    const merged = mergeAndSortTracks(results.flatMap(r => r.items));
+    const merged = mergeAndSortTracks(results.flatMap(r => r.items), query);
 
     return {
       items: merged,

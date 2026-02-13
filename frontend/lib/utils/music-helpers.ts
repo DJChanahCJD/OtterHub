@@ -1,164 +1,182 @@
 import { MusicTrack, MusicSource } from '@shared/types';
 import { MergedMusicTrack } from '../types/music';
-import zhT2SMap from './zh-t2s-map.json';
+import { normalizeText, normalizeArtists, getExactKey } from './music-key';
 
-/* ---------------- 繁简转换 ---------------- */
-
-const tMap = new Map<string, string>(Object.entries(zhT2SMap));
-
-/* ---------------- 常量 ---------------- */
-
+/* 常量 */
 const SOURCE_PRIORITY: MusicSource[] = ['kuwo', 'joox', 'netease'];
-const SOURCE_RANK = new Map(SOURCE_PRIORITY.map((s, i) => [s, i]));
 
-/* ---------------- 文本规范化 ---------------- */
-
-export const normalizeText = (v: string): string => {
-  if (!v) return '';
-
-  let base = v.toLowerCase().normalize('NFKC');
-
-  // 1. 去除括号及内容 (Live, Remix, feat. 等)
-  // 支持: (), [], {}, 【】, （）
-  base = base.replace(/[(\[\{【（].*?[)\]\}】）]/g, ' ');
-
-  // 2. 繁简转换
-  base = base.replace(/[\u4e00-\u9fa5]/g, c => tMap.get(c) ?? c);
-
-  // 3. 去除特殊字符，只保留字母数字和汉字
-  base = base.replace(/[^\w\u4e00-\u9fa5]/g, '');
-
-  const result = base.trim();
-
-  // 如果处理后为空（例如只有符号），则回退到仅去空格
-  return result || v.toLowerCase().normalize('NFKC').replace(/\s+/g, '').trim();
+const SOURCE_WEIGHT: Record<string, number> = {
+  kuwo: 30,
+  joox: 25,
+  netease: 20
 };
 
-export const normalizeArtists = (artists: string[]) =>
-  artists.map(normalizeText).filter(Boolean).sort().join('/');
-
-/* ---------------- Key 生成 ---------------- */
-
-export const getExactKey = (t: MusicTrack) => `${normalizeText(t.name)}|${normalizeArtists(t.artist)}`;
-const getNameKey = (t: MusicTrack) => normalizeText(t.name);
-
-const rank = (s: MusicSource) => SOURCE_RANK.get(s) ?? 999;
-
-/* ---------------- 辅助函数 ---------------- */
-
-/**
- * 检查艺人是否有重叠
- * 只要有一个艺人相同，即视为重叠（满足用户需求：包含原版歌手即可堆叠）
- */
-const hasArtistOverlap = (t1: MusicTrack, t2: MusicTrack): boolean => {
-  const a1 = new Set(t1.artist.map(normalizeText));
-  const a2 = t2.artist.map(normalizeText);
-  return a2.some(a => a1.has(a));
+/* 内部预处理结构（缓存所有可复用信息） */
+type PreparedTrack = MusicTrack & {
+  nName: string;
+  nArtists: string[];
+  artistKey: string;
+  exactKey: string;
+  nameKey: string;
 };
 
-const pickMainTrack = (t1: MusicTrack, t2: MusicTrack): MusicTrack => {
-  // 1. 优先选名字短的（通常原版比 Live/Remix 版短）
-  // 例如 "黑夜问白天" (5) vs "黑夜问白天 (Live)" (11) -> 选前者
-  const len1 = t1.name.length;
-  const len2 = t2.name.length;
-  if (len1 < len2) return t1;
-  if (len2 < len1) return t2;
+function prepareTracks(tracks: MusicTrack[]): PreparedTrack[] {
+  return tracks.map(t => {
+    const nName = normalizeText(t.name);
+    const nArtists = normalizeArtists(t.artist);
 
-  // 2. 名字长度一样，优先选 Source Rank 高的
-  if (rank(t1.source) < rank(t2.source)) return t1;
-  return t2;
-};
-
-/* ---------------- 主逻辑 ---------------- */
-
-/**
- * 多源合并 + 去重 + 排序
- */
-export const mergeAndSortTracks = (tracks: MusicTrack[]): MergedMusicTrack[] => {
-  // 1. 精确去重 (Same Name + Same Artists)
-  const exactMap = new Map<string, { main: MusicTrack; vars: MusicTrack[] }>();
-
-  tracks.forEach(t => {
-    const key = getExactKey(t);
-    if (!exactMap.has(key)) {
-        exactMap.set(key, { main: t, vars: [] });
-    } else {
-        const entry = exactMap.get(key)!;
-        // 同 Key 下，Source Rank 高的优先
-        if (rank(t.source) < rank(entry.main.source)) {
-            entry.vars.push(entry.main);
-            entry.main = t;
-        } else {
-            entry.vars.push(t);
-        }
-    }
-  });
-
-  // 2. 按标准化后的歌名分组
-  // "黑夜问白天 (Live)" 和 "黑夜问白天" 标准化后都是 "黑夜问白天" -> 同一组
-  const nameGroups = new Map<string, MergedMusicTrack[]>();
-
-  for (const entry of exactMap.values()) {
-    const nameKey = getNameKey(entry.main);
-    if (!nameGroups.has(nameKey)) {
-        nameGroups.set(nameKey, []);
-    }
-    
-    const merged: MergedMusicTrack = {
-        ...entry.main,
-        variants: entry.vars
+    return {
+      ...t,
+      nName,
+      nArtists,
+      artistKey: nArtists.join('/'),
+      exactKey: getExactKey(t),
+      nameKey: nName
     };
-    nameGroups.get(nameKey)!.push(merged);
+  });
+}
+
+
+/* 1. 精确去重 */
+function dedupeExact(tracks: PreparedTrack[]): (MergedMusicTrack & PreparedTrack)[] {
+  const map = new Map<string, PreparedTrack[]>();
+
+  for (const t of tracks) {
+    if (!map.has(t.exactKey)) map.set(t.exactKey, []);
+    map.get(t.exactKey)!.push(t);
   }
 
-  const finalResults: MergedMusicTrack[] = [];
+  const result: (MergedMusicTrack & PreparedTrack)[] = [];
 
-  // 3. 组内模糊合并 (Artist Overlap)
-  for (const group of nameGroups.values()) {
-     const clusters: MergedMusicTrack[] = [];
+  for (const group of map.values()) {
+    // 选主曲：短名 + 源优先
+    group.sort((a, b) =>
+      a.name.length - b.name.length ||
+      SOURCE_PRIORITY.indexOf(a.source) - SOURCE_PRIORITY.indexOf(b.source)
+    );
 
-     for (const item of group) {
-        let mergedTo = -1;
-        
-        // 尝试与现有的 cluster 合并
-        for (let i = 0; i < clusters.length; i++) {
-            if (hasArtistOverlap(item, clusters[i])) {
-                mergedTo = i;
-                break;
-            }
-        }
+    const [main, ...vars] = group;
 
-        if (mergedTo !== -1) {
-            // 合并逻辑
-            const target = clusters[mergedTo];
-            const newMain = pickMainTrack(target, item);
-            
-            const allVariants = [
-                ...(target.variants || []),
-                ...(item.variants || [])
-            ];
-            
-            // 将非 main 的那个加入 variants
-            if (newMain === target) {
-                allVariants.push(item);
-            } else {
-                allVariants.push(target);
-            }
-            
-            clusters[mergedTo] = {
-                ...newMain,
-                variants: allVariants
-            };
-
-        } else {
-            // 无法合并，作为新的 cluster
-            clusters.push(item);
-        }
-     }
-     
-     finalResults.push(...clusters);
+    result.push({
+      ...main,
+      variants: vars
+    });
   }
 
-  // 4. 最终排序
-  return finalResults.sort((a, b) => rank(a.source) - rank(b.source));
-};
+  return result;
+}
+
+/* 2. 模糊聚类（同歌名 + 艺人重叠） */
+function clusterTracks(tracks: (MergedMusicTrack & PreparedTrack)[]): (MergedMusicTrack & PreparedTrack)[] {
+  const groups = new Map<string, (MergedMusicTrack & PreparedTrack)[]>();
+
+  for (const t of tracks) {
+    if (!groups.has(t.nameKey)) groups.set(t.nameKey, []);
+    groups.get(t.nameKey)!.push(t);
+  }
+
+  const result: (MergedMusicTrack & PreparedTrack)[] = [];
+
+  for (const list of groups.values()) {
+    const clusters: (MergedMusicTrack & PreparedTrack)[] = [];
+
+    for (const item of list) {
+      let merged = false;
+
+      for (const c of clusters) {
+        if (item.nArtists.some(a => c.nArtists.includes(a))) {
+          // 选更好的主曲
+          const better =
+            item.name.length < c.name.length ||
+            SOURCE_PRIORITY.indexOf(item.source) < SOURCE_PRIORITY.indexOf(c.source)
+              ? item
+              : c;
+
+          const worse = better === item ? c : item;
+
+          Object.assign(better, {
+            variants: [...(better.variants || []), worse, ...(worse.variants || [])]
+          });
+
+          Object.assign(c, better);
+          merged = true;
+          break;
+        }
+      }
+
+      if (!merged) clusters.push(item);
+    }
+
+    result.push(...clusters);
+  }
+
+  return result;
+}
+
+/* 3. 评分模型 */
+function score(t: MergedMusicTrack & PreparedTrack, q: string): number {
+  if (!q) return SOURCE_WEIGHT[t.source] || 0;
+
+  let s = 0;
+
+  // 歌名匹配
+  if (t.nName === q) s += 100;
+  else if (t.nName.startsWith(q)) s += 80;
+  else if (t.nName.includes(q)) s += 50;
+
+  // 艺人匹配
+  if (t.artistKey.includes(q)) s += 40;
+
+  // 多来源 = 热门
+  s += Math.min((t.variants?.length || 0) * 15, 60);
+
+  // 平台质量
+  s += SOURCE_WEIGHT[t.source] || 0;
+
+  // 原版通常更短
+  s -= t.name.length * 0.3;
+
+  return s;
+}
+
+/* 4. 混排（核心） */
+function interleave(tracks: (MergedMusicTrack & PreparedTrack)[], query: string): MergedMusicTrack[] {
+  const q = normalizeText(query);
+
+  const buckets = new Map<MusicSource, (MergedMusicTrack & PreparedTrack)[]>();
+
+  for (const t of tracks) {
+    if (!buckets.has(t.source)) buckets.set(t.source, []);
+    buckets.get(t.source)!.push(t);
+  }
+
+  // 每个平台内部按评分排序
+  for (const arr of buckets.values()) {
+    arr.sort((a, b) => score(b, q) - score(a, q));
+  }
+
+  // 轮询混排
+  const result: MergedMusicTrack[] = [];
+  let active = true;
+
+  while (active) {
+    active = false;
+    for (const src of SOURCE_PRIORITY) {
+      const item = buckets.get(src)?.shift();
+      if (item) {
+        result.push(item);
+        active = true;
+      }
+    }
+  }
+
+  return result;
+}
+
+/* 主入口 */
+export function mergeAndSortTracks(tracks: MusicTrack[], query = ''): MergedMusicTrack[] {
+  const prepared = prepareTracks(tracks);
+  const unique = dedupeExact(prepared);
+  const clustered = clusterTracks(unique);
+  return interleave(clustered, query);
+}

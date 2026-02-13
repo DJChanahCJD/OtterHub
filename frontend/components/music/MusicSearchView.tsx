@@ -19,8 +19,8 @@ interface MusicSearchViewProps {
 
 export const stableSources: Record<string, string> = {
   all: "聚合搜索",
-  joox: "Joox",
   kuwo: "酷我音乐",
+  joox: "Joox",
   netease: "网易云音乐",
 };
 

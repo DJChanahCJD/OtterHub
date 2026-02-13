@@ -233,7 +233,7 @@ export const useMusicStore = create<MusicState>()(
       })),
 
       quality: "320",
-      searchSource: "netease",
+      searchSource: "all",
       setQuality: (quality) => set({ quality }),
       setSearchSource: (searchSource) => set({ searchSource }),
 
