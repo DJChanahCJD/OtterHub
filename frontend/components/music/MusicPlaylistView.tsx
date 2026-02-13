@@ -73,18 +73,18 @@ export function MusicPlaylistView({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b flex items-end gap-6 bg-muted/10">
-        <div className="h-32 w-32 bg-primary/10 rounded-lg flex items-center justify-center shadow-sm border overflow-hidden shrink-0">
+      <div className="p-4 md:p-6 border-b flex items-end gap-4 md:gap-6 bg-muted/10">
+        <div className="h-20 w-20 md:h-32 md:w-32 bg-primary/10 rounded-lg flex items-center justify-center shadow-sm border overflow-hidden shrink-0">
           <MusicCover
             src={coverUrl}
             alt={title}
             className="h-full w-full"
-            iconClassName="h-12 w-12 text-primary/40"
+            iconClassName="h-8 w-8 md:h-12 md:w-12 text-primary/40"
           />
         </div>
-        <div className="flex-1 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
+        <div className="flex-1 space-y-1 md:space-y-2">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{title}</h1>
+          <div className="text-xs md:text-sm text-muted-foreground flex items-center gap-2">
             <span>{tracks.length} 首歌曲</span>
             {description && (
               <>
@@ -93,13 +93,13 @@ export function MusicPlaylistView({
               </>
             )}
           </div>
-          <div className="pt-2 flex gap-2 items-center">
+          <div className="pt-1 md:pt-2 flex gap-2 items-center">
              <Button 
                 onClick={() => onPlay(null)} 
-                className="rounded-full px-8"
-                size="lg"
+                className={`rounded-full ${isMobile ? "px-3 h-8" : "px-8"}`}
+                size={isMobile ? "sm" : "lg"}
              >
-                <Play className="md:mr-2 h-4 w-4 fill-current" />
+                <Play className="md:mr-2 h-3 w-3 md:h-4 md:w-4 fill-current" />
                 {!isMobile && <span>播放全部</span>}
              </Button>
              {action}
@@ -138,13 +138,13 @@ export function MusicPlaylistView({
                </DropdownMenu>
              )}
              
-             <div className="relative ml-auto w-48 md:w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+             <div className="relative ml-auto w-32 md:w-64">
+                <Search className="absolute left-2 top-2.5 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                 <Input
                   placeholder="搜索..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 h-8 md:h-10 text-xs md:text-sm"
                 />
              </div>
           </div>
