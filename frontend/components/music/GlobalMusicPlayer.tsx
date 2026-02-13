@@ -271,15 +271,8 @@ export function GlobalMusicPlayer() {
          }
     });
     safeSetActionHandler("previoustrack", () => {
-        const audio = audioRef.current;
-        if (audio && audio.currentTime > 3) {
-            audio.currentTime = 0;
-            setAudioCurrentTime(0);
-            setMediaSessionPositionState();
-        } else {
-             const prevIndex = currentIndex - 1;
-             useMusicStore.getState().setCurrentIndex(prevIndex < 0 ? queue.length - 1 : prevIndex);
-        }
+        const prevIndex = currentIndex - 1;
+        useMusicStore.getState().setCurrentIndex(prevIndex < 0 ? queue.length - 1 : prevIndex);
     });
     safeSetActionHandler("seekto", (e) => {
         if (e.seekTime != null && audioRef.current) {
