@@ -33,7 +33,7 @@ export async function handleNeteaseRequest(c: any, query: any) {
 
     if (type === 'url') {
       const id = query.id || '';
-      let br = parseInt(query.br) || 320000;
+      let br = parseInt(query.br) || 192000;
       if (br < 1000) br *= 1000; // kps形式的需要补全位数
       const res = await getSongUrl(id, br, cookie);
 

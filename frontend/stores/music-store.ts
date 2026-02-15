@@ -95,7 +95,7 @@ function mergeState(local: MusicStoreData, cloud: MusicStoreData): Partial<typeo
     ...local,
     favorites: newFavorites,
     playlists: newPlaylists,
-    quality: local.quality || cloud.quality || "320",
+    quality: local.quality || cloud.quality || "192",
     searchSource: local.searchSource || cloud.searchSource || "netease",
     volume: local.volume !== undefined ? local.volume : cloud.volume || 0.7,
     isRepeat: local.isRepeat !== undefined ? local.isRepeat : cloud.isRepeat || false,
@@ -232,7 +232,7 @@ export const useMusicStore = create<MusicState>()(
         )
       })),
 
-      quality: "320",
+      quality: "192",
       searchSource: "all",
       setQuality: (quality) => set({ quality }),
       setSearchSource: (searchSource) => set({ searchSource }),
