@@ -57,6 +57,27 @@ const prefixSchema = z
   .regex(/^[a-z0-9_-]+$/i);
 
 /* ===============================
+ * GET /sync/check  检查同步状态
+ * =============================== */
+syncRoutes.get("/check", async (c) => {
+  const syncKey = getBearer(c);
+  if (!syncKey) return fail(c, "Invalid Authorization", 401);
+
+  const kv = c.env.oh_file_url;
+  const kvKey = getSyncKey(syncKey);
+
+  const { metadata } = await kv.getWithMetadata<SyncKeyMetadata>(kvKey);
+
+  if (metadata === null) {
+    return fail(c, "Sync key not found", 404);
+  }
+
+  return ok(c, {
+    lastSyncTime: metadata?.lastSyncTime ?? 0,
+  });
+});
+
+/* ===============================
  * GET /sync  拉取数据
  * =============================== */
 syncRoutes.get("/", async (c) => {

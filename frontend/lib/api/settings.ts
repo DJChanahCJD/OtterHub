@@ -34,6 +34,11 @@ export const wallpaperConfigsApi =
   createSettingsApi<WallpaperConfigs>('wallpaper');
 
 export const syncKeyApi = {
+  async check(): Promise<number> {
+    const res = await unwrap<{ lastSyncTime: number }>(client.sync.check.$get());
+    return res.lastSyncTime;
+  },
+
   async list(): Promise<SyncKeyItem[]> {
     const res = await unwrap<{ keys: SyncKeyItem[] }>(client.sync.keys.$get());
     return res.keys;
