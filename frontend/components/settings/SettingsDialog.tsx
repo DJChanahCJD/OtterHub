@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WallpaperTab } from "./wallpaper-tab/WallpaperTab";
 import { GeneralTab } from "./general-tab/GeneralTab";
 import { SyncTab } from "./sync-tab/SyncTab";
-import { LayoutGrid, Image as ImageIcon, Settings, Share2, CloudSync } from "lucide-react";
+import { KeyManageTab } from "./key-manage-tab/KeyManageTab";
+import { LayoutGrid, Image as ImageIcon, Settings, Share2, CloudSync, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ShareTab } from "./share-tab/ShareTab";
 import { useUIStore } from "@/stores/ui-store";
@@ -19,6 +20,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const menuItems = [
     { id: SettingTab.General, label: "常规设置", icon: Settings, color: "text-slate-500" },
     { id: SettingTab.Sync, label: "云端同步", icon: CloudSync, color: "text-pink-500" },
+    { id: SettingTab.KeyManage, label: "密钥管理", icon: Key, color: "text-violet-500" },
     { id: SettingTab.Wallpaper, label: "随机壁纸", icon: ImageIcon, color: "text-sky-500" },
     { id: SettingTab.Share, label: "分享管理", icon: Share2, color: "text-emerald-500" }
   ];
@@ -85,7 +87,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               {activeTab === SettingTab.General && <GeneralTab />}
               {activeTab === SettingTab.Share && <ShareTab />}
               {activeTab === SettingTab.Sync && <SyncTab />}
-              {activeTab !== SettingTab.Wallpaper && activeTab !== SettingTab.General && activeTab !== SettingTab.Share && activeTab !== SettingTab.Sync && (
+              {activeTab === SettingTab.KeyManage && <KeyManageTab />}
+              {activeTab !== SettingTab.Wallpaper && activeTab !== SettingTab.General && activeTab !== SettingTab.Share && activeTab !== SettingTab.Sync && activeTab !== SettingTab.KeyManage && (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground/20">
                   <div className="p-8 rounded-full bg-muted/30 border border-dashed border-border/50 mb-4">
                     <LayoutGrid className="h-16 w-16" />

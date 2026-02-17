@@ -1,4 +1,4 @@
-import { GeneralSettings, MusicStoreData, NetEaseStoreData, WallpaperConfigs } from "@shared/types";
+import { GeneralSettings, MusicStoreData, NetEaseStoreData, SyncKeyItem, WallpaperConfigs } from "@shared/types";
 
 import { client } from './client';
 import { unwrap } from './config';
@@ -32,3 +32,23 @@ export const neteaseStoreApi =
 
 export const wallpaperConfigsApi =
   createSettingsApi<WallpaperConfigs>('wallpaper');
+
+export const syncKeyApi = {
+  async list(): Promise<SyncKeyItem[]> {
+    const res = await unwrap<{ keys: SyncKeyItem[] }>(client.sync.keys.$get());
+    return res.keys;
+  },
+
+  async create(prefix?: string): Promise<string> {
+    const res = await unwrap<{ syncKey: string }>(
+      client.sync['create-key'].$post({
+        json: { prefix },
+      })
+    );
+    return res.syncKey;
+  },
+
+  async delete(key: string): Promise<void> {
+    await unwrap<null>(client.sync.keys[':key'].$delete({ param: { key } }));
+  },
+};

@@ -1,6 +1,7 @@
 export enum SettingTab {
     General = "general",
-    Wallpaper = "wallpaper",
     Sync = "sync",
+    KeyManage = "key-manage",
+    Wallpaper = "wallpaper",
     Share = "share",
 }
