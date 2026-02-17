@@ -211,13 +211,43 @@ async function getTracksDetail(trackIds: number[], cookie: string) {
 export async function search(keyword: string, type: number = 1, page: number = 1, limit: number = 20, cookie: string = '') {
     const url = `${BASE_URL}/api/search/pc`;
     const offset = (page - 1) * limit;
-    const data = {
-        s: keyword,
-        type: type, // 1 for song, 1000 for playlist
-        offset: offset,
-        limit: limit
+    
+    const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
+    let finalCookie = cookie.trim();
+    if (finalCookie && !finalCookie.includes('=')) {
+        finalCookie = `MUSIC_U=${finalCookie}`;
+    } else {
+        finalCookie = cleanCookie(finalCookie);
+    }
+    finalCookie = `${baseCookies} ${finalCookie}`;
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': USER_AGENT,
+        'Referer': BASE_URL,
+        'Origin': BASE_URL,
+        'Cookie': finalCookie
     };
-    return request(url, data, cookie);
+
+    const params = new URLSearchParams({
+        s: keyword,
+        type: String(type),
+        offset: String(offset),
+        limit: String(limit)
+    });
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: params.toString()
+    });
+
+    if (!response.ok) {
+        throw new Error(`NetEase Search API Error: ${response.status}`);
+    }
+
+    const json = await response.json();
+    return { data: json };
 }
 
 export async function getSongUrl(id: string, br: number = 999000, cookie: string = '') {

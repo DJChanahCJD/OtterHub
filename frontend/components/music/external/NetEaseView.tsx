@@ -11,10 +11,12 @@ import { toast } from 'sonner';
 import { useNetEaseStore, NetEaseProfile } from '@/stores/netease-store';
 import { useMusicStore } from '@/stores/music-store';
 import { MusicTrack } from '@shared/types';
-import { LogOut, RefreshCw, Loader2, ChevronLeft, Plus, User } from 'lucide-react';
+import { LogOut, RefreshCw, Loader2, ChevronLeft, Plus, User, Search } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { MusicPlaylistView } from '@/components/music/MusicPlaylistView';
 import { MusicCover } from '@/components/music/MusicCover';
+import { MusicTrackList } from '@/components/music/MusicTrackList';
+import { musicApi } from '@/lib/music-api';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -235,6 +237,13 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
   const [detailLoading, setDetailLoading] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<MusicTrack[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchHasMore, setSearchHasMore] = useState(false);
+  const [searchPage, setSearchPage] = useState(0);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
   const { createPlaylist, addToPlaylist, playContext } = useMusicStore();
 
   const createdPlaylists = playlists.filter(p => p.userId.toString() === userId.toString());
@@ -365,6 +374,42 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
       }
   };
 
+  const handleSearchPlay = (track: MusicTrack) => {
+      if (searchResults.length > 0) {
+          const index = searchResults.findIndex(t => t.id === track.id);
+          playContext(searchResults, index >= 0 ? index : 0);
+      }
+  };
+
+  const fetchSearch = async (nextPage: number, reset = false) => {
+      if (!searchQuery.trim() || searchLoading) return;
+
+      if (reset) {
+          searchAbortRef.current?.abort();
+          searchAbortRef.current = new AbortController();
+          setSearchResults([]);
+          setSearchPage(0);
+      }
+
+      setSearchLoading(true);
+      try {
+          const signal = searchAbortRef.current?.signal;
+          const res = await musicApi.search(searchQuery, '_netease', nextPage, 20, signal);
+
+          if (signal?.aborted) return;
+
+          setSearchResults(prev => reset ? res.items : [...prev, ...res.items]);
+          setSearchHasMore(res.hasMore);
+          setSearchPage(nextPage);
+      } catch (e: any) {
+          if (e.name !== 'AbortError') {
+              toast.error('搜索失败');
+          }
+      } finally {
+          setSearchLoading(false);
+      }
+  };
+
   const renderPlaylistGrid = (list: any[], isLoading: boolean) => {
       if (isLoading && list.length === 0) {
            return (
@@ -484,9 +529,41 @@ function NetEaseBrowser({ cookie, userId, onLogout }: { cookie: string, userId: 
                     <TabsTrigger value="created">Created</TabsTrigger>
                     <TabsTrigger value="subscribed">Subscribed</TabsTrigger>
                     <TabsTrigger value="recommended">Recommended</TabsTrigger>
+                    <TabsTrigger value="search">Search</TabsTrigger>
                 </TabsList>
             </div>
             <div className="flex-1 min-h-0">
+                <TabsContent value="search" className="m-0 h-full">
+                    <div className="flex flex-col h-full">
+                        <div className="p-4 border-b">
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && fetchSearch(1, true)}
+                                        placeholder="搜索歌曲 / 歌手 / 专辑"
+                                        className="pl-9"
+                                    />
+                                </div>
+                                <Button onClick={() => fetchSearch(1, true)} disabled={searchLoading}>
+                                    {searchLoading ? <Loader2 className="animate-spin" /> : <Search />}
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex-1 min-h-0">
+                            <MusicTrackList
+                                tracks={searchResults}
+                                onPlay={handleSearchPlay}
+                                loading={searchLoading}
+                                hasMore={searchHasMore}
+                                onLoadMore={() => fetchSearch(searchPage + 1)}
+                                emptyMessage={searchLoading ? "搜索中..." : "输入关键词开始搜索"}
+                            />
+                        </div>
+                    </div>
+                </TabsContent>
                 <ScrollArea className="h-full">
                     <div className="p-4">
                         <TabsContent value="created" className="m-0 mt-0">
