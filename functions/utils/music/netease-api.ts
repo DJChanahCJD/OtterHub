@@ -30,28 +30,29 @@ function cleanCookie(cookieStr: string | null): string {
     return Array.from(cookieMap.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
 }
 
+function buildCookie(rawCookie: string = ''): string {
+    const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
+    let finalCookie = rawCookie.trim();
+    
+    if (finalCookie && !finalCookie.includes('=')) {
+        finalCookie = `MUSIC_U=${finalCookie}`;
+    } else {
+        finalCookie = cleanCookie(finalCookie);
+    }
+    
+    return `${baseCookies} ${finalCookie}`;
+}
+
 async function request(url: string, data: any, cookie: string = '') {
   const encData = weapi(data);
   const params = new URLSearchParams(encData as any).toString();
-
-  // Prepare cookie
-  const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
-  let finalCookie = cookie.trim();
-  
-  if (finalCookie && !finalCookie.includes('=')) {
-      finalCookie = `MUSIC_U=${finalCookie}`;
-  } else {
-      finalCookie = cleanCookie(finalCookie);
-  }
-  
-  finalCookie = `${baseCookies} ${finalCookie}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'User-Agent': USER_AGENT,
     'Referer': BASE_URL,
     'Origin': BASE_URL,
-    'Cookie': finalCookie
+    'Cookie': buildCookie(cookie)
   };
 
   const response = await fetch(url, {
@@ -76,25 +77,12 @@ async function requestEapi(url: string, path: string, data: any, cookie: string 
     const encData = eapi(path, data);
     const params = new URLSearchParams(encData as any).toString();
 
-    // Prepare cookie - eapi needs specific cookies sometimes? 
-    // 1Listen sets os=pc in cookie for eapi too.
-    const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
-    let finalCookie = cookie.trim();
-    
-    if (finalCookie && !finalCookie.includes('=')) {
-        finalCookie = `MUSIC_U=${finalCookie}`;
-    } else {
-        finalCookie = cleanCookie(finalCookie);
-    }
-    
-    finalCookie = `${baseCookies} ${finalCookie}`;
-
     const headers: Record<string, string> = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': USER_AGENT,
         'Referer': BASE_URL,
         'Origin': BASE_URL,
-        'Cookie': finalCookie
+        'Cookie': buildCookie(cookie)
     };
 
     const response = await fetch(url, {
@@ -137,21 +125,13 @@ export async function getUserPlaylists(userId: string, cookie: string) {
         offset: '0',
         includeVideo: 'true'
     });
-    
-    // Prepare cookie
-    const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
-    let finalCookie = cookie.trim();
-    if (!finalCookie.includes('=')) {
-        finalCookie = `MUSIC_U=${finalCookie}`;
-    }
-    finalCookie = `${baseCookies} ${finalCookie}`;
 
     const headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': USER_AGENT,
         'Referer': BASE_URL,
         'Origin': BASE_URL,
-        'Cookie': finalCookie
+        'Cookie': buildCookie(cookie)
     };
     
     const response = await fetch(url, {
@@ -211,22 +191,13 @@ async function getTracksDetail(trackIds: number[], cookie: string) {
 export async function search(keyword: string, type: number = 1, page: number = 1, limit: number = 20, cookie: string = '') {
     const url = `${BASE_URL}/api/search/pc`;
     const offset = (page - 1) * limit;
-    
-    const baseCookies = 'os=pc; appver=2.9.7; mode=31;';
-    let finalCookie = cookie.trim();
-    if (finalCookie && !finalCookie.includes('=')) {
-        finalCookie = `MUSIC_U=${finalCookie}`;
-    } else {
-        finalCookie = cleanCookie(finalCookie);
-    }
-    finalCookie = `${baseCookies} ${finalCookie}`;
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': USER_AGENT,
         'Referer': BASE_URL,
         'Origin': BASE_URL,
-        'Cookie': finalCookie
+        'Cookie': buildCookie(cookie)
     };
 
     const params = new URLSearchParams({

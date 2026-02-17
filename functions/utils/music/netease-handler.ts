@@ -1,6 +1,11 @@
 import { search, getSongUrl, getSongDetail, getLyric } from "./netease-api";
+import type { Context } from 'hono';
+import type { Env } from '../../types/hono';
 
-export async function handleNeteaseRequest(c: any, query: any) {
+export async function handleNeteaseRequest(
+    c: Context<{ Bindings: Env }>, 
+    query: Record<string, string>
+) {
   try {
     const type = query.types;
 
