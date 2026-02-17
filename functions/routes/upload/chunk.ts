@@ -63,8 +63,7 @@ chunkUploadRoutes.get(
 
     try {
       const kv = c.env.oh_file_url;
-      const item = await kv.getWithMetadata(key);
-      const metadata = item.metadata as FileMetadata | null;
+      const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
 
       if (!metadata?.chunkInfo) {
         return fail(c, 'Not a chunked file', 400);

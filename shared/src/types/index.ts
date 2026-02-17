@@ -2,6 +2,7 @@ import { ImageLoadMode } from "./wallpaper";
 
 export * from "./wallpaper";
 export * from "./music";
+export * from "./sync";
 
 // === 全局设置相关类型 ===
 

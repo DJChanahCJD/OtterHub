@@ -5,7 +5,7 @@ export interface KVNamespace {
   put(key: string, value: any, options?: any): Promise<void>;
   delete(key: string): Promise<void>;
   list(options?: any): Promise<any>;
-  getWithMetadata(key: string): Promise<{ value: any; metadata: FileMetadata }>;
+  getWithMetadata<T = unknown>(key: string): Promise<{ value: any; metadata: T }>;
 }
 
 export interface R2Bucket {

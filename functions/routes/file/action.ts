@@ -17,7 +17,7 @@ actionRoutes.post(
     const kv = c.env.oh_file_url;
 
     try {
-      const { value, metadata } = await kv.getWithMetadata(key);
+      const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
 
       if (!metadata) {
         return fail(c, `File metadata not found for key: ${key}`, 404);
