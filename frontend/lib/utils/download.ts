@@ -16,7 +16,7 @@ export async function downloadMusicTrack(track: MusicTrack) {
     if (!url) throw new Error("无法获取下载链接");
 
     const filename = sanitizeFilename(
-      `${track.artist?.join(", ") || "Unknown"} - ${track.name}.mp3`
+      `${track.artist?.join(",") || "Unknown"} - ${track.name}.mp3`
     );
 
     // ---------- 尝试前端直连 ----------
