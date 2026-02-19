@@ -34,11 +34,13 @@ const handleProxyRequest = async (c: any) => {
       const streamResponse = handleStreamResponse(response);
       const newHeaders = new Headers(streamResponse.headers);
       
-      // Use RFC 5987 for non-ASCII filenames
+      // Preserve spaces in filename - use raw filename for fallback and encoded for RFC 5987
       const encodedFilename = encodeURIComponent(filename);
+      // For filename="" part, use raw filename (browsers handle spaces better here)
+      // For filename*=UTF-8'' part, use encoded filename for RFC 5987 compliance
       newHeaders.set(
         'Content-Disposition', 
-        `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`
+        `attachment; filename="${filename.replace(/"/g, '"')}"; filename*=UTF-8''${encodedFilename}`
       );
       
       return new Response(streamResponse.body, {
