@@ -3,5 +3,9 @@ compatibility_date = "2025-02-25"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "frontend/out"
 
+[[kv_namespaces]]
+binding = "oh_file_url"
+id = "oh_file_url"
+
 [observability]
 enabled = true
