@@ -5,7 +5,7 @@ pages_build_output_dir = "frontend/out"
 
 [[kv_namespaces]]
 binding = "oh_file_url"
-id = "oh_file_url"
+id = "75daf6ad0ae44adf9685d8df7246144d"
 
 [observability]
 enabled = true
