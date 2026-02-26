@@ -41,6 +41,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
   } = actions;
 
   const { safeMode, imageLoadMode } = useGeneralSettingsStore();
+  const tags = file.metadata?.tags ?? [];
 
   return (
     <>
@@ -90,7 +91,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
               fileKey={file.name}
               safeMode={safeMode}
               canPreview={!blur}
-              tags={file.metadata?.tags ?? []}
+              tags={tags}
               fileSize={file.metadata?.fileSize ?? 0}
               imageLoadMode={imageLoadMode}
               thumbUrl={file.metadata?.thumbUrl || ""}
@@ -107,7 +108,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
               {file.metadata?.fileName || file.name}
             </p>
             <div className="flex gap-1 shrink-0">
-              {file.metadata?.tags ?? []?.map((tag) => (
+              {tags.map((tag) => (
                 <FileTagBadge key={tag} tag={tag} />
               ))}
             </div>
