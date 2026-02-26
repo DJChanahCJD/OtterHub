@@ -1,0 +1,7 @@
+name = "otterhub"
+compatibility_date = "2025-02-25"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "frontend/out"
+
+[observability]
+enabled = true
