@@ -13,7 +13,7 @@ import {
 
 import { useFileDataStore, useActiveItems, useFilteredFiles } from "@/stores/file";
 import { useFileUIStore, useActiveSelectedKeys } from "@/stores/file";
-import { getFileUrl, moveToTrash } from "@/lib/api";
+import { getFileUrl, moveToTrash, deleteFile } from "@/lib/api";
 import { downloadFile, processBatch } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
@@ -26,6 +26,7 @@ export function BatchOperationsBar() {
     activeType,
     updateFileMetadata,
     moveToTrashLocal,
+    deleteFilesLocal,
   } = useFileDataStore();
   
   const {
@@ -191,6 +192,60 @@ export function BatchOperationsBar() {
   };
 
 
+  /** ===== 批量彻底删除 ===== */
+  const handleBatchPermanentDelete = async () => {
+    if (!confirm(`确认【彻底删除】这 ${selectedKeys.length} 个文件？此操作不可恢复！`)) return;
+
+    const toastId = toast.loading(`正在删除 ${selectedKeys.length} 个文件...`);
+
+    try {
+      const successful: string[] = [];
+      const failed: string[] = [];
+
+      await processBatch(
+        selectedKeys,
+        async (key) => {
+          try {
+            const success = await deleteFile(key);
+            if (success) {
+              successful.push(key);
+            } else {
+              failed.push(key);
+            }
+          } catch (err) {
+            failed.push(key);
+          }
+        },
+        (current, total) => {
+          toast.loading(`正在彻底删除 ${current}/${total} 个文件...`, {
+            id: toastId,
+          });
+        },
+        10,
+      );
+
+      if (successful.length > 0) {
+        deleteFilesLocal(successful);
+      }
+
+      if (failed.length === 0) {
+        toast.success(`成功彻底删除 ${successful.length} 个文件`, { id: toastId });
+      } else {
+        toast.error(`部分文件删除失败`, {
+          id: toastId,
+          description: `${failed.length} 个文件彻底删除失败，成功删除 ${successful.length} 个`,
+        });
+      }
+    } catch (error) {
+      toast.error("操作失败", {
+        id: toastId,
+        description: "执行批量彻底删除时发生未知错误",
+      });
+    } finally {
+      clearSelection(activeType);
+    }
+  };
+
   /** ===== 批量复制 ===== */
   const handleBatchCopy = async () => {
     const urls = selectedKeys
@@ -213,7 +268,7 @@ export function BatchOperationsBar() {
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 w-[calc(100%-2rem)] max-w-max">
         <div className="flex items-center gap-2 md:gap-4 rounded-full border border-glass-border bg-linear-to-r from-primary/90 to-accent/90 px-4 md:px-6 py-2.5 md:py-3 shadow-2xl backdrop-blur-xl">
           <span className="text-xs md:text-sm font-medium text-primary-foreground whitespace-nowrap">
-            {`${selectedKeys.length} selected`}
+            {`选中 ${selectedKeys.length} 项`}
           </span>
 
           <div className="flex items-center gap-1 md:gap-2">
@@ -222,10 +277,10 @@ export function BatchOperationsBar() {
               variant="ghost"
               className="text-primary-foreground hover:bg-primary-foreground/10 px-2 md:px-3"
               onClick={handleBatchDownload}
-              title="Download"
+              title="下载"
             >
               <Download className="md:mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Download</span>
+              <span className="hidden md:inline">下载</span>
             </Button>
 
             <Button
@@ -233,10 +288,10 @@ export function BatchOperationsBar() {
               variant="ghost"
               className="text-primary-foreground hover:bg-primary-foreground/10 px-2 md:px-3"
               onClick={handleBatchDelete}
-              title="Delete"
+              title="删除"
             >
-              <Trash2 className="md:mr-2 h-4 w-4 text-red-500" />
-              <span className="hidden md:inline">Delete</span>
+              <Trash2 className="md:mr-2 h-4 w-4 text-red-400" />
+              <span className="hidden md:inline">删除</span>
             </Button>
 
             <div className="h-6 w-px bg-primary-foreground/20 mx-1" />
@@ -281,7 +336,7 @@ export function BatchOperationsBar() {
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Tag className="mr-2 h-4 w-4 text-primary" />
-                  批量编辑标签
+                  编辑标签
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -289,7 +344,7 @@ export function BatchOperationsBar() {
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <FilePen className="mr-2 h-4 w-4 text-blue-400" />
-                  批量重命名
+                  重命名
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -297,7 +352,17 @@ export function BatchOperationsBar() {
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
                   <Copy className="mr-2 h-4 w-4 text-blue-400" />
-                  批量复制链接
+                  复制链接
+                </DropdownMenuItem>
+
+                <div className="my-1 h-px bg-border" />
+
+                <DropdownMenuItem
+                  onClick={handleBatchPermanentDelete}
+                  className="cursor-pointer text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                  彻底删除
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
