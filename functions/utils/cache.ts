@@ -38,6 +38,8 @@ export async function putToCache(
   type: keyof typeof CACHE_CONFIG
 ) {
   if (!response.ok) return;
+  // Cloudflare Workers Cache API does not support manually caching 206 Partial Content responses
+  if (response.status === 206) return;
 
   const cache = await caches.open('otterhub-cache');
   const key = createCacheKey(request);
