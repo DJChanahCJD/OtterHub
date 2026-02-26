@@ -66,7 +66,9 @@ rawRoutes.get('/:key', async (c) => {
 
     // Only cache public files
     if (!isPrivate) {
-      await putToCache(c.req.raw, resp.clone(), "file");
+      if (resp.status === 200) {
+        c.executionCtx.waitUntil(putToCache(c.req.raw, resp.clone(), "file"));
+      }
     } else {
       // Ensure private files are not cached by browser/proxies
       resp.headers.set("Cache-Control", "private, no-store, max-age=0");
