@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { app } from './app'
 import { handle } from 'hono/cloudflare-pages'
 
@@ -18,9 +17,3 @@ export const onRequest = async (ctx: any) => {
 
   return res
 }
-=======
-import { app } from './app';
-import { handle } from 'hono/cloudflare-pages';
-
-// export const onRequest = handle(app);
->>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9

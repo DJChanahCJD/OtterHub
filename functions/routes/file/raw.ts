@@ -21,7 +21,6 @@ rawRoutes.get('/:key', async (c) => {
     const isPrivate = item.metadata?.tags?.includes(FileTag.Private);
 
     if (isPrivate) {
-<<<<<<< HEAD
       let authorized = false;
 
       // 1. 优先检查 API Token (Authorization Header)
@@ -44,18 +43,6 @@ rawRoutes.get('/:key', async (c) => {
           } catch (e) {
             // Token invalid
           }
-=======
-      const token = getCookie(c, 'auth');
-      let authorized = false;
-
-      if (token) {
-        try {
-          // Use JWT_SECRET if available, otherwise fallback to PASSWORD
-          await verifyJWT(token, c.env.JWT_SECRET || c.env.PASSWORD);
-          authorized = true;
-        } catch (e) {
-          // Token invalid
->>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9
         }
       }
 
