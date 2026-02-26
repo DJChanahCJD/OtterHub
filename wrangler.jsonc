@@ -2,6 +2,9 @@
 {
 	"name": "otterhub",
 	"compatibility_date": "2026-01-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"assets": {
 		// The path to the directory containing the `index.html` file to be served at `/`
 		"directory": "./frontend/out"

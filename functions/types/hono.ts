@@ -23,4 +23,5 @@ export type Env = {
   
   TG_CHAT_ID?: string;
   TG_BOT_TOKEN?: string;
+  SENTRY_DSN?: string;
 };
