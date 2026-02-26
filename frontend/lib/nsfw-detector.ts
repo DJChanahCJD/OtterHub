@@ -1,6 +1,6 @@
 import * as nsfwjs from "nsfwjs";
 import * as tf from "@tensorflow/tfjs";
-import { MAX_CHUNK_SIZE } from "./types";
+import { MAX_CHUNK_SIZE } from "@shared/types";
 
 tf.enableProdMode();
 

@@ -2,10 +2,10 @@ import { useState, useMemo, useRef } from "react";
 import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
 import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch } from "@/lib/utils";
 import { getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
-import { MAX_CONCURRENTS, MAX_CHUNK_SIZE, binaryExtensions } from "@/lib/types";
+import { MAX_CONCURRENTS, binaryExtensions } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
-import { FileItem, FileType } from "@shared/types";
+import { FileItem, FileType, MAX_CHUNK_SIZE } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { usePreviewStore } from "@/stores/preview-store";
 
