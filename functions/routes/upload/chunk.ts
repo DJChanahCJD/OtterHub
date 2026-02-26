@@ -4,7 +4,11 @@ import { zValidator } from '@hono/zod-validator';
 import { FileType, FileMetadata, chunkPrefix, MAX_FILENAME_LENGTH, MAX_FILE_SIZE, MAX_CHUNK_NUM } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { getUniqueFileId, buildKeyId, getFileExt } from '@utils/file';
+<<<<<<< HEAD
 import { TEMP_CHUNK_TTL } from 'types';
+=======
+import { MAX_CHUNK_NUM, MAX_FILE_SIZE, TEMP_CHUNK_TTL } from 'types';
+>>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 

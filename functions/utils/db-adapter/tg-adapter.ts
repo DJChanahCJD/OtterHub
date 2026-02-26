@@ -23,7 +23,11 @@ import {
   getTgFilePath,
   processGifFile,
 } from "./tg-tools";
+<<<<<<< HEAD
 import { MAX_CHUNK_SIZE } from "@shared/types";
+=======
+import { MAX_CHUNK_SIZE } from "types";
+>>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9
 
 // Telegram存储适配器实现
 export class TGAdapter extends BaseAdapter {

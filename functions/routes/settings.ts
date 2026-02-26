@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { CF } from 'types';
+<<<<<<< HEAD
 import { GeneralSettings, MusicStoreData, NetEaseStoreData } from '@shared/types';
 
 import { ok, fail } from '@utils/response';
@@ -40,11 +41,17 @@ function createSettingsRoutes<T>(
     }
   });
 }
+=======
+import type { Env } from '../types/hono';
+
+import { ok, fail } from '@utils/response';
+>>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();
 
 settingsRoutes.use('*', authMiddleware);
 
+<<<<<<< HEAD
 /* ========= Settings ========= */
 
 createSettingsRoutes<GeneralSettings>(
@@ -84,5 +91,38 @@ createSettingsRoutes<NetEaseStoreData>(
   {
     getMessage: '获取网易云账号失败',
     postMessage: '网易云账号已同步',
+=======
+settingsRoutes.get('/', async (c) => {
+  try {
+    const kv = c.env.oh_file_url;
+    const settingsStr = await kv.get(CF.SETTINGS_KEY);
+    const settings = settingsStr ? JSON.parse(settingsStr) : {};
+    return ok(c, settings);
+  } catch (error: any) {
+    return fail(c, "获取设置失败: " + error.message, 500);
+  }
+});
+
+settingsRoutes.post(
+  '/',
+  async (c) => {
+    try {
+      const kv = c.env.oh_file_url;
+      const newSettings = await c.req.json();
+      
+      const oldSettingsStr = await kv.get(CF.SETTINGS_KEY);
+      const oldSettings = oldSettingsStr ? JSON.parse(oldSettingsStr) : {};
+      
+      const mergedSettings = {
+        ...oldSettings,
+        ...newSettings
+      };
+      
+      await kv.put(CF.SETTINGS_KEY, JSON.stringify(mergedSettings));
+      return ok(c, mergedSettings, "设置已更新");
+    } catch (error: any) {
+      return fail(c, "保存设置失败: " + error.message, 500);
+    }
+>>>>>>> 82d9b41c2fb72e68a5e1ac6cce44c606d3f22ea9
   }
 );
