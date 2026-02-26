@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePreviewStore } from "@/stores/preview-store";
 import { getFileUrl } from "@/lib/api";
 import { downloadFile } from "@/lib/utils";
-import { Copy, CopyCheck, Download, Minimize2, X, FileText, Maximize2 } from "lucide-react";
+import { Copy, CopyCheck, Download, Minus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -89,7 +89,7 @@ export function GlobalTextReader({ position = "top-[60%]" }: { position?: string
             </h3>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => minimize('text')} title="最小化">
-                <Minimize2 className="h-4 w-4" />
+                <Minus className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" onClick={() => close('text')} title="关闭">
                 <X className="h-4 w-4" />

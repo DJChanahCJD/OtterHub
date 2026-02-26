@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePreviewStore } from "@/stores/preview-store";
 import { API_URL, getFileUrl } from "@/lib/api";
-import { Minimize2, X, Video as VideoIcon } from "lucide-react";
+import { Minus, X, Video as VideoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -27,14 +27,6 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
     }
   }, [viewState]);
 
-  if (!activeFile) return null;
-
-  const url = getFileUrl(activeFile.name);
-  const poster =
-    typeof activeFile.metadata?.thumbUrl === "string" && activeFile.metadata.thumbUrl.length > 0
-      ? `${API_URL}${activeFile.metadata.thumbUrl}`
-      : undefined;
-
   const updateBufferedPercent = useCallback(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -47,6 +39,14 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
     const percent = Math.max(0, Math.min(100, (lastBufferedEnd / duration) * 100));
     setBufferedPercent(percent);
   }, []);
+
+  if (!activeFile) return null;
+
+  const url = getFileUrl(activeFile.name);
+  const poster =
+    typeof activeFile.metadata?.thumbUrl === "string" && activeFile.metadata.thumbUrl.length > 0
+      ? `${API_URL}${activeFile.metadata.thumbUrl}`
+      : undefined;
 
   return (
     <>
@@ -71,7 +71,7 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
             </h3>
             <div className="flex gap-2 pointer-events-auto">
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => minimize('video')} title="最小化">
-                <Minimize2 className="h-5 w-5" />
+                <Minus className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => close('video')} title="关闭">
                 <X className="h-5 w-5" />

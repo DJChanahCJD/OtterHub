@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePreviewStore } from "@/stores/preview-store";
 import { getFileUrl } from "@/lib/api";
-import { Music, Minimize2, X, Play, Pause } from "lucide-react";
+import { Music, Minus, X, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +74,7 @@ export function GlobalAudioPlayer({ position = "top-[20%]" }: { position?: strin
           {/* Header Actions */}
           <div className="absolute top-4 right-4 flex gap-2">
             <Button variant="ghost" size="icon" onClick={() => minimize('audio')} title="最小化">
-              <Minimize2 className="h-4 w-4" />
+              <Minus className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => close('audio')} title="关闭">
               <X className="h-4 w-4" />
