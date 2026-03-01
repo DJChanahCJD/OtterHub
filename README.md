@@ -95,6 +95,8 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
    ```bash
    npm run dev
    ```
+> 第一次启动需要构建前端 `npm run build`，后续启动直接 `npm run dev` 即可。
+
 
 3. **访问网站**
    - 前端：`http://localhost:3000`
@@ -112,7 +114,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 Fork 本项目，然后在 Cloudflare Dashboard 创建 Pages 项目：
 
-- **构建命令**: `npm run build`
+- **构建命令**: `npm install && npm run build`
 - **构建输出目录**: `frontend/out`
 
 ### 2. 配置环境变量
