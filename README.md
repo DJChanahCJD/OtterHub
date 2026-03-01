@@ -136,6 +136,10 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 > `TG_CHAT_ID` 和 `TG_BOT_TOKEN` 需在 Telegram 中获取。
 > 💡 详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
 
+### 4. 重新部署
+
+回到部署页面重试部署，让环境变量和 KV 生效。
+
 ---
 
 ## 🔧 技术原理
@@ -345,7 +349,6 @@ OtterHub/
   - [x] NSFWJS 客户端检测（安全模式遮罩）
   - [x] 日夜模式
   - [x] 移动端基础适配
-  - [x] Toast 轻量化（移动端友好）
 
 ### High Priority
 - [x] 基于 cookie 实现登录登出
@@ -357,14 +360,7 @@ OtterHub/
   - [x] KV实现, 一次性 / 有效期 URL （允许用户选择）
   - [x] key: `shared:<uuid>`
   - [x] value: `<file_key>`
-- [ ] 文件类型定制
-  - [ ] 音频：音频播放列表（歌曲 / 博客场景）
-    - [x] 对接GDStudio API实现歌曲搜索
-    - [x] 歌词沉浸页🌟
-    - [x] 对接KV持久化
-    - [x] 随机播放队列（允许回溯上一首）
-    - [x] 歌单导入功能（支持获取网易云的个人歌单导入, 参考1Listen）
-  - ~~[x] 视频：在线播放支持 (video.js)~~
+- [x] 文件类型定制
   - [x] 文档：预览支持
     - [x] 电子书（PDF、EPUB 等） `<iframe> / <embed> / pdf.js / epub.js`
     - [x] 漫画（图片 → 连续阅读 / PDF）
