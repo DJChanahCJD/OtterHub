@@ -163,16 +163,6 @@
   .custom-scrollbar {
     scrollbar-width: thin;
   }
-
-  .lyrics-mask {
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 15%,
-      black 85%,
-      transparent 100%
-    );
-  }
 }
 
 @keyframes ripple {
@@ -183,26 +173,5 @@
   100% {
     transform: scale(4);
     opacity: 0;
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-/* Add audio bar animation for music visualizer */
-@keyframes audio-bar {
-  0%,
-  100% {
-    height: 0.5rem;
-  }
-  50% {
-    height: 1.5rem;
   }
 }

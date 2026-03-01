@@ -7,9 +7,7 @@ import { wallpaperRoutes } from './routes/wallpaper';
 import { uploadRoutes } from './routes/upload';
 import { trashRoutes } from './routes/trash';
 import { proxyRoutes } from './routes/proxy';
-import { musicRoutes } from './routes/music';
 import { shareRoutes } from './routes/share';
-import { syncRoutes } from './routes/sync';
 import { Hono } from 'hono';
 import type { Env } from './types/hono';
 
@@ -30,9 +28,7 @@ app.route('/wallpaper', wallpaperRoutes);
 app.route('/upload', uploadRoutes);
 app.route('/trash', trashRoutes);
 app.route('/proxy', proxyRoutes);
-app.route('/music-api', musicRoutes);
 app.route('/share', shareRoutes);
-app.route('/sync', syncRoutes);
 
 // Export AppType for RPC
 export type AppType = typeof app;

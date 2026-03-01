@@ -1,8 +1,6 @@
 import { ImageLoadMode } from "./wallpaper";
 
 export * from "./wallpaper";
-export * from "./music";
-export * from "./sync";
 
 // === 全局设置相关类型 ===
 
@@ -84,7 +82,6 @@ export type ListFilesResponse = {
   cacheStatus?: string | null;
 }
 
-// TODO: 分享相关类型（非前后端共享，待迁移）
 export interface ShareItem {
   token: string;
   fileKey: string;
@@ -99,19 +96,6 @@ export interface CreateShareRequest {
   fileKey: string;
   expireIn?: number;
   oneTime?: boolean;
-}
-
-
-export interface NetEaseStoreData {
-  cookie: string;
-  userId: string;
-  profile: {
-    nickname: string;
-    avatarUrl: string;
-    backgroundUrl: string;
-    signature: string;
-  } | null;
-  updatedAt: number;
 }
 
 export const MAX_FILENAME_LENGTH = 128; // 最大文件名长度（包括扩展名）
