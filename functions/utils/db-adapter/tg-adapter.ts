@@ -31,14 +31,19 @@ export class TGAdapter extends BaseAdapter {
     super(env, kvName);
   }
 
-  private async getCachedTgFilePath(fileId: string): Promise<string | null> {
+  private async getCachedTgFilePath(fileId: string, forceRefresh: boolean = false): Promise<string | null> {
     const kv = this.env[this.kvName];
     const cacheKey = `tgpath:${fileId}`;
 
-    try {
-      const { metadata } = await kv.getWithMetadata(cacheKey);
-      if (metadata?.tgFilePath) return metadata.tgFilePath;
-    } catch {
+    if (!forceRefresh) {
+      try {
+        const { metadata } = await kv.getWithMetadata(cacheKey);
+        if (metadata?.tgFilePath) {
+          return metadata.tgFilePath;
+        }
+      } catch (error) {
+        console.warn(`[TGAdapter] Cache read failed for fileId: ${fileId}`, error);
+      }
     }
 
     const filePath = await getTgFilePath(fileId, this.env.TG_BOT_TOKEN);
@@ -46,12 +51,14 @@ export class TGAdapter extends BaseAdapter {
 
     try {
       await kv.put(cacheKey, '', {
-        expirationTtl: 60 * 60 * 24 * 7,
+        // Telegram 文件链接有效期为 1 小时，缓存 55 分钟以防过期
+        expirationTtl: 3300, 
         metadata: {
           tgFilePath: filePath,
         }
       });
-    } catch {
+    } catch (error) {
+      console.warn(`[TGAdapter] Cache write failed for fileId: ${fileId}`, error);
     }
 
     return filePath;
@@ -231,12 +238,11 @@ export class TGAdapter extends BaseAdapter {
       const ext = key.substring(key.lastIndexOf(".") + 1);
       const contentType = getContentTypeByExt(ext);
 
-      const filePath = await this.getCachedTgFilePath(fileId);
+      let filePath = await this.getCachedTgFilePath(fileId);
       if (!filePath) {
         return failResponse(`File not found for key: ${key}`, 404);
       }
 
-      const tgUrl = buildTgFileUrl(this.env.TG_BOT_TOKEN, filePath);
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", encodeContentDisposition(metadata.fileName));
@@ -244,9 +250,27 @@ export class TGAdapter extends BaseAdapter {
       headers.set("Accept-Ranges", "bytes");
 
       const range = req?.headers.get("Range") || null;
-      if (range) {
-        const tgResp = await fetch(tgUrl, { headers: { Range: range } });
 
+      const fetchFromTg = async (currentFilePath: string) => {
+        const tgUrl = buildTgFileUrl(this.env.TG_BOT_TOKEN, currentFilePath);
+        return range 
+          ? fetch(tgUrl, { headers: { Range: range } })
+          : fetch(tgUrl);
+      };
+
+      let tgResp = await fetchFromTg(filePath);
+
+      // Telegram 链接有效期 1 小时，如遇 401/404 错误则强制刷新缓存并重试一次
+      if (tgResp.status === 401 || tgResp.status === 404) {
+        console.log(`[TGAdapter] TG URL expired or invalid (Status: ${tgResp.status}). Retrying for key: ${key}`);
+        filePath = await this.getCachedTgFilePath(fileId, true);
+        if (!filePath) {
+          return failResponse(`File not found for key: ${key} after retry`, 404);
+        }
+        tgResp = await fetchFromTg(filePath);
+      }
+
+      if (range) {
         const contentRange = tgResp.headers.get("Content-Range");
         const contentLength = tgResp.headers.get("Content-Length");
 
@@ -259,7 +283,6 @@ export class TGAdapter extends BaseAdapter {
         });
       }
 
-      const tgResp = await fetch(tgUrl);
       const contentLength = tgResp.headers.get("Content-Length");
       if (contentLength) headers.set("Content-Length", contentLength);
 
@@ -319,7 +342,7 @@ export class TGAdapter extends BaseAdapter {
 
     // 准备上下文
     const botToken = this.env.TG_BOT_TOKEN;
-    const getFilePath = (fileId: string) => this.getCachedTgFilePath(fileId);
+    const getFilePath = (fileId: string, forceRefresh = false) => this.getCachedTgFilePath(fileId, forceRefresh);
 
     // 创建连续流
     const stream = new ReadableStream({
@@ -359,38 +382,20 @@ export class TGAdapter extends BaseAdapter {
             // 或者如果已经有预读取的 promise，使用它
             let response: Response;
             
-            // 预读取逻辑：始终保持 fetchPromise 是 "下一个要处理的请求"
-            // 当循环开始时，fetchPromise 应该是当前分片的请求（如果是第一次）或者上一轮预读取的
-            
-            // 修正逻辑：
-            // 我们需要处理当前分片 chunk[i]。
-            // 如果 fetchPromise 存在且对应当前分片（实际上我们在循环尾部预读 i+1），则 await 它。
-            // 但第一次进入循环时，fetchPromise 是 null。
-            
-            // 让我们使用更清晰的预读取模型：
-            // 在处理 chunk[i] 之前，确保 chunk[i] 正在请求中。
-            // 在处理 chunk[i] 的过程中，启动 chunk[i+1] 的请求。
-
-            const fetchChunk = async (c: Chunk) => {
-               const filePath = await getFilePath(c.file_id);
+            // 预读取逻辑：始终保持 fetchPromise 是下一个要处理的请求
+            // 在处理当前分片的同时，启动下一个分片的请求
+            const fetchChunk = async (c: Chunk, forceRefresh = false) => {
+               const filePath = await getFilePath(c.file_id, forceRefresh);
                if (!filePath) throw new Error(`Missing chunk ${c.idx}`);
                const url = buildTgFileUrl(botToken, filePath);
                
-               // 计算在该分片内的请求范围
-               // 分片范围: [chunkStart, chunkEnd)
-               // 请求范围: [start, end + 1)
-               // 交集: [max(chunkStart, start), min(chunkEnd, end + 1))
-               
+               // 计算该分片内的请求范围，并转换为相对于该分片的 Range
                const reqStart = Math.max(chunkStart, start);
                const reqEnd = Math.min(chunkEnd, end + 1);
-               
-               // 转换为相对于分片的 Range
                const relativeStart = reqStart - chunkStart;
                const relativeEnd = reqEnd - chunkStart;
                
-               // 如果请求的是整个分片，且分片很大，TG 可能支持 Range
-               // 这里我们总是使用 Range 以减少带宽（如果只需要部分）
-               // TG API range 是 inclusive
+               // 始终使用 Range 请求以减少带宽消耗 (TG API range 包含边界值)
                const headers: HeadersInit = {
                    "Range": `bytes=${relativeStart}-${relativeEnd - 1}`
                };
@@ -404,6 +409,12 @@ export class TGAdapter extends BaseAdapter {
             
             response = await fetchPromise;
             fetchPromise = null; // 消费掉
+
+            // Telegram 链接有效期 1 小时，如遇 401/404 错误则强制刷新缓存并重试一次
+            if (response.status === 401 || response.status === 404) {
+                console.log(`[TGAdapter] Chunk ${chunk.idx} URL expired (Status: ${response.status}). Retrying...`);
+                response = await fetchChunk(chunk, true);
+            }
 
             // 立即启动下一个分片的预读取
             if (i + 1 < sortedChunks.length) {
