@@ -136,15 +136,52 @@ export function resolveFileDescriptor(
   };
 }
 
+type TgPhotoVariant = {
+  file_id?: string;
+  file_size?: number;
+};
+
+/**
+ * 从 Telegram 图片上传结果中提取原图与预览图的 file_id。
+ */
+export function getTgPhotoVariantIds(response: any): {
+  fileId: string | null;
+  previewFileId: string | null;
+} {
+  if (!response?.ok || !Array.isArray(response?.result?.photo)) {
+    return { fileId: null, previewFileId: null };
+  }
+
+  const variants = (response.result.photo as TgPhotoVariant[])
+    .filter((item) => typeof item.file_id === "string");
+  if (!variants.length) {
+    return { fileId: null, previewFileId: null };
+  }
+
+  const sortedVariants = [...variants].sort((prev, current) =>
+    (prev.file_size ?? 0) - (current.file_size ?? 0),
+  );
+  const originalVariant = sortedVariants[sortedVariants.length - 1];
+  const previewVariant = [...sortedVariants]
+    .reverse()
+    .find((item) => item.file_id !== originalVariant.file_id) ?? null;
+
+  return {
+    fileId: originalVariant.file_id ?? null,
+    previewFileId: previewVariant?.file_id ?? null,
+  };
+}
+
+/**
+ * 提取 Telegram 上传结果中的主文件 file_id。
+ */
 export function getTgFileId(response: any): string | null {
   if (!response.ok || !response.result) return null;
 
   const result = response.result;
 
   if (result.photo) {
-    return result.photo.reduce((prev: any, current: any) =>
-      prev.file_size > current.file_size ? prev : current
-    ).file_id;
+    return getTgPhotoVariantIds(response).fileId;
   }
   if (result.document) return result.document.file_id;
   if (result.video) return result.video.file_id;
@@ -156,12 +193,15 @@ export function getTgFileId(response: any): string | null {
   return null;
 }
 
+/**
+ * 提取 Telegram 视频缩略图 file_id。
+ */
 export function getVideoThumbId(response: any): string | null {
   if (!response.ok || !response.result) return null;
 
   const result = response.result;
   if (!result.video) return null;
   
-  // 拿到file_id 还需要通过getFilePath获取到具体文件路径，然后存到video的元数据中
-  return result.video.thumb.file_id;
+  // 拿到 file_id 还需要通过 getFilePath 获取到具体文件路径，然后存到 video 的元数据中
+  return response.result.video.thumbnail?.file_id || response.result.video.thumb?.file_id || null;
 }
