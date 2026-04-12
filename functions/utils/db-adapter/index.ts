@@ -6,9 +6,9 @@ import { CF } from "types";
 
 // 存储适配器接口定义
 export interface DBAdapter {
-  // 上传单个完整文件
-  uploadFile(file: File | Blob | Uint8Array, metadata: FileMetadata): Promise<{ key: string }>;
-  uploadStream(stream: ReadableStream, metadata: FileMetadata): Promise<{ key: string }>;
+  // 上传单个完整文件；waitUntil 可选，传入后 AI 分析将在后台异步执行
+  uploadFile(file: File | Blob | Uint8Array, metadata: FileMetadata, waitUntil?: (p: Promise<any>) => void): Promise<{ key: string }>;
+  uploadStream(stream: ReadableStream, metadata: FileMetadata, waitUntil?: (p: Promise<any>) => void): Promise<{ key: string }>;
   // 上传分片文件
   uploadChunk(
     key: string,

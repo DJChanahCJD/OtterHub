@@ -14,6 +14,11 @@ export interface R2Bucket {
   delete(key: string): Promise<void>;
 }
 
+/** Cloudflare Workers AI binding（在 Pages Functions Bindings 面板中配置，变量名为 AI） */
+export interface WorkersAI {
+  run(model: string, inputs: Record<string, any>): Promise<any>;
+}
+
 export type Env = {
   oh_file_url: KVNamespace;
   oh_file_r2?: R2Bucket;
@@ -23,4 +28,7 @@ export type Env = {
   
   TG_CHAT_ID?: string;
   TG_BOT_TOKEN?: string;
+
+  /** Workers AI binding，可选；不配置时 AI 富化功能自动跳过 */
+  AI?: WorkersAI;
 };

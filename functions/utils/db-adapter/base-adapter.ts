@@ -22,11 +22,13 @@ export abstract class BaseAdapter implements DBAdapter {
   abstract uploadFile(
     file: File | Blob | Uint8Array,
     metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
   ): Promise<{ key: string }>;
 
   abstract uploadStream(
     stream: ReadableStream,
     metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
   ): Promise<{ key: string }>;
 
   abstract get(key: string, req?: Request): Promise<Response>;

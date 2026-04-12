@@ -28,7 +28,7 @@ singleUploadRoutes.post('/', async (c) => {
       tags: isNsfw ? [FileTag.NSFW] : [],
     };
 
-    const { key } = await dbAdapter.uploadFile(uploadFile, metadata);
+    const { key } = await dbAdapter.uploadFile(uploadFile, metadata, c.executionCtx.waitUntil.bind(c.executionCtx));
     return ok(c, key);
   } catch (error: any) {
     console.error('Upload error:', error);

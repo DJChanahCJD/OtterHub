@@ -72,6 +72,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
   - 密码登录（基于 JWT + Cookie）
   - NSFW 图片客户端检测（nsfw.js），安全模式下自动遮罩
 - **基础管理功能**：批量下载 / 删除，搜索 / 收藏 / 排序 / 标签
+- **AI 图片分析**：上传图片后自动生成简要描述，便于图片检索（需配置 Workers AI binding）
 
 ---
 
@@ -128,15 +129,22 @@ TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 ```
 
+> `TG_CHAT_ID` 和 `TG_BOT_TOKEN` 需在 Telegram 中获取。
+> 💡 详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
+
 ### 3. 绑定 KV Namespace
 
 1. 在 Cloudflare Dashboard 创建 KV 命名空间 `oh_file_url`
 2. 将 `oh_file_url` 绑定到 Pages 项目，变量名也设为 `oh_file_url`
 
-> `TG_CHAT_ID` 和 `TG_BOT_TOKEN` 需在 Telegram 中获取。
-> 💡 详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
+### 4. （可选）绑定 Workers AI
 
-### 4. 重新部署
+如需启用图片自动分析功能：
+
+1. 进入 Pages 项目 -> **Settings -> Functions -> AI Bindings**
+2. 点击「Add binding」，**变量名填 `AI`**，选择默认 Workers AI 资源
+
+### 5. 重新部署
 
 回到部署页面重试部署，让环境变量和 KV 绑定生效。
 
@@ -351,9 +359,7 @@ OtterHub/
 - [x] 预览与展示
   - [x] 图片瀑布流（支持 GIF）
   - [x] 视频缩略图（Telegram thumbnail），仅 20MB 内的视频文件支持
-  - [x] 文档预览支持
-    - [x] 纯文本文件（TXT / MD / JSON 等）
-    - [x] EPUB 电子书（PDF 直接走浏览器预览）
+  - [x] 纯文本文件预览（TXT / MD / JSON 等）
   - [x] 图片加载策略（默认 / 省流 / 无图）
 
 - [x] 安全与体验
@@ -361,6 +367,7 @@ OtterHub/
   - [x] 移动端基础适配
   - [x] NSFWJS 客户端检测（安全模式遮罩）
   - [x] 右下角悬浮按钮（FAB），多操作统一入口（登出、管理页面、回收站）
+  - [x] AI 图片分析
 
 ---
 

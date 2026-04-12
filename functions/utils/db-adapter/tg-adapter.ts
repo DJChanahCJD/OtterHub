@@ -25,6 +25,7 @@ import {
   processGifFile,
 } from "./tg-tools";
 import { MAX_CHUNK_SIZE } from "@shared/types";
+import { analyzeImageAndEnrich, isSupportedImage } from "../ai/image-analysis";
 
 // Telegram存储适配器实现
 export class TGAdapter extends BaseAdapter {
@@ -59,6 +60,7 @@ export class TGAdapter extends BaseAdapter {
   async uploadFile(
     file: File | Blob | Uint8Array,
     metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
   ): Promise<{ key: string }> {
     if (metadata.fileSize > MAX_CHUNK_SIZE) {
       throw new Error(`File size exceeds ${MAX_CHUNK_SIZE}MB`);
@@ -113,17 +115,28 @@ export class TGAdapter extends BaseAdapter {
       await kv.put(key, "", { metadata });
     }
 
+    // 图片上传成功后异步触发 AI 分析
+    if (kv && fileType === FileType.Image && isSupportedImage(processedFile.type, processedFileName)) {
+      const enrichTask = analyzeImageAndEnrich(this.env, kv, key, processedFile, metadata);
+      if (waitUntil) {
+        waitUntil(enrichTask);
+      } else {
+        enrichTask.catch((err) => console.warn("[AI] Background enrich failed:", err));
+      }
+    }
+
     return { key };
   }
 
   async uploadStream(
     stream: ReadableStream,
     metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
   ): Promise<{ key: string }> {
     // Telegram 不支持流式上传，需要转为 Blob
     const response = new Response(stream);
     const blob = await response.blob();
-    return this.uploadFile(blob, metadata);
+    return this.uploadFile(blob, metadata, waitUntil);
   }
 
   /**

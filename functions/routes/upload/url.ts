@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { FileMetadata, FileTag } from '@shared/types';
+import { FileMetadata, FileTag, MAX_FILENAME_LENGTH } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
@@ -44,7 +44,7 @@ urlUploadRoutes.post(
         tags: isNsfw ? [FileTag.NSFW] : [],
       };
 
-      const { key } = await dbAdapter.uploadStream(response.body, metadata);
+      const { key } = await dbAdapter.uploadStream(response.body, metadata, c.executionCtx.waitUntil.bind(c.executionCtx));
       return ok(c, { key, fileSize });
     } catch (error: any) {
       console.error('Remote upload error:', error);
