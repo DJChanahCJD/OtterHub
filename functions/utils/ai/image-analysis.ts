@@ -1,4 +1,4 @@
-import { FileMetadata } from "@shared/types";
+import { FileMetadata, MAX_DESC_LENGTH } from "@shared/types";
 import { buildTgFileUrl, getTgFilePath } from "@utils/db-adapter/tg-tools";
 
 type WorkersAI = {
@@ -24,8 +24,13 @@ type AIImageSource = {
 const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 仅用于内存文件的兜底限制
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
-const AI_DESC_MAX = 300;
-const AI_OUTPUT_PROMPT = "Extract key elements as a comma-separated list of keywords. Include main objects, background, colors, style, and mood. No sentences, no markdown. Example: village, beach, castle, bright blue, oil painting, peaceful.";
+const AI_OUTPUT_PROMPT =
+  "Generate search-oriented visual tags for this image. " +
+  "Return ONLY a comma-separated list of 5 to 10 short tags. " +
+  "Order by importance: main subject, action/pose, key objects, scene/location, distinctive color, obvious style. " +
+  "Prefer concrete nouns or short noun phrases. " +
+  "Avoid vague adjectives, emotions, tiny details, and duplicate meanings. " +
+  "No sentences, no markdown, no explanations.";
 
 export function isSupportedImage(mimeType?: string | null, fileName?: string): boolean {
   if (mimeType) return SUPPORTED_IMAGE_PREFIXES.some((p) => mimeType.startsWith(p));
@@ -47,14 +52,17 @@ function extractImageDesc(result: unknown): string {
 }
 
 function normalizeDesc(desc: string): string {
-  return desc
+  const parsedTags = desc
     .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fa5,\s-]/g, "") // 仅保留字母、数字、中文、逗号、空格和连字符
+    .replace(/[^a-z0-9\u4e00-\u9fa5,\s-]/g, "") // 仅保留字母数字、中文、逗号、空格、连字符
     .split(",")
-    .map(tag => tag.trim())
-    .filter(Boolean)
+    .map(tag => tag.trim().slice(0, 24))       // 限制单个 tag 长度，防止长句污染
+    .filter(Boolean);                          // 过滤空值
+
+  // 使用 Set 去重，再重新拼接并限制总长度
+  return Array.from(new Set(parsedTags))
     .join(", ")
-    .slice(0, AI_DESC_MAX);
+    .slice(0, MAX_DESC_LENGTH);
 }
 
 /**
