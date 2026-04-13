@@ -18,61 +18,34 @@ type KVWithMetadata = {
 
 type AIImageSource = {
   previewFileId?: string | null;
+  tgFileId?: string | null; // 用于兜底的原图 ID
 };
 
-/** 支持 AI 图片分析的图片 MIME 前缀 */
 const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-
-/** AI 输入最大体积，避免 Worker 内存和请求体膨胀 */
-const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-
-/** AI 分析使用的 Cloudflare image-to-text 模型 */
+const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 仅用于内存文件的兜底限制
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
-
-/** AI 描述最大长度，避免 metadata 过大 */
 const AI_DESC_MAX = 300;
+const AI_OUTPUT_PROMPT = "Extract key elements as a comma-separated list of keywords. Include main objects, background, colors, style, and mood. No sentences, no markdown. Example: village, beach, castle, bright blue, oil painting, peaceful.";
 
-// 强制输出逗号分隔的标签
-const AI_OUTPUT_PROMPT = "Extract key elements as a comma-separated list of keywords. Include main objects, background, colors, style, and emotional mood/atmosphere. No sentences, no markdown. Example: village, beach, castle, bright blue, oil painting, peaceful.";
-
-/**
- * 判断当前文件是否支持图片 AI 分析。
- */
-export function isSupportedImage(mimeType: string | null | undefined, fileName?: string): boolean {
-  if (mimeType) {
-    return SUPPORTED_IMAGE_PREFIXES.some((prefix) => mimeType.startsWith(prefix));
-  }
+export function isSupportedImage(mimeType?: string | null, fileName?: string): boolean {
+  if (mimeType) return SUPPORTED_IMAGE_PREFIXES.some((p) => mimeType.startsWith(p));
   if (fileName) {
-    const ext = fileName.split(".").pop()?.toLowerCase();
-    return ["jpg", "jpeg", "png", "webp", "gif"].includes(ext ?? "");
+    const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+    return ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
   }
   return false;
 }
 
-/**
- * 将图片内容读取为 Uint8Array，供 Workers AI 调用。
- */
-async function toUint8Array(file: File | Blob): Promise<Uint8Array> {
-  const buffer = await file.arrayBuffer();
-  return new Uint8Array(buffer);
-}
-
-/**
- * 极简提取 AI 纯文本返回值。
- */
 function extractImageAiDesc(result: unknown): string {
   if (typeof result === "string") return result;
-
   if (result && typeof result === "object" && !Array.isArray(result)) {
     const record = result as Record<string, unknown>;
     const text = record.response ?? record.description ?? record.text ?? record.result;
     if (typeof text === "string") return text;
   }
-
   return "";
 }
 
-// 清洗逻辑改为标签标准化（小写、去除非法标点、去重排版）
 function normalizeAiDesc(desc: string): string {
   return desc
     .toLowerCase()
@@ -85,84 +58,58 @@ function normalizeAiDesc(desc: string): string {
 }
 
 /**
- * 拉取 Telegram 预览图并校验体积，避免把过大的图片送入 AI。
+ * 核心优化：利用 CF 边缘节点拉取并实时压缩图片，返回轻量级 ArrayBuffer
  */
-async function fetchTelegramPreviewBlob(
-  botToken: string,
-  previewFileId: string,
-  key: string,
-): Promise<Blob | null> {
-  const filePath = await getTgFilePath(previewFileId, botToken);
-  if (!filePath) {
-    console.warn(`[AI] Preview file path not found for key: ${key}`);
-    return null;
-  }
+async function fetchResizedImageBuffer(botToken: string, fileId: string): Promise<ArrayBuffer | null> {
+  const filePath = await getTgFilePath(fileId, botToken);
+  if (!filePath) return null;
 
-  const previewUrl = buildTgFileUrl(botToken, filePath);
-  const response = await fetch(previewUrl);
-  if (!response.ok) {
-    console.warn(`[AI] Preview fetch failed for key: ${key}, status: ${response.status}`);
-    return null;
-  }
+  const url = buildTgFileUrl(botToken, filePath);
+  
+  // 利用 Cloudflare Image Resizing，将压缩计算卸载到边缘节点
+  const res = await fetch(url, {
+    cf: {
+      image: {
+        width: 1024,
+        height: 1024,
+        fit: "scale-down",
+        format: "jpeg",
+        quality: 75,
+      },
+    },
+  } as RequestInit); // 断言以规避 TS 对 cf 字段的报错
 
-  const contentLength = Number(response.headers.get("Content-Length") ?? 0);
-  if (contentLength > AI_INPUT_MAX_BYTES) {
-    console.warn(`[AI] Preview too large for key: ${key}, size: ${contentLength}`);
-    return null;
-  }
-
-  const previewBlob = await response.blob();
-  if (previewBlob.size > AI_INPUT_MAX_BYTES) {
-    console.warn(`[AI] Preview blob too large for key: ${key}, size: ${previewBlob.size}`);
-    return null;
-  }
-
-  return previewBlob;
+  return res.ok ? res.arrayBuffer() : null;
 }
 
 /**
- * 选择用于 AI 分析的图片输入源：优先 TG 预览图，其次小体积原图。
+ * 获取用于 AI 分析的图像内存流。优先 CF 压缩网络图，回退小体积本地图。
  */
-async function resolveAnalysisFile(
+async function resolveAnalysisBuffer(
   env: AIEnv,
-  key: string,
   file: File | Blob,
-  metadata: FileMetadata,
-  source: AIImageSource,
-): Promise<File | Blob | null> {
-  if (source.previewFileId && env.TG_BOT_TOKEN) {
-    const previewBlob = await fetchTelegramPreviewBlob(env.TG_BOT_TOKEN, source.previewFileId, key);
-    if (previewBlob) {
-      return previewBlob;
+  source: AIImageSource
+): Promise<ArrayBuffer | null> {
+  const targetId = source.previewFileId || source.tgFileId;
+
+  // 1. 优先走 Cloudflare Resizing 链路 (无论原图多大，出来的都是小图)
+  if (env.TG_BOT_TOKEN && targetId) {
+    try {
+      const buffer = await fetchResizedImageBuffer(env.TG_BOT_TOKEN, targetId);
+      if (buffer) return buffer;
+    } catch (err) {
+      console.warn("[AI] CF Resize fetch failed, falling back to memory file:", err);
     }
   }
 
-  const originalSize = file.size || metadata.fileSize;
-  if (originalSize > AI_INPUT_MAX_BYTES) {
-    console.warn(`[AI] Skip original image for key: ${key}, size: ${originalSize}`);
-    return null;
+  // 2. 网络链路失败时，兜底使用当前内存中的 file 对象 (仅限小于 5MB)
+  if (file.size <= AI_INPUT_MAX_BYTES) {
+    return file.arrayBuffer();
   }
 
-  return file;
+  return null;
 }
 
-/**
- * 调用 Cloudflare Workers AI，返回清洗后的单行描述。
- */
-async function runAIAnalysis(ai: WorkersAI, file: File | Blob): Promise<string> {
-  const imageData = await toUint8Array(file);
-  const result = await ai.run(AI_MODEL, {
-    image: Array.from(imageData),
-    prompt: AI_OUTPUT_PROMPT,
-    max_tokens: 100,
-  });
-
-  return normalizeAiDesc(extractImageAiDesc(result));
-}
-
-/**
- * 对图片文件执行 AI 分析并将结果写回 KV metadata。
- */
 export async function analyzeImageAndEnrich(
   env: AIEnv,
   kv: KVWithMetadata,
@@ -174,16 +121,20 @@ export async function analyzeImageAndEnrich(
   if (!env.AI) return;
 
   try {
-    const analysisFile = await resolveAnalysisFile(env, key, file, metadata, source);
-    if (!analysisFile) {
+    const buffer = await resolveAnalysisBuffer(env, file, source);
+    if (!buffer) {
+      console.warn(`[AI] Skip enrich: No suitable image buffer resolved for key: ${key}`);
       return;
     }
 
-    const desc = await runAIAnalysis(env.AI, analysisFile);
-    if (!desc) {
-      console.warn(`[AI] Empty result for key: ${key}`);
-      return;
-    }
+    const result = await env.AI.run(AI_MODEL, {
+      image: Array.from(new Uint8Array(buffer)), 
+      prompt: AI_OUTPUT_PROMPT,
+      max_tokens: 100,
+    });
+
+    const desc = normalizeAiDesc(extractImageAiDesc(result));
+    if (!desc) return;
 
     const latest = await kv.getWithMetadata<FileMetadata>(key);
     if (!latest?.metadata) {
