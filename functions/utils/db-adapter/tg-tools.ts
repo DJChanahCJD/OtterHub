@@ -147,6 +147,7 @@ type TgDocumentThumb = {
 
 type TgDocumentResult = {
   file_id?: string;
+  file_size?: number;
   thumbnail?: TgDocumentThumb;
   thumb?: TgDocumentThumb;
 };
@@ -154,6 +155,7 @@ type TgDocumentResult = {
 type TgImageVariantIds = {
   fileId: string | null;
   previewFileId: string | null;
+  fileSize?: number;
 };
 
 /**
@@ -176,6 +178,7 @@ function extractPhotoVariantIds(variants: TgPhotoVariant[]): TgImageVariantIds {
   return {
     fileId: originalVariant.file_id ?? null,
     previewFileId: previewVariant?.file_id ?? null,
+    fileSize: originalVariant.file_size,
   };
 }
 
@@ -203,6 +206,7 @@ export function getTgImageVariantIds(response: any): TgImageVariantIds {
     fileId: documentResult.file_id,
     previewFileId:
       previewFileId && previewFileId !== documentResult.file_id ? previewFileId : null,
+    fileSize: documentResult.file_size,
   };
 }
 
@@ -246,7 +250,39 @@ export function getVideoThumbId(response: any): string | null {
 
   const result = response.result;
   if (!result.video) return null;
-  
+
   // 拿到 file_id 还需要通过 getFilePath 获取到具体文件路径，然后存到 video 的元数据中
   return response.result.video.thumbnail?.file_id || response.result.video.thumb?.file_id || null;
+}
+
+/**
+ * 从 Telegram 上传响应中提取实际文件大小。
+ * - sendPhoto: 取 photo 数组中最大变体的 file_size
+ * - sendDocument/sendVideo/sendAudio: 取对应对象的 file_size
+ */
+export function getTgFileSize(response: any): number | undefined {
+  if (!response?.ok || !response?.result) return undefined;
+
+  const result = response.result;
+
+  // sendPhoto 响应
+  if (Array.isArray(result.photo)) {
+    const variants = result.photo as TgPhotoVariant[];
+    const validVariants = variants.filter((v) => typeof v.file_size === "number");
+    if (validVariants.length === 0) return undefined;
+    return Math.max(...validVariants.map((v) => v.file_size!));
+  }
+
+  // sendDocument/sendVideo/sendAudio 响应
+  if (result.document?.file_size !== undefined) {
+    return result.document.file_size;
+  }
+  if (result.video?.file_size !== undefined) {
+    return result.video.file_size;
+  }
+  if (result.audio?.file_size !== undefined) {
+    return result.audio.file_size;
+  }
+
+  return undefined;
 }

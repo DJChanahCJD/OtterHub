@@ -18,6 +18,7 @@ import {
 import {
   getTgFileId,
   getTgImageVariantIds,
+  getTgFileSize,
   getVideoThumbId,
   resolveFileDescriptor,
   buildTgApiUrl,
@@ -105,6 +106,12 @@ export class TGAdapter extends BaseAdapter {
     const tgFileId = imageVariantIds.fileId ?? getTgFileId(result.data);
     if (!tgFileId) {
       throw new Error("Failed to extract Telegram file_id");
+    }
+
+    // 使用 Telegram 返回的实际文件大小（sendPhoto 会压缩图片）
+    const actualFileSize = getTgFileSize(result.data);
+    if (actualFileSize !== undefined) {
+      metadata.fileSize = actualFileSize;
     }
 
     // 图片和视频都尽量复用 Telegram 返回的小图能力

@@ -47,7 +47,7 @@ export type FileMetadata = {
   tags?: FileTag[] | string[];
   chunkInfo?: ChunkInfo; // 分片信息（大文件分片上传时使用）
   thumbUrl?: string; // 缩略图URL
-  aiDesc?: string;     // AI 生成的图片简短描述（可选，分析失败时不存在）
+  desc?: string;     // 图片简短描述（上传后 AI 自动分析填充）
 };
 
 export enum FileTag {

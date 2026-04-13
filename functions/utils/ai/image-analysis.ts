@@ -36,7 +36,7 @@ export function isSupportedImage(mimeType?: string | null, fileName?: string): b
   return false;
 }
 
-function extractImageAiDesc(result: unknown): string {
+function extractImageDesc(result: unknown): string {
   if (typeof result === "string") return result;
   if (result && typeof result === "object" && !Array.isArray(result)) {
     const record = result as Record<string, unknown>;
@@ -46,7 +46,7 @@ function extractImageAiDesc(result: unknown): string {
   return "";
 }
 
-function normalizeAiDesc(desc: string): string {
+function normalizeDesc(desc: string): string {
   return desc
     .toLowerCase()
     .replace(/[^a-z0-9\u4e00-\u9fa5,\s-]/g, "") // 仅保留字母、数字、中文、逗号、空格和连字符
@@ -133,7 +133,7 @@ export async function analyzeImageAndEnrich(
       max_tokens: 100,
     });
 
-    const desc = normalizeAiDesc(extractImageAiDesc(result));
+    const desc = normalizeDesc(extractImageDesc(result));
     if (!desc) return;
 
     const latest = await kv.getWithMetadata<FileMetadata>(key);
@@ -142,10 +142,10 @@ export async function analyzeImageAndEnrich(
       return;
     }
 
-    // 仅追加或更新 aiDesc，保留原有的 metadata 和 tags
+    // 仅追加或更新 desc，保留原有的 metadata 和 tags
     const updatedMeta: FileMetadata = {
       ...latest.metadata,
-      aiDesc: desc,
+      desc: desc,
     };
 
     await kv.put(key, latest.value ?? "", { metadata: updatedMeta });

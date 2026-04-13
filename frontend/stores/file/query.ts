@@ -90,11 +90,11 @@ export const useFilteredFiles = () => {
       if (query) {
         const name = item.metadata?.fileName?.toLowerCase() ?? item.name.toLowerCase();
         const matchesName = name.includes(query) || (query.length >= 3 && item.name.toLowerCase().includes(query));
-        // 同时搜索 AI 生成的图片描述与标签，保证检索能力与 metadata 增强保持一致。
-        const aiDesc = item.metadata?.aiDesc?.toLowerCase() ?? "";
+        // 同时搜索图片描述与标签，保证检索能力与 metadata 增强保持一致。
+        const desc = item.metadata?.desc?.toLowerCase() ?? "";
         const tagText = ((item.metadata?.tags || []) as string[]).join(" ").toLowerCase();
-        const matchesAI = query.length >= 2 && (aiDesc.includes(query) || tagText.includes(query));
-        if (!matchesName && !matchesAI) return false;
+        const matchesDesc = query.length >= 2 && (desc.includes(query) || tagText.includes(query));
+        if (!matchesName && !matchesDesc) return false;
       }
       // 收藏过滤
       if (filterLiked && !item.metadata?.liked) return false;
