@@ -25,6 +25,48 @@ export const formatFileSize = (bytes: number): string => {
 };
 
 
+/**
+ * 将 HTMLImageElement 等比缩放绘制到指定尺寸的正方形 canvas
+ * @param img 图片元素
+ * @param size 目标边长（px），默认 224
+ */
+export function resizeImageToCanvas(
+  img: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
+  size = 224
+): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  canvas.getContext("2d")!.drawImage(img, 0, 0, size, size);
+  return canvas;
+}
+
+/**
+ * 从图片 URL 加载图片，缩放并压缩为 Blob
+ * @param url 图片地址
+ * @param size 目标边长（px），默认 224
+ * @param quality JPEG 压缩质量 0~1，默认 0.7
+ */
+export function compressImageFromUrl(
+  url: string,
+  size = 224,
+  quality = 0.7
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = resizeImageToCanvas(img, size);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = url;
+  });
+}
+
 // 下载文件
 export const downloadFile = async (url: string, metadata: FileMetadata) => {
   if (!url) return;

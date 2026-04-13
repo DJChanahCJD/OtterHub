@@ -1,6 +1,7 @@
 import * as nsfwjs from "nsfwjs";
 import * as tf from "@tensorflow/tfjs";
 import { MAX_CHUNK_SIZE } from "@shared/types";
+import { resizeImageToCanvas } from "@/lib/utils/file";
 
 tf.enableProdMode();
 
@@ -56,14 +57,6 @@ async function warmupModel(model: nsfwjs.NSFWJS) {
   }
 }
 
-// 图片尺寸缩放：提升检测性能
-function resizeImage(img: HTMLImageElement, size = 224): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, 0, 0, size, size);
-  return canvas;
-}
 
 class NSFWDetector {
   private model?: nsfwjs.NSFWJS;
@@ -119,7 +112,7 @@ class NSFWDetector {
         img.src = url;
       });
       // 使用缩放后的图片进行检测
-      const canvas = resizeImage(img);
+      const canvas = resizeImageToCanvas(img);
       return await this.detect(canvas);
     } catch {
       return false;

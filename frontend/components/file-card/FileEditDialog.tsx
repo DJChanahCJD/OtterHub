@@ -5,6 +5,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { editMetadata, analyzeImage, getFileUrl } from "@/lib/api";
 import { FileItem, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
+import { compressImageFromUrl } from "@/lib/utils/file";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { TagSelector } from "@/components/TagSelector";
 import {
@@ -68,25 +69,6 @@ export function FileEditDialog({
       setDesc(file.metadata?.desc || "");
     }
   }, [file]);
-
-  // 将图片 URL 加载并压缩为 JPEG Blob
-  const compressImageFromUrl = (url: string, size = 224): Promise<Blob> =>
-    new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = canvas.height = size;
-        canvas.getContext("2d")!.drawImage(img, 0, 0, size, size);
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
-          "image/jpeg",
-          0.7
-        );
-      };
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = url;
-    });
 
   // AI分析图片生成描述
   const handleAnalyzeImage = async () => {
