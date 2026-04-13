@@ -13,6 +13,7 @@ export type UnifiedWallpaper = {
     previewUrl: string;
     rawUrl: string;
     source: WallpaperSourceId;
+    purity?: 'sfw' | 'sketchy' | 'nsfw';
 }
 
 // 具体源配置类型

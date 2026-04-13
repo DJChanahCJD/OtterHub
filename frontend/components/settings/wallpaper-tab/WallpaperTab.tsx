@@ -95,7 +95,7 @@ export function WallpaperTab() {
     setUploadingIds((prev) => new Set(prev).add(wp.id));
     try {
       const fileName = `${wp.source}_${wp.id}.jpg`;
-      const isNsfw = (activeSource as any).isNsfw(config);
+      const isNsfw = wp.purity === 'nsfw';
 
       const { key, fileSize } = await uploadByUrl(wp.rawUrl, fileName, isNsfw);
 

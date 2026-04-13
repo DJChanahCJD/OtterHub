@@ -14,7 +14,6 @@ export const UnsplashSource: WallpaperProvider<UnsplashConfig> = {
   },
   getApiKey: (config) => config.apiKey,
   setApiKey: (config, accessKey) => ({ ...config, apiKey: accessKey }),
-  isNsfw: () => false, // Unsplash 内容通常是安全的
 
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -27,8 +27,7 @@ export const WallhavenSource: WallpaperProvider<WallhavenConfig> = {
   },
   getApiKey: (config) => config.apiKey,
   setApiKey: (config, key) => ({ ...config, apiKey: key }),
-  isNsfw: (config) => config.purity !== "100",
-  
+
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <ConfigItem label="关键词">

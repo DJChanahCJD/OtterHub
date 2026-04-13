@@ -25,12 +25,10 @@ const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "imag
 const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 仅用于内存文件的兜底限制
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 const AI_OUTPUT_PROMPT =
-  "Generate search-oriented visual tags for this image. " +
-  "Return ONLY a comma-separated list of 5 to 10 short tags. " +
-  "Order by importance: main subject, action/pose, key objects, scene/location, distinctive color, obvious style. " +
-  "Prefer concrete nouns or short noun phrases. " +
-  "Avoid vague adjectives, emotions, tiny details, and duplicate meanings. " +
-  "No sentences, no markdown, no explanations.";
+  "Output 5-10 comma-separated visual tags for search. " +
+  "Order: subject, action, objects, scene, color, style. " +
+  "Use concrete nouns. Skip vague words, minor details, and duplicates. " +
+  "NO sentences, markdown, or explanations.";
 
 export function isSupportedImage(mimeType?: string | null, fileName?: string): boolean {
   if (mimeType) return SUPPORTED_IMAGE_PREFIXES.some((p) => mimeType.startsWith(p));

@@ -13,7 +13,6 @@ export const PicsumSource: WallpaperProvider<PicsumConfig> = {
   },
   getApiKey: () => WP_API_KEY_PLACEHOLDER,
   setApiKey: (config) => config,
-  isNsfw: () => false,
 
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">

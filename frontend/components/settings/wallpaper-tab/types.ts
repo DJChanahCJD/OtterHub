@@ -26,7 +26,6 @@ export interface WallpaperProviderLogic<T> {
   defaultConfig: T;
   getApiKey(config: T): string;
   setApiKey(config: T, key: string): T;
-  isNsfw(config: T): boolean;
 }
 
 export interface WallpaperProviderUI<T> {

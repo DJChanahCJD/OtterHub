@@ -59,6 +59,7 @@ wallhavenRoutes.get(
         previewUrl: getWallpaperProxyUrl(origin, item.thumbs.original || item.thumbs.large || item.thumbs.small),
         rawUrl: item.path,
         source: "wallhaven",
+        purity: item.purity,
       }));
 
       return ok(c, unifiedData);

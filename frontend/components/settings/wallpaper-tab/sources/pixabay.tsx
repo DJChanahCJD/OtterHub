@@ -37,7 +37,6 @@ export const PixabaySource: WallpaperProvider<PixabayConfig> = {
   },
   getApiKey: (config) => config.apiKey,
   setApiKey: (config, key) => ({ ...config, apiKey: key }),
-  isNsfw: () => false, // Pixabay 默认开启 SafeSearch，且 API 强制 safe
 
   ConfigPanel: ({ config, onChange }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

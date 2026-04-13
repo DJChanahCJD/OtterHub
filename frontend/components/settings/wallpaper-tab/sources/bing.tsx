@@ -9,7 +9,6 @@ export const BingSource: WallpaperProvider<BingConfig> = {
   defaultConfig: {},
   getApiKey: () => WP_API_KEY_PLACEHOLDER, // Bing 不需要 API Key
   setApiKey: (config) => config,
-  isNsfw: () => false,
 
   ConfigPanel: () => (
     <div className="flex items-center justify-center h-20 border-2 border-dashed rounded-lg bg-background/50">
