@@ -83,8 +83,21 @@ export type ListFilesResponse = {
   cacheStatus?: string | null;
 }
 
-export interface ShareItem {
+// 分享类型
+export type ShareType = 'single' | 'bundle';
+
+// 打包分享中的文件信息
+export interface BundleFileInfo {
+  key: string;
+  name: string;
+  size: number;
+  mimeType?: string;
+}
+
+// 单文件分享项
+export interface SingleShareItem {
   token: string;
+  type: 'single';
   fileKey: string;
   fileName: string;
   fileSize: number;
@@ -93,16 +106,60 @@ export interface ShareItem {
   expiresAt?: number;
 }
 
-export interface CreateShareRequest {
+// 打包分享项
+export interface BundleShareItem {
+  token: string;
+  type: 'bundle';
+  files: BundleFileInfo[];
+  oneTime?: boolean;
+  createdAt: number;
+  expiresAt?: number;
+}
+
+// 兼容旧版的分享项类型
+export interface ShareItem {
+  token: string;
   fileKey: string;
+  fileName: string;
+  fileSize: number;
+  oneTime?: boolean;
+  createdAt: number;
+  expiresAt?: number;
+  type?: ShareType;
+  files?: BundleFileInfo[];
+}
+
+// 创建分享请求
+export interface CreateShareRequest {
+  type?: ShareType;
+  fileKey?: string;       // single 模式
+  fileKeys?: string[];    // bundle 模式
   expireIn?: number;
   oneTime?: boolean;
+}
+
+// 分享元数据响应
+export interface ShareMetaResponse {
+  type: ShareType;
+  // single 模式字段
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  // bundle 模式字段
+  files?: BundleFileInfo[];
+  // 通用字段
+  oneTime?: boolean;
+  createdAt: number;
+  expiresAt?: number;
 }
 
 export const MAX_FILENAME_LENGTH = 128; // 最大文件名长度（包括扩展名）
 export const MAX_DESC_LENGTH = 300; // 最大描述长度
 
-export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB, TG BOT API 可供下载的最大文件大小为20MB
+
+// 打包分享最大文件数量限制（防止 Cloudflare Worker CPU 超时）
+export const MAX_FILES_IN_BUNDLE = 50;
 export const MAX_CHUNK_NUM = 50                 // 由于Cloudflare Worker的CPU限制，这里限制最大分片数为50, 即文件大小不得超过1000MB≈1GB
 export const MAX_FILE_SIZE = MAX_CHUNK_SIZE * MAX_CHUNK_NUM
 export const TRASH_EXPIRATION_TTL = 30 * 24 * 60 * 60; // 设置 30 天过期

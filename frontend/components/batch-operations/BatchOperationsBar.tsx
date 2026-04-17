@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen, Share2 } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,9 @@ import { downloadFile, processBatch } from "@/lib/utils";
 import { DIRECT_DOWNLOAD_LIMIT, ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
+import { BatchShareDialog } from "./BatchShareDialog";
 import { toast } from "sonner";
-import { FileType } from "@shared/types";
+import { FileType, MAX_FILES_IN_BUNDLE } from "@shared/types";
 
 export function BatchOperationsBar() {
   const {
@@ -42,6 +43,7 @@ export function BatchOperationsBar() {
 
   const [showBatchTags, setShowBatchTags] = useState(false);
   const [showBatchRename, setShowBatchRename] = useState(false);
+  const [showBatchShare, setShowBatchShare] = useState(false);
 
   const items = useActiveItems();
   const filteredFiles = useFilteredFiles();
@@ -322,11 +324,7 @@ export function BatchOperationsBar() {
                   }}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      isAllSelected ? "text-primary" : "text-blue-400"
-                    }`}
-                  />
+                  <Check className="mr-2 h-4 w-4 text-blue-400" />
                   {isAllSelected ? "取消本页全选" : "全选当前页"}
                 </DropdownMenuItem>
 
@@ -334,7 +332,7 @@ export function BatchOperationsBar() {
                   onClick={() => setShowBatchTags(true)}
                   className="cursor-pointer text-foreground hover:bg-secondary/50"
                 >
-                  <Tag className="mr-2 h-4 w-4 text-primary" />
+                  <Tag className="mr-2 h-4 w-4 text-blue-400" />
                   编辑标签
                 </DropdownMenuItem>
 
@@ -344,6 +342,20 @@ export function BatchOperationsBar() {
                 >
                   <FilePen className="mr-2 h-4 w-4 text-blue-400" />
                   重命名
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (selectedKeys.length > MAX_FILES_IN_BUNDLE) {
+                      toast.error(`最多支持 ${MAX_FILES_IN_BUNDLE} 个文件`);
+                      return;
+                    }
+                    setShowBatchShare(true);
+                  }}
+                  className="cursor-pointer text-foreground hover:bg-secondary/50"
+                >
+                  <Share2 className="mr-2 h-4 w-4 text-blue-400" />
+                  打包分享
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -390,6 +402,12 @@ export function BatchOperationsBar() {
         open={showBatchRename}
         onOpenChange={setShowBatchRename}
         onSuccess={handleBatchRenameSuccess}
+      />
+
+      <BatchShareDialog
+        files={items.filter((item) => selectedSet.has(item.name))}
+        open={showBatchShare}
+        onOpenChange={setShowBatchShare}
       />
     </>
   );
