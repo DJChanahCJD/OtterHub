@@ -7,10 +7,10 @@ import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import {
-  MIME_TO_EXT,
   extractMimeType,
   extractFileNameFromDisposition,
   extractFileNameFromUrl,
+  getExtByMime,
   hasExtension,
 } from '@shared/utils/file';
 
@@ -51,7 +51,7 @@ urlUploadRoutes.post(
 
       // 3. 若文件名无扩展名，根据 MIME 类型补全
       if (!hasExtension(resolvedName) && mimeType) {
-        const ext = MIME_TO_EXT[mimeType] ?? '';
+        const ext = getExtByMime(mimeType);
         if (ext) resolvedName += ext;
       }
 

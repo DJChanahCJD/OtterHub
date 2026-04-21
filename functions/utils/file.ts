@@ -1,9 +1,14 @@
 import { extractKeyFromTrash } from "./db-adapter/shared-utils";
 import { FileType, chunkPrefix } from "@shared/types";
+import {
+  getExtension,
+  getFileTypeByMimeOrExt as getSharedFileTypeByMimeOrExt,
+  getMimeTypeByExt,
+} from "@shared/utils/file";
 
 // 获取文件扩展名
 export function getFileExt(fileName: string): string {
-  return fileName.split(".").pop()!.toLowerCase();
+  return getExtension(fileName);
 }
 
 // 构建存储键
@@ -42,40 +47,17 @@ export function getUniqueFileId(length = 16): string {
  * 覆盖主流浏览器可 inline 预览的文件类型
  */
 export function getContentTypeByExt(ext: string): string {
-  const e = ext.toLowerCase();
-
-  // ---------- 图片 ----------
-  if (['png'].includes(e)) return 'image/png';
-  if (['jpg', 'jpeg'].includes(e)) return 'image/jpeg';
-  if (['webp'].includes(e)) return 'image/webp';
-  if (['gif'].includes(e)) return 'image/gif';
-  if (['bmp'].includes(e)) return 'image/bmp';
-  if (['svg'].includes(e)) return 'image/svg+xml';
-
-  // ---------- 视频 ----------
-  if (['mp4'].includes(e)) return 'video/mp4';
-  if (['webm'].includes(e)) return 'video/webm';
-  if (['ogg', 'ogv'].includes(e)) return 'video/ogg';
-
-  // ---------- 音频 ----------
-  if (['mp3'].includes(e)) return 'audio/mpeg';
-  if (['wav'].includes(e)) return 'audio/wav';
-  if (['ogg'].includes(e)) return 'audio/ogg';
-  if (['m4a'].includes(e)) return 'audio/mp4';
-  if (['aac'].includes(e)) return 'audio/aac';
-  if (['flac'].includes(e)) return 'audio/flac';
-
-  // ---------- 文档 ----------
-  if (['pdf'].includes(e)) return 'application/pdf';
-  if (['txt'].includes(e)) return 'text/plain; charset=utf-8';
-  if (['md'].includes(e)) return 'text/markdown; charset=utf-8';
-  if (['html', 'htm'].includes(e)) return 'text/html; charset=utf-8';
-
-  // ---------- 兜底 ----------
-  return 'application/octet-stream';
+  return getMimeTypeByExt(ext);
 }
 
 export function getFileTypeByName(fileName: string): string {
   const ext = getFileExt(fileName);
   return getContentTypeByExt(ext);
+}
+
+export function getFileTypeByMimeOrExt(
+  mimeType: string | undefined,
+  ext: string,
+): FileType {
+  return getSharedFileTypeByMimeOrExt(mimeType, ext);
 }

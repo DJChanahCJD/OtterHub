@@ -1,4 +1,4 @@
-import { getFileExt } from "../file";
+import { getContentTypeByExt, getFileExt, getFileTypeByMimeOrExt } from "../file";
 import { FileType } from "@shared/types";
 
 /**
@@ -89,7 +89,8 @@ export function resolveFileDescriptor(
   ext: string;
 } {
   const ext = getFileExt(fileName).toLowerCase();
-  const mime = file.type;
+  const mime = file.type || getContentTypeByExt(ext);
+  const fileType = getFileTypeByMimeOrExt(mime, ext);
 
   // GIF 特判
   if (mime === "image/gif" || ext === "gif" || mime === "image/webp" || ext === "webp") {
@@ -101,7 +102,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (mime.startsWith("image/")) {
+  if (fileType === FileType.Image) {
     return {
       apiEndpoint: "sendPhoto",
       field: "photo",
@@ -110,7 +111,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (mime.startsWith("video/")) {
+  if (fileType === FileType.Video) {
     return {
       apiEndpoint: "sendVideo",
       field: "video",
@@ -119,7 +120,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (mime.startsWith("audio/")) {
+  if (fileType === FileType.Audio) {
     return {
       apiEndpoint: "sendAudio",
       field: "audio",

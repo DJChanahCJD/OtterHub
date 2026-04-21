@@ -6,17 +6,10 @@ import { shareApi } from '@/lib/api/share';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileIcon, Loader2, Clock, AlertCircle, CalendarClock, Package, Archive, Image, Music, Video, FileText, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { formatFileSize, formatTime } from '@/lib/utils';
+import { formatFileSize, formatTime, getFileCategoryByName } from '@/lib/utils';
 import { ShareMetaResponse } from '@shared/types';
 
-const FILE_TYPES = [
-  { type: 'image', reg: /\.(jpe?g|png|gif|webp|svg|bmp|ico|avif|heic|heif)$/i },
-  { type: 'video', reg: /\.(mp4|webm|mov|avi|mkv|m4v|3gp|ogv)$/i },
-  { type: 'audio', reg: /\.(mp3|wav|ogg|flac|aac|m4a|wma|ape|opus)$/i },
-  { type: 'text', reg: /\.(txt|md|json|jsx?|tsx?|css|html|xml|ya?ml|csv|log|py|java|c|cpp|h|go|rs|sh|bat)$/i },
-] as const;
-
-const getFileCategory = (name: string) => FILE_TYPES.find(t => t.reg.test(name))?.type || 'other';
+const getFileCategory = (name: string) => getFileCategoryByName(name);
 
 const FileIconByType = ({ category, className }: { category: string; className?: string }) => {
   const icons: Record<string, any> = { image: Image, video: Video, audio: Music, text: FileText };

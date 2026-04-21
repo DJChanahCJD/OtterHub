@@ -5,6 +5,7 @@ import {
   buildKeyId,
   getFileIdFromKey,
   getContentTypeByExt,
+  getFileTypeByMimeOrExt,
 } from "../file";
 import {
   Chunk,
@@ -36,19 +37,8 @@ export class R2Adapter extends BaseAdapter {
     const fileName = metadata.fileName;
     const fileExtension = (fileName.split(".").pop() ?? "").toLowerCase();
 
-    // 根据文件类型确定前缀
-    let fileType: FileType;
     const mimeType = (file as any).type || getContentTypeByExt(fileExtension);
-
-    if (mimeType.startsWith("image/")) {
-      fileType = FileType.Image;
-    } else if (mimeType.startsWith("audio/")) {
-      fileType = FileType.Audio;
-    } else if (mimeType.startsWith("video/")) {
-      fileType = FileType.Video;
-    } else {
-      fileType = FileType.Document;
-    }
+    const fileType = getFileTypeByMimeOrExt(mimeType, fileExtension);
 
     // 构建带有前缀的完整fileId
     const key = buildKeyId(fileType, fileId, fileExtension);
@@ -80,17 +70,7 @@ export class R2Adapter extends BaseAdapter {
     // 优先使用传入的 mimeType,否则根据扩展名推导
     const contentType = mimeType || getContentTypeByExt(fileExtension);
 
-    // 根据文件类型确定前缀
-    let fileType: FileType;
-    if (contentType.startsWith("image/")) {
-      fileType = FileType.Image;
-    } else if (contentType.startsWith("audio/")) {
-      fileType = FileType.Audio;
-    } else if (contentType.startsWith("video/")) {
-      fileType = FileType.Video;
-    } else {
-      fileType = FileType.Document;
-    }
+    const fileType = getFileTypeByMimeOrExt(contentType, fileExtension);
 
     const key = buildKeyId(fileType, fileId, fileExtension);
 

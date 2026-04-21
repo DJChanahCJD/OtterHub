@@ -82,7 +82,7 @@ export function FileUploadZone() {
             },
           };
 
-          addFileLocal(fileItem, getFileType(file.type));
+          addFileLocal(fileItem, getFileType(file.type, file.name));
           successCount++;
         } catch (err) {
           failed.push(`${file.name}: ${(err as Error).message}`);
@@ -108,7 +108,7 @@ export function FileUploadZone() {
         let stopPolling = false;
 
         try {
-          const fileType = getFileType(file.type);
+          const fileType = getFileType(file.type, file.name);
           const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
 
           const key = await uploadChunkInit(

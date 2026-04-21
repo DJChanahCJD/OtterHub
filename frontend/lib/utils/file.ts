@@ -1,11 +1,15 @@
 import { FileMetadata, FileType } from "@shared/types";
+import {
+  getFileTypeByMimeOrName,
+  getMimeTypeByExt,
+} from "@shared/utils/file";
 import { DIRECT_DOWNLOAD_LIMIT } from "../types";
 
-export const getFileType = (mimeType: string): FileType => {
-  if (mimeType.startsWith("image/")) return FileType.Image;
-  if (mimeType.startsWith("audio/")) return FileType.Audio;
-  if (mimeType.startsWith("video/")) return FileType.Video;
-  return FileType.Document;
+export type { FileCategory } from "@shared/utils/file";
+export { getFileCategoryByName } from "@shared/utils/file";
+
+export const getFileType = (mimeType: string, fileName?: string): FileType => {
+  return getFileTypeByMimeOrName(mimeType, fileName || "");
 };
 
 export const getFileTypeFromKey = (key: string): FileType => {
@@ -314,14 +318,16 @@ export const downloadFile = async (
 
   if (supportsFileSystemAccess()) {
     const ext = fileName.split(".").pop()?.toLowerCase() || "";
-    const mimeType = getMimeTypeFromExt(ext);
+    const mimeType = ext ? getMimeTypeByExt(ext) : "";
+    const acceptedMimeType =
+      mimeType && mimeType !== "application/octet-stream" ? mimeType : undefined;
     try {
       const handle = await window.showSaveFilePicker!({
         suggestedName: fileName,
-        types: mimeType
+        types: acceptedMimeType
           ? [{
               description: "File",
-              accept: { [mimeType]: [`.${ext}`] },
+              accept: { [acceptedMimeType]: [`.${ext}`] },
             }]
           : undefined,
       });
@@ -368,32 +374,6 @@ export const downloadFile = async (
 
   triggerAnchorDownload(url, fileName);
   return SUCCESS_DOWNLOAD_RESULT;
-};
-
-const getMimeTypeFromExt = (ext: string): string | undefined => {
-  const mimeMap: Record<string, string> = {
-    mp4: "video/mp4",
-    webm: "video/webm",
-    mkv: "video/x-matroska",
-    avi: "video/x-msvideo",
-    mov: "video/quicktime",
-    mp3: "audio/mpeg",
-    wav: "audio/wav",
-    flac: "audio/flac",
-    aac: "audio/aac",
-    ogg: "audio/ogg",
-    pdf: "application/pdf",
-    zip: "application/zip",
-    rar: "application/x-rar-compressed",
-    "7z": "application/x-7z-compressed",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    webp: "image/webp",
-    svg: "image/svg+xml",
-  };
-  return mimeMap[ext];
 };
 
 export interface BatchDownloadOptions {

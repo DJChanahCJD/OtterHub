@@ -20,7 +20,7 @@ export const formatDate = (timestamp: number): string => {
 };
 
 export function buildTmpFileKey(file: File): string {
-  const fileType = getFileType(file.type);
+  const fileType = getFileType(file.type, file.name);
   return `${fileType}:${crypto.randomUUID()}`;
 }
 
