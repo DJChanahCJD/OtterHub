@@ -4,6 +4,7 @@ import { X, Plus, Tag } from "lucide-react";
 import { FileTag } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { TAG_CONFIG } from "@/lib/utils";
+import { FileTagBadge } from "@/components/FileTagBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,32 +46,14 @@ export function TagSelector({
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2 min-h-9.5 p-2 rounded-lg bg-secondary/30 border border-glass-border">
         {/* 已选标签：纯展示 + 删除 */}
-        {tags.map((tag) => {
-          const config = TAG_CONFIG[tag];
-          return (
-            <div
-              key={tag}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-sm font-medium transition-colors",
-                config?.bgColor || "bg-secondary/30",
-                config?.textColor || "text-foreground/80",
-                config?.borderColor || "border-glass-border",
-              )}
-            >
-              <Tag className="h-3.5 w-3.5" />
-              <span>{config?.label || tag}</span>
-              {!disabled && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="ml-0.5 hover:opacity-70 transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {tags.map((tag) => (
+          <FileTagBadge
+            key={tag}
+            tag={tag}
+            removable={!disabled}
+            onRemove={() => handleRemoveTag(tag)}
+          />
+        ))}
 
         {/* 独立的 Dropdown Trigger */}
         {!disabled && availableTags.length > 0 && (

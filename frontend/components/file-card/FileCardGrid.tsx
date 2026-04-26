@@ -109,7 +109,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
             </p>
             <div className="flex gap-1 shrink-0">
               {tags.map((tag) => (
-                <FileTagBadge key={tag} tag={tag} />
+                <FileTagBadge key={tag} tag={tag} forceDark />
               ))}
             </div>
           </div>

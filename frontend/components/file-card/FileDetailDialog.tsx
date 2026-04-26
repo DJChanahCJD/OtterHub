@@ -83,7 +83,7 @@ export function FileDetailDialog({
                 <p className="text-sm text-foreground/60 mb-1">标签</p>
                 <div className="flex flex-wrap gap-2">
                   {file.metadata.tags.map((tag) => (
-                    <FileTagBadge key={tag} tag={tag} showIcon />
+                    <FileTagBadge key={tag} tag={tag} />
                   ))}
                 </div>
               </div>
