@@ -82,13 +82,9 @@ export function GeneralTab() {
   // 保存打开面板时的设置快照，用于关闭时对比是否变更
   const settingsSnapshotRef = useRef<SettingsSnapshot | null>(null);
 
-  // 打开设置面板时：自动拉取云端最新设置，完成后保存快照
+  // 打开设置面板时：仅保存快照，不拉取云端（避免覆盖 Header 的本地修改）
   useEffect(() => {
-    const init = async () => {
-      await store.fetchSettings();
-      settingsSnapshotRef.current = store.getSettingsSnapshot();
-    };
-    init();
+    settingsSnapshotRef.current = store.getSettingsSnapshot();
   }, []);
 
   // 关闭/离开设置面板时：如有变更，自动同步到云端
@@ -158,6 +154,13 @@ export function GeneralTab() {
     settingsSnapshotRef.current = store.getSettingsSnapshot();
   }, setIsUploading, "保存成功", "保存失败");
 
+  // 从云端恢复，成功后更新快照
+  const handleFetchFromCloud = withLoading(async () => {
+    await store.fetchSettings();
+    // 恢复成功后更新快照，避免退出时误触发同步
+    settingsSnapshotRef.current = store.getSettingsSnapshot();
+  }, setIsSyncing, "恢复成功", "恢复失败");
+
   return (
     <div className="flex flex-col h-full overflow-y-auto custom-scrollbar space-y-6 pr-2">
       {/* 头部区域 */}
@@ -167,7 +170,7 @@ export function GeneralTab() {
           <p className="text-sm text-muted-foreground">更改自动保存，可手动同步到云端</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={withLoading(store.fetchSettings, setIsSyncing, "恢复成功", "恢复失败")} disabled={isSyncing} className="rounded-xl h-9">
+          <Button variant="outline" size="sm" onClick={handleFetchFromCloud} disabled={isSyncing} className="rounded-xl h-9">
             <CloudSync className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
             从云端恢复
           </Button>

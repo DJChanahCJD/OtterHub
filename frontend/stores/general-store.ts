@@ -67,6 +67,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
               defaultUploadTags: settings.defaultUploadTags || [],
               enableImageAnalysis: settings.enableImageAnalysis !== false,
             });
+            toast.success("已从云端恢复数据");
           }
         } catch (error) {
           console.error("Failed to fetch general settings", error);
