@@ -13,12 +13,14 @@ interface GeneralStoreState {
   nsfwDetection: boolean;
   imageLoadMode: ImageLoadMode;
   defaultUploadTags: FileTag[];
+  enableImageAnalysis: boolean;
 
   setDataSaverThreshold: (threshold: number) => void;
   setSafeMode: (enabled: boolean) => void;
   setNsfwDetection: (enabled: boolean) => void;
   setImageLoadMode: (mode: ImageLoadMode) => void;
   setDefaultUploadTags: (tags: FileTag[]) => void;
+  setEnableImageAnalysis: (enabled: boolean) => void;
   
   fetchSettings: () => Promise<void>;
   syncSettings: () => Promise<void>;
@@ -32,12 +34,14 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
       nsfwDetection: true,
       imageLoadMode: ImageLoadMode.DataSaver,
       defaultUploadTags: [],
+      enableImageAnalysis: true,
 
       setDataSaverThreshold: (threshold) => set({ dataSaverThreshold: threshold }),
       setSafeMode: (enabled) => set({ safeMode: enabled }),
       setNsfwDetection: (enabled) => set({ nsfwDetection: enabled }),
       setImageLoadMode: (mode) => set({ imageLoadMode: mode }),
       setDefaultUploadTags: (tags) => set({ defaultUploadTags: tags }),
+      setEnableImageAnalysis: (enabled) => set({ enableImageAnalysis: enabled }),
 
       fetchSettings: async () => {
         try {
@@ -49,6 +53,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
               nsfwDetection: settings.nsfwDetection,
               imageLoadMode: settings.imageLoadMode,
               defaultUploadTags: settings.defaultUploadTags || [],
+              enableImageAnalysis: settings.enableImageAnalysis !== false,
             });
           }
         } catch (error) {
@@ -57,7 +62,14 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
       },
 
       syncSettings: async () => {
-        const { dataSaverThreshold, safeMode, nsfwDetection, imageLoadMode, defaultUploadTags } = get();
+        const {
+          dataSaverThreshold,
+          safeMode,
+          nsfwDetection,
+          imageLoadMode,
+          defaultUploadTags,
+          enableImageAnalysis,
+        } = get();
         try {
           await generalSettingsApi.update({
             dataSaverThreshold,
@@ -65,6 +77,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
             nsfwDetection,
             imageLoadMode,
             defaultUploadTags,
+            enableImageAnalysis,
           });
           toast.success("设置已保存到云端");
         } catch (error) {
@@ -81,6 +94,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
         nsfwDetection: state.nsfwDetection,
         imageLoadMode: state.imageLoadMode,
         defaultUploadTags: state.defaultUploadTags,
+        enableImageAnalysis: state.enableImageAnalysis,
       }),
     }
   )

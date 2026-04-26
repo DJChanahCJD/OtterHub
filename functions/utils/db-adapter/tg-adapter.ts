@@ -9,6 +9,7 @@ import {
   ApiResponse,
   Chunk,
   FileType,
+  GeneralSettings,
 } from "@shared/types";
 import {
   parseRangeHeader,
@@ -29,6 +30,8 @@ import {
 
 import { MAX_CHUNK_SIZE } from "@shared/types";
 import { analyzeImageAndEnrich, isSupportedImage } from "../ai/image-analysis";
+import { kvGetJSON } from "@utils/kv";
+import { CF } from "types";
 
 // Telegram存储适配器实现
 export class TGAdapter extends BaseAdapter {
@@ -132,16 +135,28 @@ export class TGAdapter extends BaseAdapter {
       await kv.put(key, "", { metadata });
     }
 
-    // 图片上传成功后异步触发 AI 分析，优先使用 Telegram 返回的小图
+    // 图片上传成功后根据全局设置决定是否异步触发 AI 分析，优先使用 Telegram 返回的小图
     if (kv && fileType === FileType.Image && isSupportedImage(processedFile.type, processedFileName)) {
-      const enrichTask = analyzeImageAndEnrich(this.env, kv, key, processedFile, {
-        previewFileId: imageVariantIds.previewFileId,
-        tgFileId: tgFileId,
-      });
-      if (waitUntil) {
-        waitUntil(enrichTask);
-      } else {
-        enrichTask.catch((err) => console.warn("[AI] Background enrich failed:", err));
+      let enableImageAnalysis = true;
+      try {
+        const settings = await kvGetJSON<Partial<GeneralSettings>>(kv, CF.SETTINGS_KEY, {
+          enableImageAnalysis: true,
+        });
+        enableImageAnalysis = settings.enableImageAnalysis !== false;
+      } catch (err) {
+        console.warn("[AI] Failed to read image analysis setting, using default enabled:", err);
+      }
+
+      if (enableImageAnalysis) {
+        const enrichTask = analyzeImageAndEnrich(this.env, kv, key, processedFile, {
+          previewFileId: imageVariantIds.previewFileId,
+          tgFileId: tgFileId,
+        });
+        if (waitUntil) {
+          waitUntil(enrichTask);
+        } else {
+          enrichTask.catch((err) => console.warn("[AI] Background enrich failed:", err));
+        }
       }
     }
 

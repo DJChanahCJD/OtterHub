@@ -3,18 +3,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { 
-  ShieldCheck, 
-  Zap, 
-  CloudSync, 
-  CloudUpload,
-  Info,
-  ShieldAlert,
-  FolderOpen,
-  Trash2,
-  RefreshCw,
-  Download,
-  AlertCircle,
-  Tags
+  ShieldCheck, Zap, CloudSync, CloudUpload, Info, ShieldAlert, FolderOpen, 
+  Trash2, RefreshCw, Download, AlertCircle, Tags, Sparkles 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,144 +16,116 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { cn } from "@/lib/utils";
 import {
-  loadDirectoryHandle,
-  clearDirectoryHandleCache,
-  pickDownloadDirectoryForFirstTime,
+  loadDirectoryHandle, clearDirectoryHandleCache, pickDownloadDirectoryForFirstTime,
 } from "@/lib/utils/file";
 import { TagSelector } from "@/components/TagSelector";
 
-export function GeneralTab() {
-  const { 
-    dataSaverThreshold, 
-    setDataSaverThreshold, 
-    nsfwDetection, 
-    setNsfwDetection,
-    defaultUploadTags,
-    setDefaultUploadTags,
-    fetchSettings,
-    syncSettings
-  } = useGeneralSettingsStore();
+const SettingCard = ({ icon: Icon, iconColor, title, desc, children }: any) => (
+  <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
+    <CardHeader>
+      <div className="flex items-center gap-2">
+        <Icon className={`h-4 w-4 ${iconColor}`} />
+        <CardTitle className="text-base">{title}</CardTitle>
+      </div>
+      {desc && <CardDescription>{desc}</CardDescription>}
+    </CardHeader>
+    <CardContent className="grid gap-4">{children}</CardContent>
+  </Card>
+);
 
+const SettingItem = ({ title, desc, children }: any) => (
+  <div className="flex items-center justify-between">
+    <div className="space-y-0.5">
+      <Label className="text-sm font-medium">{title}</Label>
+      {desc && <p className="text-[11px] text-muted-foreground">{desc}</p>}
+    </div>
+    {children}
+  </div>
+);
+
+const HintBox = ({ icon: Icon = Info, variant = "default", children }: any) => {
+  const styles = {
+    default: "bg-muted/30 border-border/20 text-muted-foreground",
+    warning: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
+    info: "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+  };
+  return (
+    <div className={cn("flex items-start gap-1.5 p-1.5 rounded-lg border text-xs leading-relaxed", styles[variant as keyof typeof styles])}>
+      <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-80" />
+      <div>{children}</div>
+    </div>
+  );
+};
+
+// --- 主组件 ---
+export function GeneralTab() {
+  const store = useGeneralSettingsStore();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [localThreshold, setLocalThreshold] = useState(dataSaverThreshold.toString());
-
+  const [localThreshold, setLocalThreshold] = useState(store.dataSaverThreshold.toString());
   const [currentDir, setCurrentDir] = useState<string | null>(null);
   const [isDirLoading, setIsDirLoading] = useState(false);
   const [supportsFsApi, setSupportsFsApi] = useState(false);
 
+  // 初始化 FsApi & 读取目录
   useEffect(() => {
-    setSupportsFsApi(typeof window !== "undefined" && "showDirectoryPicker" in window);
-
-    if (supportsFsApi) {
-      loadCurrentDirectory();
+    const isSupported = typeof window !== "undefined" && "showDirectoryPicker" in window;
+    setSupportsFsApi(isSupported);
+    if (isSupported) {
+      loadDirectoryHandle().then(handle => setCurrentDir(handle?.name || null)).catch(() => setCurrentDir(null));
     }
-  }, [supportsFsApi]);
+  }, []);
 
-  useEffect(() => {
-    setLocalThreshold(dataSaverThreshold.toString());
-  }, [dataSaverThreshold]);
-
+  // 阈值防抖同步
+  useEffect(() => setLocalThreshold(store.dataSaverThreshold.toString()), [store.dataSaverThreshold]);
   useEffect(() => {
     const threshold = parseFloat(localThreshold);
-    if (isNaN(threshold) || threshold < 0 || threshold === dataSaverThreshold) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setDataSaverThreshold(threshold);
-    }, 500);
-
+    if (isNaN(threshold) || threshold < 0 || threshold === store.dataSaverThreshold) return;
+    const timer = setTimeout(() => store.setDataSaverThreshold(threshold), 500);
     return () => clearTimeout(timer);
-  }, [localThreshold, dataSaverThreshold, setDataSaverThreshold]);
+  }, [localThreshold, store.dataSaverThreshold, store.setDataSaverThreshold]);
 
-  const loadCurrentDirectory = async () => {
+  // 异步操作工厂函数
+  const withLoading = (action: () => Promise<any>, setLoader: (val: boolean) => void, successMsg?: string, errorMsg?: string) => async () => {
+    setLoader(true);
     try {
-      const handle = await loadDirectoryHandle();
-      setCurrentDir(handle?.name || null);
+      const res = await action();
+      if (successMsg) toast.success(successMsg);
+      return res;
     } catch {
-      setCurrentDir(null);
+      if (errorMsg) toast.error(errorMsg);
+    } finally {
+      setLoader(false);
     }
   };
 
-  const handleChangeDirectory = async () => {
-    setIsDirLoading(true);
-    try {
-      const result = await pickDownloadDirectoryForFirstTime();
-      if (result) {
-        setCurrentDir(result.dirName);
-        toast.success(`下载目录已更改为: ${result.dirName}`);
-      }
-    } catch {
-      toast.error("更改目录失败");
-    } finally {
-      setIsDirLoading(false);
+  const handleChangeDirectory = withLoading(async () => {
+    const result = await pickDownloadDirectoryForFirstTime();
+    if (result) {
+      setCurrentDir(result.dirName);
+      toast.success(`已切换到: ${result.dirName}`);
     }
-  };
+  }, setIsDirLoading, undefined, "更换失败");
 
-  const handleClearDirectory = async () => {
-    setIsDirLoading(true);
-    try {
-      await clearDirectoryHandleCache();
-      setCurrentDir(null);
-      toast.success("下载目录已清除，下次下载将重新选择");
-    } catch {
-      toast.error("清除目录失败");
-    } finally {
-      setIsDirLoading(false);
-    }
-  };
-
-  // 从云端同步
-  const handleFetchFromCloud = async () => {
-    setIsSyncing(true);
-    try {
-      await fetchSettings();
-      toast.success("同步成功");
-    } catch (error) {
-      toast.error("从云端同步失败");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // 上传到云端
-  const handleUploadToCloud = async () => {
-    setIsUploading(true);
-    try {
-      await syncSettings();
-      toast.success("备份成功");
-    } catch (error) {
-      toast.error("备份失败");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  const handleClearDirectory = withLoading(async () => {
+    await clearDirectoryHandleCache();
+    setCurrentDir(null);
+  }, setIsDirLoading, "已清除，下次下载需重新选择目录", "清除失败");
 
   return (
     <div className="flex flex-col h-full overflow-y-auto custom-scrollbar space-y-6 pr-2">
+      {/* 头部区域 */}
       <div className="flex items-center justify-between px-1">
         <div>
           <h2 className="text-xl font-bold tracking-tight">常规设置</h2>
-          <p className="text-sm text-muted-foreground">修改立即生效，支持手动云端同步</p>
+          <p className="text-sm text-muted-foreground">更改自动保存，可手动同步到云端</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleFetchFromCloud}
-            disabled={isSyncing}
-            className="rounded-xl h-9"
-          >
+          <Button variant="outline" size="sm" onClick={withLoading(store.fetchSettings, setIsSyncing, "同步成功", "同步失败")} disabled={isSyncing} className="rounded-xl h-9">
             <CloudSync className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
             从云端同步
           </Button>
-          <Button
-            size="sm"
-            onClick={handleUploadToCloud}
-            disabled={isUploading}
-            className="rounded-xl h-9 shadow-sm"
-          >
+          <Button size="sm" onClick={withLoading(store.syncSettings, setIsUploading, "备份成功", "备份失败")} disabled={isUploading} className="rounded-xl h-9 shadow-sm">
             <CloudUpload className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")} />
             备份到云端
           </Button>
@@ -174,165 +136,76 @@ export function GeneralTab() {
 
       <div className="grid gap-6">
         {/* 1. 省流模式设置 */}
-        <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="h-4 w-4 text-amber-500" />
-              <CardTitle className="text-base">图片加载策略</CardTitle>
-            </div>
-            <CardDescription>控制省流模式下的图片加载行为</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="flex flex-col space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="threshold" className="text-sm font-medium">省流无图阈值</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="threshold"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={localThreshold}
-                    onChange={(e) => setLocalThreshold(e.target.value)}
-                    className="w-24 h-9 text-right font-mono text-xs rounded-lg bg-background/50"
-                  />
-                  MB
+        <SettingCard icon={Zap} iconColor="text-amber-500" title="图片加载策略">
+          <div className="flex flex-col space-y-3">
+            <SettingItem title="省流模式阈值">
+              <div className="flex items-center gap-2">
+                <Input type="number" step="0.1" min="0.1" value={localThreshold} onChange={(e) => setLocalThreshold(e.target.value)} className="w-24 h-9 text-right font-mono text-xs rounded-lg bg-background/50" />
+                MB
+              </div>
+            </SettingItem>
+            <HintBox>省流模式下，超过此大小的图片不加载预览。</HintBox>
+          </div>
+        </SettingCard>
+
+        {/* 2. 上传设置 */}
+        <SettingCard icon={ShieldCheck} iconColor="text-emerald-500" title="上传设置">
+          <div className="flex flex-col space-y-4">
+            <SettingItem title="NSFW 内容检测" desc="上传前本地检测敏感内容">
+              <Switch checked={store.nsfwDetection} onCheckedChange={store.setNsfwDetection} />
+            </SettingItem>
+            {!store.nsfwDetection && (
+              <HintBox icon={ShieldAlert} variant="warning">
+                关闭后上传更快，但敏感内容不会自动标记 NSFW。
+              </HintBox>
+            )}
+
+            <SettingItem title="AI 智能分析" desc="上传后智能识别生成描述">
+              <Switch checked={store.enableImageAnalysis} onCheckedChange={store.setEnableImageAnalysis} />
+            </SettingItem>
+            {!store.enableImageAnalysis && (
+              <HintBox icon={Sparkles} variant="info">
+                关闭后跳过 AI 分析，可节省一次 KV 写操作
+              </HintBox>
+            )}
+
+            <SettingItem title="默认上传标签" desc="上传时自动添加的标签">
+              <TagSelector tags={store.defaultUploadTags} onChange={store.setDefaultUploadTags} placeholder="选择默认标签..." />
+            </SettingItem>
+          </div>
+        </SettingCard>
+
+        {/* 4. 下载管理 */}
+        {supportsFsApi ? (
+          <SettingCard icon={Download} iconColor="text-orange-500" title="下载管理">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-border/20">
+              <div className="flex items-center gap-3">
+                <FolderOpen className="h-5 w-5 text-blue-500" />
+                <div>
+                  <p className="font-medium text-sm">批量下载目录</p>
+                  <p className="text-xs text-muted-foreground">{currentDir || "未设置"}</p>
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
-                <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
-                当加载模式切换为“省流”时，文件大小超过此阈值的图片将不会被加载预览图。
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 2. 上传安全设置 */}
-        <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <CardTitle className="text-base">上传安全设置</CardTitle>
-            </div>
-            <CardDescription>配置上传时的安全检查行为</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">NSFW.js 自动检测</Label>
-                  <p className="text-[11px] text-muted-foreground">上传图片前进行本地内容识别</p>
-                </div>
-                <Switch
-                  checked={nsfwDetection}
-                  onCheckedChange={setNsfwDetection}
-                />
-              </div>
-              
-              {!nsfwDetection && (
-                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-                  <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div className="text-[11px] leading-relaxed">
-                    <span className="font-bold">注意：</span>
-                    关闭检测后，上传速度将显著提升（减少 CPU 消耗），但系统将不再自动为违规内容标记 NSFW 标签。
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
-                <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
-                开启后，系统将在浏览器端使用 TensorFlow.js 对图片进行识别。这可能会消耗较多内存和 CPU。
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 3. 默认上传标签 */}
-        <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Tags className="h-4 w-4 text-blue-500" />
-              <CardTitle className="text-base">默认上传标签</CardTitle>
-            </div>
-            <CardDescription>上传文件时自动应用的标签</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="flex flex-col space-y-3">
-              <TagSelector
-                tags={defaultUploadTags}
-                onChange={setDefaultUploadTags}
-                placeholder="选择默认标签..."
-              />
-              
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
-                <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
-                设置后，所有上传的文件都会自动应用这些标签。例如，选择&ldquo;Private&rdquo;标签可以让上传的文件默认为私有。
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 3. 下载目录管理 */}
-        {supportsFsApi && (
-          <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Download className="h-4 w-4 text-orange-500" />
-                <CardTitle className="text-base">下载目录管理</CardTitle>
-              </div>
-              <CardDescription>管理批量下载文件的保存目录</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-border/20">
-                <div className="flex items-center gap-3">
-                  <FolderOpen className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="font-medium text-sm">当前下载目录</p>
-                    <p className="text-xs text-muted-foreground">
-                      {currentDir || "未设置"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleChangeDirectory}
-                    disabled={isDirLoading}
-                    className="h-9"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isDirLoading ? "animate-spin" : ""}`} />
-                    更改目录
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleChangeDirectory} disabled={isDirLoading} className="h-9">
+                  <RefreshCw className={cn("h-4 w-4 mr-2", isDirLoading && "animate-spin")} />
+                  更换目录
+                </Button>
+                {currentDir && (
+                  <Button variant="ghost" size="sm" onClick={handleClearDirectory} className="h-9" title="清除目录">
+                      <Trash2 className="h-4 w-4" />
                   </Button>
-                  {currentDir && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearDirectory}
-                      disabled={isDirLoading}
-                      className="h-9"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      清除
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
-
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 bg-muted/30 p-2 rounded-lg border border-border/20">
-                <Info className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
-                首次下载时会提示选择目录，建议先在下载目录中手动创建 OtterHub 文件夹并选中它。之后会自动使用已选目录；如果权限失效，下次下载时会重新提示选择。
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {!supportsFsApi && (
+            </div>
+            <HintBox>首次批量下载需选择目录。建议提前创建 OtterHub 文件夹。目录授权失效时会重新提示。</HintBox>
+          </SettingCard>
+        ) : (
           <Alert className="border-yellow-500/50 bg-yellow-500/10">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle className="text-yellow-800">下载功能受限</AlertTitle>
+            <AlertTitle className="text-yellow-800">下载功能不可用</AlertTitle>
             <AlertDescription className="text-yellow-700">
-              您的浏览器不支持 File System Access API，无法自定义下载目录。建议使用 Chrome 或 Edge 浏览器以获得最佳体验。
+              当前浏览器不支持自定义下载目录，请使用 Chrome 或 Edge。
             </AlertDescription>
           </Alert>
         )}
