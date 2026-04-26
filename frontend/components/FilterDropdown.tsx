@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Filter, Heart, Tag, Calendar as CalendarIcon, X } from "lucide-react";
+import { Filter, Heart, Tag, Calendar as CalendarIcon, X, AlertTriangle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { useFileQueryStore } from "@/stores/file"
-import { cn } from "@/lib/utils";
+import { cn, TAG_CONFIG } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { FileTag } from "@shared/types";
 
@@ -201,22 +201,33 @@ export function FilterDropdown() {
                 <Tag className="h-3 w-3" />
                 <span>标签</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-glass-border">
-                {availableTags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant={filterTags.includes(tag) ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer px-2.5 py-1 text-[10px] transition-all",
-                      filterTags.includes(tag) 
-                        ? "bg-primary text-primary-foreground border-primary" 
-                        : "bg-transparent text-foreground/60 border-glass-border hover:border-primary/50 hover:text-foreground"
-                    )}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
+              <div className="flex flex-wrap gap-1.5">
+                {availableTags.map((tag) => {
+                  const config = TAG_CONFIG[tag];
+                  const isSelected = filterTags.includes(tag);
+                  return (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className={cn(
+                        "cursor-pointer px-2 py-1 text-[10px] transition-all duration-200 flex items-center gap-1",
+                        isSelected
+                          ? cn(
+                              config?.bgColor || "bg-primary/20",
+                              config?.textColor || "text-primary",
+                              config?.borderColor || "border-primary/50",
+                              "shadow-sm"
+                            )
+                          : "bg-transparent text-foreground/50 border-glass-border hover:border-foreground/30 hover:text-foreground/70"
+                      )}
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag === FileTag.NSFW && <AlertTriangle className="h-3 w-3" />}
+                      {tag === FileTag.Private && <Lock className="h-3 w-3" />}
+                      {config?.label || tag}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           )}

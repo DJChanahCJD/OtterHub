@@ -8,7 +8,6 @@ import { Tag, AlertTriangle, Lock, X } from "lucide-react";
 interface FileTagBadgeProps {
   tag: string | FileTag;
   forceDark?: boolean;
-  removable?: boolean;
   onRemove?: () => void;
 }
 
@@ -25,7 +24,6 @@ const TAG_ICONS: Record<string, any> = {
 export function FileTagBadge({
   tag,
   forceDark = false,
-  removable = false,
   onRemove,
 }: FileTagBadgeProps) {
   const config = TAG_CONFIG[tag as FileTag];
@@ -36,12 +34,12 @@ export function FileTagBadge({
     const badge = (
       <span
         className={cn(
-          "inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-secondary/30 text-foreground/80 rounded border border-glass-border",
+          "inline-flex items-center gap-1 px-1.5 py-1 text-xs bg-secondary/30 text-foreground/80 rounded border border-glass-border",
         )}
       >
         <IconComponent className="h-3 w-3" />
         <span>{tag}</span>
-        {removable && onRemove && (
+        {onRemove && (
           <button
             type="button"
             onClick={(e) => {
@@ -65,7 +63,7 @@ export function FileTagBadge({
   const badge = (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded border transition-colors",
+        "inline-flex items-center gap-1 px-1.5 py-1 text-xs rounded border transition-colors",
         config.bgColor,
         config.textColor,
         config.borderColor,
@@ -74,7 +72,7 @@ export function FileTagBadge({
     >
       <IconComponent className="h-3 w-3" />
       <span>{config.label}</span>
-      {removable && onRemove && (
+      {onRemove && (
         <button
           type="button"
           onClick={(e) => {

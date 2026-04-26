@@ -44,13 +44,12 @@ export function TagSelector({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-9.5 p-2 rounded-lg bg-secondary/30 border border-glass-border">
+      <div className="flex flex-wrap items-center gap-2 min-h-9.5 p-2 rounded-lg bg-secondary/30 border border-glass-border">
         {/* 已选标签：纯展示 + 删除 */}
         {tags.map((tag) => (
           <FileTagBadge
             key={tag}
             tag={tag}
-            removable={!disabled}
             onRemove={() => handleRemoveTag(tag)}
           />
         ))}
