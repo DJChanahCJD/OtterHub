@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   ShieldCheck,
@@ -29,10 +29,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  useGeneralSettingsStoreClient,
-  SettingsSnapshot,
-} from "@/stores/general-store";
+import { useGeneralSettingsStoreClient } from "@/stores/general-store";
 import { cn } from "@/lib/utils";
 import {
   loadDirectoryHandle,
@@ -87,8 +84,14 @@ const HintBox = ({ icon: Icon = Info, variant = "default", children }: any) => {
   );
 };
 
+interface GeneralTabProps {
+  onGeneralSettingsSnapshotReset?: () => void;
+}
+
 // --- 主组件 ---
-export function GeneralTab() {
+export function GeneralTab({
+  onGeneralSettingsSnapshotReset,
+}: GeneralTabProps) {
   const store = useGeneralSettingsStoreClient();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -96,29 +99,7 @@ export function GeneralTab() {
   const [currentDir, setCurrentDir] = useState<string | null>(null);
   const [isDirLoading, setIsDirLoading] = useState(false);
   const [supportsFsApi, setSupportsFsApi] = useState(false);
-
-  // 保存打开面板时的设置快照，用于关闭时对比是否变更
-  const settingsSnapshotRef = useRef<SettingsSnapshot | null>(null);
-
-  // 打开设置面板时：仅保存快照，不拉取云端（避免覆盖 Header 的本地修改）
-  useEffect(() => {
-    if (store) {
-      settingsSnapshotRef.current = store.getSettingsSnapshot();
-    }
-  }, [store]);
-
-  // 关闭/离开设置面板时：如有变更，自动同步到云端
-  useEffect(() => {
-    return () => {
-      const snapshot = settingsSnapshotRef.current;
-      if (snapshot && store && store.hasSettingsChanged(snapshot)) {
-        // 静默同步，不阻塞关闭，失败也不提示（下次打开会重试）
-        store.syncSettings().catch(() => {
-          // 静默失败，下次打开时会再次尝试同步
-        });
-      }
-    };
-  }, [store]);
+  const dataSaverThreshold = store?.dataSaverThreshold;
 
   // 初始化 FsApi & 读取目录
   useEffect(() => {
@@ -134,10 +115,10 @@ export function GeneralTab() {
 
   // 阈值防抖同步
   useEffect(() => {
-    if (store) {
-      setLocalThreshold(store.dataSaverThreshold.toString());
+    if (dataSaverThreshold !== undefined) {
+      setLocalThreshold(dataSaverThreshold.toString());
     }
-  }, [store?.dataSaverThreshold]);
+  }, [dataSaverThreshold]);
   useEffect(() => {
     if (!store) return;
     const threshold = parseFloat(localThreshold);
@@ -206,7 +187,7 @@ export function GeneralTab() {
       if (!store) return;
       await store.syncSettings();
       // 成功后更新快照，避免退出时重复触发自动同步
-      settingsSnapshotRef.current = store.getSettingsSnapshot();
+      onGeneralSettingsSnapshotReset?.();
     },
     setIsUploading,
     "保存成功",
@@ -219,7 +200,7 @@ export function GeneralTab() {
       if (!store) return;
       await store.fetchSettings();
       // 恢复成功后更新快照，避免退出时误触发同步
-      settingsSnapshotRef.current = store.getSettingsSnapshot();
+      onGeneralSettingsSnapshotReset?.();
     },
     setIsSyncing,
     "恢复成功",

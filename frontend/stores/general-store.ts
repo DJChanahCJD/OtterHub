@@ -33,7 +33,7 @@ interface GeneralStoreState {
   setEnableImageAnalysis: (enabled: boolean) => void;
 
   fetchSettings: () => Promise<void>;
-  syncSettings: () => Promise<void>;
+  syncSettings: (options?: { silent?: boolean }) => Promise<void>;
   getSettingsSnapshot: () => SettingsSnapshot;
   hasSettingsChanged: (snapshot: SettingsSnapshot) => boolean;
 }
@@ -48,12 +48,14 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
       defaultUploadTags: [],
       enableImageAnalysis: true,
 
-      setDataSaverThreshold: (threshold) => set({ dataSaverThreshold: threshold }),
+      setDataSaverThreshold: (threshold) =>
+        set({ dataSaverThreshold: threshold }),
       setSafeMode: (enabled) => set({ safeMode: enabled }),
       setNsfwDetection: (enabled) => set({ nsfwDetection: enabled }),
       setImageLoadMode: (mode) => set({ imageLoadMode: mode }),
       setDefaultUploadTags: (tags) => set({ defaultUploadTags: tags }),
-      setEnableImageAnalysis: (enabled) => set({ enableImageAnalysis: enabled }),
+      setEnableImageAnalysis: (enabled) =>
+        set({ enableImageAnalysis: enabled }),
 
       fetchSettings: async () => {
         try {
@@ -74,7 +76,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
         }
       },
 
-      syncSettings: async () => {
+      syncSettings: async (options) => {
         const {
           dataSaverThreshold,
           safeMode,
@@ -92,7 +94,9 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
             defaultUploadTags,
             enableImageAnalysis,
           });
-          toast.success("设置已保存到云端");
+          if (!options?.silent) {
+            toast.success("设置已保存到云端");
+          }
         } catch (error) {
           console.error("Failed to sync general settings", error);
           throw error;
@@ -128,8 +132,8 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
           current.nsfwDetection !== snapshot.nsfwDetection ||
           current.imageLoadMode !== snapshot.imageLoadMode ||
           current.enableImageAnalysis !== snapshot.enableImageAnalysis ||
-          JSON.stringify(current.defaultUploadTags.sort()) !==
-            JSON.stringify(snapshot.defaultUploadTags.sort())
+          JSON.stringify([...current.defaultUploadTags].sort()) !==
+            JSON.stringify([...snapshot.defaultUploadTags].sort())
         );
       },
     }),
