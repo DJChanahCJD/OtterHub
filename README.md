@@ -69,6 +69,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
   - 密码登录（基于 JWT + Cookie）
   - NSFW 图片客户端检测（nsfw.js），安全模式下自动遮罩
 - **基础管理功能**：批量下载 / 删除，搜索 / 收藏 / 排序 / 标签
+- **Telegram 频道上传**：频道 / 群内发送文件后自动注册到 OtterHub，并可回复直链
 - **AI 图片分析**：上传图片后自动生成简要描述，便于图片检索（需配置 Workers AI binding）；Telegram 图片无论走 `sendPhoto` 还是 `sendDocument`，都会优先复用较小预览图做分析，超大原图会安全跳过
 
 ---
@@ -133,10 +134,32 @@ PASSWORD=your_password          # 密码
 TG_CHAT_ID=your_tg_chat_id      # Telegram Chat ID
 TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
+TG_WEBHOOK_SECRET=your_secret   # Telegram Webhook 校验密钥（频道上传需要）
+PUBLIC_BASE_URL=https://your-domain.example # (可选) 频道上传回复中的公开访问地址
+TG_UPLOAD_NOTIFY=true           # (可选) 频道上传后是否回复直链，默认 true
 ```
 
 > `TG_CHAT_ID` 和 `TG_BOT_TOKEN` 需在 Telegram 中获取。
 > 💡 详细流程可参考：[Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
+
+<details>
+<summary>从 Telegram 频道/群组上传文件</summary>
+
+1. 将 Bot 加入目标频道 / 群，并授予读取消息和发送消息权限
+2. 部署完成后进入 OtterHub 设置页 -> 常规设置 -> 上传设置
+3. 点击「配置 Webhook」，再点击「检查状态」确认已绑定
+
+也可以手动调用 Telegram `setWebhook` 调试：
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d "{\"url\":\"https://你的域名/telegram/webhook\",\"secret_token\":\"<YOUR_SECRET>\",\"allowed_updates\":[\"message\",\"channel_post\"]}"
+```
+
+频道 / 群内发送图片或文件后，OtterHub 会直接注册 Telegram `file_id`，不会重新下载再上传文件。
+
+</details>
 
 ### 3. 绑定 KV Namespace
 
@@ -324,6 +347,7 @@ OtterHub/
 │   │   ├── db-adapter/ # 存储适配器 (Telegram/R2)
 │   │   ├── proxy/      # 代理
 │   │   └── ...
+│   ├── routes/telegram # Telegram Webhook 导入与配置
 │   ├── app.ts          # Hono App 定义 & AppType 导出
 │   └── [[path]].ts     # Pages Functions 入口
 ├── shared/             # 前后端共享类型/工具 (Workspaces)
@@ -350,6 +374,7 @@ OtterHub/
 - [x] 核心能力
   - [x] 基于 Cookie 实现密码登录、登出功能
   - [x] 分片上传（≤20MB / 片），支持大文件（已实测 100MB，理论 1GB）
+  - [x] Telegram 频道 / 群上传导入（Webhook 注册 `file_id`）
   - [x] HTTP Range 支持（视频 / 音频按需加载、断点续传）
   - [x] Private 私有文件访问控制
   - [x] 回收站功能（支持恢复 / 永久删除 / 自动清理）

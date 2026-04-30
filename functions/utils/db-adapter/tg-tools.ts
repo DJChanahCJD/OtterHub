@@ -1,5 +1,18 @@
-import { getContentTypeByExt, getFileExt, getFileTypeByMimeOrExt } from "../file";
+import {
+  getContentTypeByExt,
+  getFileExt,
+  getFileTypeByMimeOrExt,
+} from "../file";
 import { FileType } from "@shared/types";
+
+const TELEGRAM_UPLOAD_NOTIFY_DISABLED = new Set([
+  "0",
+  "false",
+  "no",
+  "off",
+  "disable",
+  "disabled",
+]);
 
 /**
  * 构建 Telegram API URL
@@ -40,7 +53,10 @@ export async function getTgFilePath(
  * @param botToken Telegram Bot Token
  * @returns Response 对象
  */
-export async function getTgFile(fileId: string, botToken: string): Promise<Response> {
+export async function getTgFile(
+  fileId: string,
+  botToken: string
+): Promise<Response> {
   const filePath = await getTgFilePath(fileId, botToken);
 
   if (!filePath) {
@@ -63,11 +79,11 @@ export async function processGifFile(
 
   try {
     // 核心：直接读取原文件的 Blob 数据，不做任何内容转换
-    const blob = await file.arrayBuffer().then(buffer => new Blob([buffer]));
-    
+    const blob = await file.arrayBuffer().then((buffer) => new Blob([buffer]));
+
     // 替换文件名为 webp 后缀（不区分大小写）
     const newFileName = fileName.replace(/\.gif$/i, ".webp");
-    
+
     // 创建新的 File 对象，仅修改名称和 MIME 类型，内容不变
     const newFile = new File([blob], newFileName, { type: "image/webp" });
 
@@ -93,7 +109,12 @@ export function resolveFileDescriptor(
   const fileType = getFileTypeByMimeOrExt(mime, ext);
 
   // GIF 特判
-  if (mime === "image/gif" || ext === "gif" || mime === "image/webp" || ext === "webp") {
+  if (
+    mime === "image/gif" ||
+    ext === "gif" ||
+    mime === "image/webp" ||
+    ext === "webp"
+  ) {
     return {
       apiEndpoint: "sendDocument",
       field: "document",
@@ -159,22 +180,37 @@ type TgImageVariantIds = {
   fileSize?: number;
 };
 
+type TgWebhookMedia = {
+  kind: string;
+  fileId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  ext: string;
+  fileType: FileType;
+  messageId: number;
+  previewFileId?: string;
+};
+
 /**
  * 从 Telegram 图片尺寸列表中提取原图与预览图 file_id。
  */
 function extractPhotoVariantIds(variants: TgPhotoVariant[]): TgImageVariantIds {
-  const validVariants = variants.filter((item) => typeof item.file_id === "string");
+  const validVariants = variants.filter(
+    (item) => typeof item.file_id === "string"
+  );
   if (!validVariants.length) {
     return { fileId: null, previewFileId: null };
   }
 
-  const sortedVariants = [...validVariants].sort((prev, current) =>
-    (prev.file_size ?? 0) - (current.file_size ?? 0),
+  const sortedVariants = [...validVariants].sort(
+    (prev, current) => (prev.file_size ?? 0) - (current.file_size ?? 0)
   );
   const originalVariant = sortedVariants[sortedVariants.length - 1];
-  const previewVariant = [...sortedVariants]
-    .reverse()
-    .find((item) => item.file_id !== originalVariant.file_id) ?? null;
+  const previewVariant =
+    [...sortedVariants]
+      .reverse()
+      .find((item) => item.file_id !== originalVariant.file_id) ?? null;
 
   return {
     fileId: originalVariant.file_id ?? null,
@@ -196,7 +232,9 @@ export function getTgImageVariantIds(response: any): TgImageVariantIds {
   }
 
   // 对于大于 5MB 的通过 sendDocument 上传的图片，似乎没有 thumb 返回
-  const documentResult = response.result.document as TgDocumentResult | undefined;
+  const documentResult = response.result.document as
+    | TgDocumentResult
+    | undefined;
   if (!documentResult?.file_id) {
     return { fileId: null, previewFileId: null };
   }
@@ -207,7 +245,9 @@ export function getTgImageVariantIds(response: any): TgImageVariantIds {
   return {
     fileId: documentResult.file_id,
     previewFileId:
-      previewFileId && previewFileId !== documentResult.file_id ? previewFileId : null,
+      previewFileId && previewFileId !== documentResult.file_id
+        ? previewFileId
+        : null,
     fileSize: documentResult.file_size,
   };
 }
@@ -243,7 +283,6 @@ export function getTgFileId(response: any): string | null {
   return null;
 }
 
-
 /**
  * 提取 Telegram 视频缩略图 file_id。
  */
@@ -254,7 +293,11 @@ export function getVideoThumbId(response: any): string | null {
   if (!result.video) return null;
 
   // 拿到 file_id 还需要通过 getFilePath 获取到具体文件路径，然后存到 video 的元数据中
-  return response.result.video.thumbnail?.file_id || response.result.video.thumb?.file_id || null;
+  return (
+    response.result.video.thumbnail?.file_id ||
+    response.result.video.thumb?.file_id ||
+    null
+  );
 }
 
 /**
@@ -270,7 +313,9 @@ export function getTgFileSize(response: any): number | undefined {
   // sendPhoto 响应
   if (Array.isArray(result.photo)) {
     const variants = result.photo as TgPhotoVariant[];
-    const validVariants = variants.filter((v) => typeof v.file_size === "number");
+    const validVariants = variants.filter(
+      (v) => typeof v.file_size === "number"
+    );
     if (validVariants.length === 0) return undefined;
     return Math.max(...validVariants.map((v) => v.file_size!));
   }
@@ -287,4 +332,254 @@ export function getTgFileSize(response: any): number | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * 从 Telegram 入站消息中提取 OtterHub 可注册的媒体文件信息。
+ */
+export function getTelegramFileFromMessage(
+  message: any
+): TgWebhookMedia | null {
+  if (!message) return null;
+
+  if (Array.isArray(message.photo) && message.photo.length) {
+    const imageVariantIds = extractPhotoVariantIds(message.photo);
+    if (!imageVariantIds.fileId) return null;
+
+    return {
+      kind: "photo",
+      fileId: imageVariantIds.fileId,
+      fileName: `photo_${message.message_id || Date.now()}.jpg`,
+      fileSize: imageVariantIds.fileSize ?? 0,
+      mimeType: "image/jpeg",
+      ext: "jpg",
+      fileType: FileType.Image,
+      messageId: Number(message.message_id || 0),
+      previewFileId: imageVariantIds.previewFileId ?? undefined,
+    };
+  }
+
+  const candidates = [
+    {
+      key: "document",
+      fallbackName: "document",
+      fallbackMime: "application/octet-stream",
+    },
+    { key: "video", fallbackName: "video", fallbackMime: "video/mp4" },
+    { key: "audio", fallbackName: "audio", fallbackMime: "audio/mpeg" },
+    { key: "voice", fallbackName: "voice", fallbackMime: "audio/ogg" },
+    { key: "animation", fallbackName: "animation", fallbackMime: "video/mp4" },
+    {
+      key: "video_note",
+      fallbackName: "video_note",
+      fallbackMime: "video/mp4",
+    },
+    { key: "sticker", fallbackName: "sticker", fallbackMime: "image/webp" },
+  ];
+
+  for (const item of candidates) {
+    const data = message[item.key];
+    if (!data?.file_id) continue;
+
+    const mimeType = data.mime_type || item.fallbackMime;
+    const rawFileName = data.file_name || "";
+    const ext = getFileExt(rawFileName) || getFileExtByMime(mimeType) || "bin";
+    const fileName =
+      rawFileName ||
+      `${item.fallbackName}_${message.message_id || Date.now()}.${ext}`;
+    const fileType = getFileTypeByMimeOrExt(mimeType, ext);
+    const previewFileId =
+      data.thumbnail?.file_id || data.thumb?.file_id || undefined;
+
+    return {
+      kind: item.key,
+      fileId: data.file_id,
+      fileName,
+      fileSize: Number(data.file_size || 0),
+      mimeType,
+      ext,
+      fileType,
+      messageId: Number(message.message_id || 0),
+      previewFileId: previewFileId !== data.file_id ? previewFileId : undefined,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * 构建公开文件访问链接。
+ */
+export function buildTelegramDirectLink(
+  publicBaseUrl: string | undefined,
+  fallbackOrigin: string,
+  key: string
+): string {
+  const base =
+    normalizePublicBaseUrl(publicBaseUrl) ||
+    normalizePublicBaseUrl(fallbackOrigin);
+  const path = `/file/${key}`;
+  return base ? `${base}${path}` : path;
+}
+
+/**
+ * 判断是否需要在 Telegram 中回复上传完成通知。
+ */
+export function shouldNotifyTelegramUpload(
+  rawValue: string | undefined
+): boolean {
+  if (!rawValue) return true;
+  return !TELEGRAM_UPLOAD_NOTIFY_DISABLED.has(rawValue.trim().toLowerCase());
+}
+
+/**
+ * 发送 Telegram 上传完成通知；回复失败时退回普通消息。
+ */
+export async function sendTelegramUploadNotice(
+  botToken: string,
+  payload: {
+    chatId: string | number;
+    replyToMessageId?: number;
+    directLink: string;
+    fileId: string;
+    messageId?: number;
+    fileName: string;
+    fileSize: number;
+  }
+): Promise<{ ok: boolean; skipped?: boolean; data?: any; error?: string }> {
+  const text = buildTelegramUploadNoticeText(payload);
+  const basePayload = {
+    chat_id: payload.chatId,
+    text,
+    disable_web_page_preview: true,
+  };
+
+  try {
+    let result = await postTelegramMessage(botToken, {
+      ...basePayload,
+      ...(payload.replyToMessageId
+        ? {
+            reply_to_message_id: payload.replyToMessageId,
+            allow_sending_without_reply: true,
+          }
+        : {}),
+    });
+
+    if (!result.ok && payload.replyToMessageId) {
+      result = await postTelegramMessage(botToken, basePayload);
+    }
+
+    return result;
+  } catch (error: any) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * 按 MIME 类型推断 Telegram 入站文件扩展名。
+ */
+function getFileExtByMime(mimeType: string): string {
+  const contentType = mimeType.split(";")[0].trim().toLowerCase();
+  const extByMime: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/bmp": "bmp",
+    "image/svg+xml": "svg",
+    "video/mp4": "mp4",
+    "video/webm": "webm",
+    "video/quicktime": "mov",
+    "video/x-matroska": "mkv",
+    "audio/mpeg": "mp3",
+    "audio/ogg": "ogg",
+    "audio/wav": "wav",
+    "audio/flac": "flac",
+    "audio/aac": "aac",
+    "audio/mp4": "m4a",
+    "audio/opus": "opus",
+    "application/pdf": "pdf",
+    "application/zip": "zip",
+    "application/x-7z-compressed": "7z",
+    "application/x-rar-compressed": "rar",
+    "text/plain": "txt",
+  };
+
+  return extByMime[contentType] || "";
+}
+
+/**
+ * 规范化用于回复直链的公开基础 URL。
+ */
+function normalizePublicBaseUrl(rawValue: string | undefined): string {
+  if (!rawValue) return "";
+
+  try {
+    return new URL(rawValue).toString().replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * 生成 Telegram 通知文本。
+ */
+function buildTelegramUploadNoticeText(payload: {
+  directLink: string;
+  fileId: string;
+  messageId?: number;
+  fileName: string;
+  fileSize: number;
+}): string {
+  const lines = [
+    "Upload completed",
+    `Name: ${truncateFileName(payload.fileName, 120) || "unnamed"}`,
+    `Size: ${formatFileSize(payload.fileSize)}`,
+    `Direct Link: ${payload.directLink}`,
+    `File ID: ${payload.fileId}`,
+  ];
+
+  if (payload.messageId) {
+    lines.push(`Message ID: ${payload.messageId}`);
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 发送 Telegram sendMessage 请求。
+ */
+async function postTelegramMessage(
+  botToken: string,
+  payload: Record<string, unknown>
+): Promise<{ ok: boolean; data: any }> {
+  const response = await fetch(buildTgApiUrl(botToken, "sendMessage"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => ({}));
+  return { ok: response.ok && data?.ok, data };
+}
+
+/**
+ * 格式化文件大小，供 Telegram 通知展示。
+ */
+function formatFileSize(bytes: number): string {
+  const numeric = Number(bytes || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "0 B";
+  if (numeric < 1024) return `${numeric} B`;
+  if (numeric < 1024 * 1024) return `${(numeric / 1024).toFixed(2)} KB`;
+  if (numeric < 1024 * 1024 * 1024) {
+    return `${(numeric / (1024 * 1024)).toFixed(2)} MB`;
+  }
+  return `${(numeric / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+/**
+ * 截断过长文件名，避免 Telegram 通知过长。
+ */
+function truncateFileName(fileName: string, limit: number): string {
+  return fileName.length <= limit ? fileName : fileName.slice(0, limit);
 }

@@ -1,11 +1,13 @@
-import { FileMetadata } from '@shared/types';
+import { FileMetadata } from "@shared/types";
 
 export interface KVNamespace {
   get(key: string, options?: any): Promise<any>;
   put(key: string, value: any, options?: any): Promise<void>;
   delete(key: string): Promise<void>;
   list(options?: any): Promise<any>;
-  getWithMetadata<T = unknown>(key: string): Promise<{ value: any; metadata: T }>;
+  getWithMetadata<T = unknown>(
+    key: string
+  ): Promise<{ value: any; metadata: T }>;
 }
 
 export interface R2Bucket {
@@ -25,9 +27,12 @@ export type Env = {
   JWT_SECRET?: string;
   PASSWORD?: string;
   API_TOKEN?: string;
-  
+
   TG_CHAT_ID?: string;
   TG_BOT_TOKEN?: string;
+  TG_WEBHOOK_SECRET?: string;
+  PUBLIC_BASE_URL?: string;
+  TG_UPLOAD_NOTIFY?: string;
 
   /** Workers AI binding，可选；不配置时 AI 富化功能自动跳过 */
   AI?: WorkersAI;

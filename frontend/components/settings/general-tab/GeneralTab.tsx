@@ -15,6 +15,7 @@ import {
   Download,
   AlertCircle,
   Sparkles,
+  Webhook,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ import { TagSelector } from "@/components/TagSelector";
 import { SafeModeToggle } from "@/components/SafeModeToggle";
 import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
 import { ImageLoadMode } from "@shared/types";
+import { telegramWebhookApi, TelegramWebhookInfo } from "@/lib/api/telegram";
 
 const SettingCard = ({ icon: Icon, iconColor, title, desc, children }: any) => (
   <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -95,6 +97,12 @@ export function GeneralTab({
   const store = useGeneralSettingsStoreClient();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCheckingTelegramWebhook, setIsCheckingTelegramWebhook] =
+    useState(false);
+  const [isSettingTelegramWebhook, setIsSettingTelegramWebhook] =
+    useState(false);
+  const [telegramWebhookInfo, setTelegramWebhookInfo] =
+    useState<TelegramWebhookInfo | null>(null);
   const [localThreshold, setLocalThreshold] = useState("5.0");
   const [currentDir, setCurrentDir] = useState<string | null>(null);
   const [isDirLoading, setIsDirLoading] = useState(false);
@@ -205,6 +213,41 @@ export function GeneralTab({
     setIsSyncing,
     "恢复成功",
     "恢复失败"
+  );
+
+  /**
+   * 读取 Telegram webhook 当前绑定状态。
+   */
+  const handleCheckTelegramWebhook = withLoading(
+    async () => {
+      const info = await telegramWebhookApi.getInfo();
+      setTelegramWebhookInfo(info);
+      if (info.configured) {
+        toast.success("Telegram Webhook 已绑定");
+      } else {
+        toast.warning("Telegram Webhook 尚未绑定");
+      }
+    },
+    setIsCheckingTelegramWebhook,
+    undefined,
+    "检查失败"
+  );
+
+  /**
+   * 让后端使用环境变量配置 Telegram webhook。
+   */
+  const handleSetupTelegramWebhook = withLoading(
+    async () => {
+      const result = await telegramWebhookApi.setup();
+      setTelegramWebhookInfo({
+        configured: true,
+        url: result.webhookUrl,
+      });
+      toast.success("Telegram Webhook 已配置");
+    },
+    setIsSettingTelegramWebhook,
+    undefined,
+    "配置失败"
   );
 
   // SSR 安全处理 - 放在所有 hooks 之后
@@ -329,6 +372,63 @@ export function GeneralTab({
                 placeholder="选择默认标签..."
               />
             </SettingItem>
+
+            <div className="rounded-lg border border-border/20 bg-background/50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Webhook className="h-5 w-5 text-sky-500 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">Telegram 频道上传</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {telegramWebhookInfo?.url ||
+                        (telegramWebhookInfo?.reason === "missing-token"
+                          ? "缺少 TG_BOT_TOKEN"
+                          : "未检查")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCheckTelegramWebhook}
+                    disabled={
+                      isCheckingTelegramWebhook || isSettingTelegramWebhook
+                    }
+                    className="h-9"
+                  >
+                    <RefreshCw
+                      className={cn(
+                        "h-4 w-4 mr-2",
+                        isCheckingTelegramWebhook && "animate-spin"
+                      )}
+                    />
+                    检查状态
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSetupTelegramWebhook}
+                    disabled={
+                      isCheckingTelegramWebhook || isSettingTelegramWebhook
+                    }
+                    className="h-9"
+                  >
+                    <CloudUpload
+                      className={cn(
+                        "h-4 w-4 mr-2",
+                        isSettingTelegramWebhook && "animate-pulse"
+                      )}
+                    />
+                    配置 Webhook
+                  </Button>
+                </div>
+              </div>
+              {telegramWebhookInfo?.lastErrorMessage && (
+                <p className="mt-3 text-xs text-destructive">
+                  {telegramWebhookInfo.lastErrorMessage}
+                </p>
+              )}
+            </div>
           </div>
         </SettingCard>
 
