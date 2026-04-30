@@ -69,7 +69,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
   - 密码登录（基于 JWT + Cookie）
   - NSFW 图片客户端检测（nsfw.js），安全模式下自动遮罩
 - **基础管理功能**：批量下载 / 删除，搜索 / 收藏 / 排序 / 标签
-- **Telegram 频道上传**：频道 / 群内发送文件后自动注册到 OtterHub，并可回复直链
+- **Telegram 频道上传**：频道 / 群内发送 ≤20MB 文件后自动注册到 OtterHub，并可回复直链
 - **AI 图片分析**：上传图片后自动生成简要描述，便于图片检索（需配置 Workers AI binding）；Telegram 图片无论走 `sendPhoto` 还是 `sendDocument`，都会优先复用较小预览图做分析，超大原图会安全跳过
 
 ---
@@ -157,7 +157,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
   -d "{\"url\":\"https://你的域名/telegram/webhook\",\"secret_token\":\"<YOUR_SECRET>\",\"allowed_updates\":[\"message\",\"channel_post\"]}"
 ```
 
-频道 / 群内发送图片或文件后，OtterHub 会直接注册 Telegram `file_id`，不会重新下载再上传文件。
+频道 / 群内发送 ≤20MB 的图片或文件后，OtterHub 会直接注册 Telegram `file_id`，不会重新下载再上传文件。超过 20MB 的文件请使用网页上传，网页上传会自动分片。
 
 </details>
 
@@ -374,7 +374,7 @@ OtterHub/
 - [x] 核心能力
   - [x] 基于 Cookie 实现密码登录、登出功能
   - [x] 分片上传（≤20MB / 片），支持大文件（已实测 100MB，理论 1GB）
-  - [x] Telegram 频道 / 群上传导入（Webhook 注册 `file_id`）
+  - [x] Telegram 频道 / 群上传导入（Webhook 注册 ≤20MB 文件的 `file_id`）
   - [x] HTTP Range 支持（视频 / 音频按需加载、断点续传）
   - [x] Private 私有文件访问控制
   - [x] 回收站功能（支持恢复 / 永久删除 / 自动清理）

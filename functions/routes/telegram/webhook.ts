@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { FileMetadata } from "@shared/types";
+import { FileMetadata, MAX_CHUNK_SIZE } from "@shared/types";
 import type { Env } from "../../types/hono";
 import { authMiddleware } from "../../middleware/auth";
 import { buildKeyId } from "@utils/file";
@@ -59,6 +59,76 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
   }
 
   const key = buildKeyId(media.fileType, media.fileId, media.ext);
+  const directLink = buildTelegramDirectLink(
+    c.env.PUBLIC_BASE_URL,
+    new URL(c.req.url).origin,
+    key
+  );
+  const chatId = message?.chat?.id;
+  const shouldNotify =
+    chatId && shouldNotifyTelegramUpload(c.env.TG_UPLOAD_NOTIFY);
+
+  if (media.fileSize > MAX_CHUNK_SIZE) {
+    if (shouldNotify) {
+      const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {
+        chatId,
+        replyToMessageId: message.message_id,
+        directLink,
+        fileId: media.fileId,
+        messageId: media.messageId || message.message_id,
+        fileName: media.fileName,
+        fileSize: media.fileSize,
+        text: `文件超过 20MB，无法通过 Telegram 频道导入。\n请在 OtterHub 网页端上传，系统会自动分片。\n文件名：${media.fileName}`,
+      });
+
+      if (!noticeResult.ok && !noticeResult.skipped) {
+        console.warn(
+          "[TelegramWebhook] Large-file notice failed:",
+          noticeResult.data?.description ||
+            noticeResult.error ||
+            "unknown error"
+        );
+      }
+    }
+
+    return ok(c, {
+      ignored: "file-too-large",
+      key,
+      maxSize: MAX_CHUNK_SIZE,
+    });
+  }
+
+  const existing = await c.env.oh_file_url.getWithMetadata<FileMetadata>(key);
+  if (existing.metadata) {
+    if (shouldNotify) {
+      const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {
+        chatId,
+        replyToMessageId: message.message_id,
+        directLink,
+        fileId: media.fileId,
+        messageId: media.messageId || message.message_id,
+        fileName: media.fileName,
+        fileSize: media.fileSize,
+        text: `文件已存在于 OtterHub。\n直链：${directLink}`,
+      });
+
+      if (!noticeResult.ok && !noticeResult.skipped) {
+        console.warn(
+          "[TelegramWebhook] Duplicate notice failed:",
+          noticeResult.data?.description ||
+            noticeResult.error ||
+            "unknown error"
+        );
+      }
+    }
+
+    return ok(c, {
+      key,
+      url: directLink,
+      existed: true,
+    });
+  }
+
   const metadata: FileMetadata = {
     fileName: media.fileName,
     fileSize: media.fileSize,
@@ -71,14 +141,7 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
 
   await c.env.oh_file_url.put(key, "", { metadata });
 
-  const directLink = buildTelegramDirectLink(
-    c.env.PUBLIC_BASE_URL,
-    new URL(c.req.url).origin,
-    key
-  );
-
-  const chatId = message?.chat?.id;
-  if (chatId && shouldNotifyTelegramUpload(c.env.TG_UPLOAD_NOTIFY)) {
+  if (shouldNotify) {
     const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {
       chatId,
       replyToMessageId: message.message_id,

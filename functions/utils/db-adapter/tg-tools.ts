@@ -445,9 +445,10 @@ export async function sendTelegramUploadNotice(
     messageId?: number;
     fileName: string;
     fileSize: number;
+    text?: string;
   }
 ): Promise<{ ok: boolean; skipped?: boolean; data?: any; error?: string }> {
-  const text = buildTelegramUploadNoticeText(payload);
+  const text = payload.text || buildTelegramUploadNoticeText(payload);
   const basePayload = {
     chat_id: payload.chatId,
     text,
