@@ -6,6 +6,7 @@ import { generalSettingsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { storeKey } from ".";
 import { FileTag } from "@shared/types";
+import { TelegramWebhookInfo } from "@/lib/api/telegram";
 
 // 设置快照类型（用于对比变更）
 export interface SettingsSnapshot {
@@ -24,6 +25,7 @@ interface GeneralStoreState {
   imageLoadMode: ImageLoadMode;
   defaultUploadTags: FileTag[];
   enableImageAnalysis: boolean;
+  telegramWebhookInfo: TelegramWebhookInfo | null;
 
   setDataSaverThreshold: (threshold: number) => void;
   setSafeMode: (enabled: boolean) => void;
@@ -31,6 +33,7 @@ interface GeneralStoreState {
   setImageLoadMode: (mode: ImageLoadMode) => void;
   setDefaultUploadTags: (tags: FileTag[]) => void;
   setEnableImageAnalysis: (enabled: boolean) => void;
+  setTelegramWebhookInfo: (info: TelegramWebhookInfo | null) => void;
 
   fetchSettings: () => Promise<void>;
   syncSettings: (options?: { silent?: boolean }) => Promise<void>;
@@ -47,6 +50,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
       imageLoadMode: ImageLoadMode.DataSaver,
       defaultUploadTags: [],
       enableImageAnalysis: true,
+      telegramWebhookInfo: null,
 
       setDataSaverThreshold: (threshold) =>
         set({ dataSaverThreshold: threshold }),
@@ -56,6 +60,7 @@ export const useGeneralSettingsStore = create<GeneralStoreState>()(
       setDefaultUploadTags: (tags) => set({ defaultUploadTags: tags }),
       setEnableImageAnalysis: (enabled) =>
         set({ enableImageAnalysis: enabled }),
+      setTelegramWebhookInfo: (info) => set({ telegramWebhookInfo: info }),
 
       fetchSettings: async () => {
         try {

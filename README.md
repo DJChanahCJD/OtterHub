@@ -426,6 +426,7 @@ OtterHub/
 - [x] 随机壁纸获取（Wallhaven、Bing、Pixabay 等）
 - [x] API Token 支持 (通过 `API_TOKEN` 环境变量配置)
 - [ ] 申请 TG API ID，自建 Telegram Bot API Server, 单个文件下载上限可提升至 2GB
+- [ ] ~~TG Webhook 上传同步文件标签~~（会额外消耗一次 KV 读取额度）
 
 - [ ] KV vs D1 数据库评估
   - D1：单库 500MB，分库可达 5GB

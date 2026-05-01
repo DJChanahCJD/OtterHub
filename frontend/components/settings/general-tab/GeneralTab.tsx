@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   ShieldCheck,
@@ -41,7 +41,7 @@ import { TagSelector } from "@/components/TagSelector";
 import { SafeModeToggle } from "@/components/SafeModeToggle";
 import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
 import { ImageLoadMode } from "@shared/types";
-import { telegramWebhookApi, TelegramWebhookInfo } from "@/lib/api/telegram";
+import { telegramWebhookApi } from "@/lib/api/telegram";
 
 const SettingCard = ({ icon: Icon, iconColor, title, desc, children }: any) => (
   <Card className="border border-border/40 shadow-sm bg-muted/10 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -95,14 +95,14 @@ export function GeneralTab({
   onGeneralSettingsSnapshotReset,
 }: GeneralTabProps) {
   const store = useGeneralSettingsStoreClient();
+  const telegramWebhookInfo = store?.telegramWebhookInfo ?? null;
+  const setTelegramWebhookInfo = store?.setTelegramWebhookInfo;
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isCheckingTelegramWebhook, setIsCheckingTelegramWebhook] =
     useState(false);
   const [isSettingTelegramWebhook, setIsSettingTelegramWebhook] =
     useState(false);
-  const [telegramWebhookInfo, setTelegramWebhookInfo] =
-    useState<TelegramWebhookInfo | null>(null);
   const [localThreshold, setLocalThreshold] = useState("5.0");
   const [currentDir, setCurrentDir] = useState<string | null>(null);
   const [isDirLoading, setIsDirLoading] = useState(false);
@@ -120,6 +120,28 @@ export function GeneralTab({
         .catch(() => setCurrentDir(null));
     }
   }, []);
+
+  // 组件挂载时自动检查 Telegram Webhook 状态（如果尚未检查过）
+  const hasCheckedWebhookRef = useRef(false);
+  useEffect(() => {
+    if (!store || telegramWebhookInfo !== null || hasCheckedWebhookRef.current)
+      return;
+
+    hasCheckedWebhookRef.current = true;
+    const checkWebhook = async () => {
+      setIsCheckingTelegramWebhook(true);
+      try {
+        const info = await telegramWebhookApi.getInfo();
+        store.setTelegramWebhookInfo(info);
+      } catch {
+        // 静默失败，不打扰用户
+      } finally {
+        setIsCheckingTelegramWebhook(false);
+      }
+    };
+
+    checkWebhook();
+  }, [store, telegramWebhookInfo]);
 
   // 阈值防抖同步
   useEffect(() => {
@@ -221,7 +243,7 @@ export function GeneralTab({
   const handleCheckTelegramWebhook = withLoading(
     async () => {
       const info = await telegramWebhookApi.getInfo();
-      setTelegramWebhookInfo(info);
+      setTelegramWebhookInfo?.(info);
       if (info.configured) {
         toast.success("Telegram Webhook 已绑定");
       } else {
@@ -239,7 +261,7 @@ export function GeneralTab({
   const handleSetupTelegramWebhook = withLoading(
     async () => {
       const result = await telegramWebhookApi.setup();
-      setTelegramWebhookInfo({
+      setTelegramWebhookInfo?.({
         configured: true,
         url: result.webhookUrl,
       });
