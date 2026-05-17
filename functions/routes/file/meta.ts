@@ -1,18 +1,23 @@
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
-import { FileMetadata, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH } from '@shared/types';
-import { authMiddleware } from '../../middleware/auth';
-import type { Env } from '../../types/hono';
-import { fail, ok } from '@utils/response';
+import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+import {
+  FileMetadata,
+  FileTag,
+  MAX_FILENAME_LENGTH,
+  MAX_DESC_LENGTH,
+} from "@shared/types";
+import { authMiddleware } from "../../middleware/auth";
+import type { Env } from "../../types/hono";
+import { fail, ok } from "@utils/response";
 
 export const metaRoutes = new Hono<{ Bindings: Env }>();
 
 metaRoutes.patch(
-  '/:key/meta',
+  "/:key/meta",
   authMiddleware,
   zValidator(
-    'json',
+    "json",
     z.object({
       fileName: z.string().min(1).max(MAX_FILENAME_LENGTH).optional(),
       tags: z.array(z.enum(FileTag)).optional(),
@@ -20,9 +25,9 @@ metaRoutes.patch(
     })
   ),
   async (c) => {
-    const key = c.req.param('key');
-    const { fileName, tags, desc } = c.req.valid('json');
-    const kv = c.env.oh_file_url;
+    const key = c.req.param("key");
+    const { fileName, tags, desc } = c.req.valid("json");
+    const kv = c.env.oh_file_url_demo;
 
     try {
       const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
@@ -39,7 +44,7 @@ metaRoutes.patch(
 
       return ok(c, metadata);
     } catch (e: any) {
-      console.error('Update metadata error:', e);
+      console.error("Update metadata error:", e);
       return fail(c, `Failed to update metadata: ${e.message}`);
     }
   }

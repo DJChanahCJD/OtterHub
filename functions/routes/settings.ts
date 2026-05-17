@@ -1,11 +1,11 @@
-import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth';
-import { CF } from 'types';
-import { GeneralSettings } from '@shared/types';
+import { Hono } from "hono";
+import { authMiddleware } from "../middleware/auth";
+import { CF } from "types";
+import { GeneralSettings } from "@shared/types";
 
-import { ok, fail } from '@utils/response';
-import { kvGetJSON } from '@utils/kv';
-import { Env } from 'types/hono';
+import { ok, fail } from "@utils/response";
+import { kvGetJSON } from "@utils/kv";
+import { Env } from "types/hono";
 
 function createSettingsRoutes<T>(
   app: Hono<{ Bindings: Env }>,
@@ -19,9 +19,9 @@ function createSettingsRoutes<T>(
   const getMsg = options?.getMessage ?? "获取配置失败";
   const postMsg = options?.postMessage ?? "配置已更新";
 
-  app.get(path, async c => {
+  app.get(path, async (c) => {
     try {
-      const kv = c.env.oh_file_url;
+      const kv = c.env.oh_file_url_demo;
       const data = await kvGetJSON<T>(kv, key, {} as T);
       return ok(c, data);
     } catch (e: any) {
@@ -29,9 +29,9 @@ function createSettingsRoutes<T>(
     }
   });
 
-  app.post(path, async c => {
+  app.post(path, async (c) => {
     try {
-      const kv = c.env.oh_file_url;
+      const kv = c.env.oh_file_url_demo;
       const body = await c.req.json<T>();
       await kv.put(key, JSON.stringify(body));
       return ok(c, body, postMsg);
@@ -43,26 +43,21 @@ function createSettingsRoutes<T>(
 
 export const settingsRoutes = new Hono<{ Bindings: Env }>();
 
-settingsRoutes.use('*', authMiddleware);
+settingsRoutes.use("*", authMiddleware);
 
 /* ========= Settings ========= */
 
 createSettingsRoutes<GeneralSettings>(
   settingsRoutes,
-  '/general',
+  "/general",
   CF.SETTINGS_KEY,
   {
-    getMessage: '获取常规设置失败',
-    postMessage: '常规设置已更新',
+    getMessage: "获取常规设置失败",
+    postMessage: "常规设置已更新",
   }
 );
 
-createSettingsRoutes(
-  settingsRoutes,
-  '/wallpaper',
-  CF.WALLPAPER_CONFIG_KEY,
-  {
-    getMessage: '获取壁纸配置失败',
-    postMessage: '壁纸配置已更新',
-  }
-);
+createSettingsRoutes(settingsRoutes, "/wallpaper", CF.WALLPAPER_CONFIG_KEY, {
+  getMessage: "获取壁纸配置失败",
+  postMessage: "壁纸配置已更新",
+});

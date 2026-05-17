@@ -7,6 +7,7 @@ import type { Env, KVNamespace } from "../types/hono";
 import { getFileTypeByName } from "@utils/file";
 import {
   BundleFileInfo,
+  DEMO_FILE_TTL,
   MAX_FILES_IN_BUNDLE,
   ShareData,
   SingleShareData,
@@ -64,14 +65,13 @@ app.post(
   async (c) => {
     const { type, fileKey, fileKeys, bundleName, expireIn } =
       c.req.valid("json");
-    const kv = c.env.oh_file_url;
+    const kv = c.env.oh_file_url_demo;
     const db = DBAdapterFactory.getAdapter(c.env);
 
     const shareId = crypto.randomUUID();
     const shareKey = `${shareKeyPrefix}${shareId}`;
     const now = Date.now();
-    const expiresAt =
-      expireIn && expireIn > 0 ? now + expireIn * 1000 : undefined;
+    const expiresAt = now + DEMO_FILE_TTL * 1000;
 
     // 单文件分享
     if (type === "single") {
@@ -92,7 +92,7 @@ app.post(
       };
 
       await kv.put(shareKey, JSON.stringify(shareData), {
-        expirationTtl: expireIn && expireIn > 0 ? expireIn : undefined,
+        expirationTtl: DEMO_FILE_TTL,
       });
 
       return ok(c, { token: shareId });
@@ -134,7 +134,7 @@ app.post(
     };
 
     await kv.put(shareKey, JSON.stringify(shareData), {
-      expirationTtl: expireIn && expireIn > 0 ? expireIn : undefined,
+      expirationTtl: DEMO_FILE_TTL,
     });
 
     return ok(c, { token: shareId, fileCount: files.length });
@@ -143,7 +143,7 @@ app.post(
 
 // 2. List Shares (Protected)
 app.get("/list", authMiddleware, async (c) => {
-  const kv = c.env.oh_file_url;
+  const kv = c.env.oh_file_url_demo;
   const list = await kv.list({ prefix: shareKeyPrefix });
 
   const shares: ShareListItem[] = [];
@@ -186,7 +186,7 @@ app.get("/list", authMiddleware, async (c) => {
 // 3. Revoke Share (Protected)
 app.delete("/revoke/:token", authMiddleware, async (c) => {
   const shareToken = c.req.param("token");
-  const kv = c.env.oh_file_url;
+  const kv = c.env.oh_file_url_demo;
   await kv.delete(`${shareKeyPrefix}${shareToken}`);
 
   return ok(c, { success: true });
@@ -195,7 +195,7 @@ app.delete("/revoke/:token", authMiddleware, async (c) => {
 // 4. Get Share Metadata (Public)
 app.get("/:token/meta", async (c) => {
   const token = c.req.param("token");
-  const kv = c.env.oh_file_url;
+  const kv = c.env.oh_file_url_demo;
   const shareKey = `${shareKeyPrefix}${token}`;
 
   const shareData = await getKVData<ShareData>(kv, shareKey);
@@ -235,7 +235,7 @@ app.get("/:token/meta", async (c) => {
 app.get("/:token/raw", async (c) => {
   const token = c.req.param("token");
   const fileKey = c.req.query("file"); // 打包分享时指定文件
-  const kv = c.env.oh_file_url;
+  const kv = c.env.oh_file_url_demo;
   const shareKey = `${shareKeyPrefix}${token}`;
 
   const shareData = await getKVData<ShareData>(kv, shareKey);
@@ -269,7 +269,7 @@ app.get("/:token/raw", async (c) => {
 // 6. Download All Files as ZIP (Public)
 app.get("/:token/download-all", async (c) => {
   const token = c.req.param("token");
-  const kv = c.env.oh_file_url;
+  const kv = c.env.oh_file_url_demo;
   const shareKey = `${shareKeyPrefix}${token}`;
 
   const shareData = await getKVData<ShareData>(kv, shareKey);

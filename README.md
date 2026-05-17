@@ -44,9 +44,9 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 > [!IMPORTANT]
 > 体验站点：[OtterHub Demo](https://otterhub-demo.pages.dev/)
 >
-> 账号：`OtterHub` | 密码：`123456`
+> 密码：`OtterHub`
 >
-> 限制：演示站的默认文件不可删，仅支持上传 ≤20MB 文件（1 小时自动清理）
+> 限制：仅支持上传 ≤20MB 文件，所有上传内容、分享链接、回收站均 24 小时后自动清理
 
 ![网站截图](public/website-screenshot.png)
 
@@ -178,8 +178,8 @@ curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 
 ### 3. 绑定 KV Namespace
 
-1. 在 Cloudflare Dashboard 创建 KV 命名空间 `oh_file_url`
-2. 将 `oh_file_url` 绑定到 Pages 项目，变量名也设为 `oh_file_url`
+1. 在 Cloudflare Dashboard 创建 KV 命名空间 `oh_file_url_demo`
+2. 将 `oh_file_url_demo` 绑定到 Pages 项目，变量名也设为 `oh_file_url_demo`
 
 ### 4. （可选）绑定 Workers AI
 

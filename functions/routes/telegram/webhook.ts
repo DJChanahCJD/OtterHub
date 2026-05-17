@@ -73,7 +73,8 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
     });
   }
 
-  const existing = await c.env.oh_file_url.getWithMetadata<FileMetadata>(key);
+  const existing =
+    await c.env.oh_file_url_demo.getWithMetadata<FileMetadata>(key);
   if (existing.metadata) {
     if (shouldNotify) {
       const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {
@@ -114,7 +115,7 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
       : undefined,
   };
 
-  await c.env.oh_file_url.put(key, "", { metadata });
+  await c.env.oh_file_url_demo.put(key, "", { metadata });
 
   if (shouldNotify) {
     const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {

@@ -22,7 +22,7 @@ export interface WorkersAI {
 }
 
 export type Env = {
-  oh_file_url: KVNamespace;
+  oh_file_url_demo: KVNamespace;
   oh_file_r2?: R2Bucket;
   JWT_SECRET?: string;
   PASSWORD?: string;

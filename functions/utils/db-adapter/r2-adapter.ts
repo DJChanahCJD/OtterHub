@@ -7,11 +7,7 @@ import {
   getContentTypeByExt,
   getFileTypeByMimeOrExt,
 } from "../file";
-import {
-  Chunk,
-  FileMetadata,
-  FileType,
-} from "@shared/types";
+import { Chunk, FileMetadata, FileType, DEMO_FILE_TTL } from "@shared/types";
 import {
   extractKeyFromTrash,
   parseRangeHeader,
@@ -31,7 +27,7 @@ export class R2Adapter extends BaseAdapter {
 
   async uploadFile(
     file: File | Blob | Uint8Array,
-    metadata: FileMetadata,
+    metadata: FileMetadata
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
@@ -52,7 +48,10 @@ export class R2Adapter extends BaseAdapter {
 
     // 将文件信息保存到KV存储（value 为空字符串，chunks 在 metadata）
     if (this.env[this.kvName]) {
-      await this.env[this.kvName].put(key, "", { metadata });
+      await this.env[this.kvName].put(key, "", {
+        metadata,
+        expirationTtl: DEMO_FILE_TTL,
+      });
     }
 
     return { key };
@@ -62,7 +61,7 @@ export class R2Adapter extends BaseAdapter {
     stream: ReadableStream,
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
-    mimeType?: string,
+    mimeType?: string
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
@@ -83,7 +82,10 @@ export class R2Adapter extends BaseAdapter {
 
     // 保存元数据
     if (this.env[this.kvName]) {
-      await this.env[this.kvName].put(key, "", { metadata });
+      await this.env[this.kvName].put(key, "", {
+        metadata,
+        expirationTtl: DEMO_FILE_TTL,
+      });
     }
 
     return { key };
@@ -97,7 +99,7 @@ export class R2Adapter extends BaseAdapter {
     chunkFile: File | Blob | Uint8Array,
     parentKey: string,
     chunkIndex: number,
-    fileName?: string,
+    fileName?: string
   ): Promise<string> {
     const bucket = this.env[this.bucketName];
     const chunkId = this.getTempChunkId(parentKey, chunkIndex);
@@ -161,7 +163,7 @@ export class R2Adapter extends BaseAdapter {
 
       headers.set("Content-Length", String(size));
       // 获取元数据以获取原始文件名
-      const item = await this.getFileMetadataWithValue(key);  //  这里如果是trash, 则用trash的key，如果非trash，即用原Key
+      const item = await this.getFileMetadataWithValue(key); //  这里如果是trash, 则用trash的key，如果非trash，即用原Key
       if (!item) {
         return failResponse("Metadata not found", 404);
       }
@@ -169,7 +171,7 @@ export class R2Adapter extends BaseAdapter {
 
       headers.set(
         "Content-Disposition",
-        encodeContentDisposition(metadata.fileName, false),
+        encodeContentDisposition(metadata.fileName, false)
       );
 
       return new Response(object.body, { status: 200, headers });
@@ -186,7 +188,7 @@ export class R2Adapter extends BaseAdapter {
         return failResponse("File not found", 404);
       }
       const { metadata, value } = item;
-      
+
       if (!metadata) {
         console.error(`[getMergedFile] No metadata found for key: ${key}`);
         return failResponse("Metadata not found", 404);
@@ -204,7 +206,10 @@ export class R2Adapter extends BaseAdapter {
       }
 
       // 使用通用工具函数验证分片完整性
-      const validation = validateChunksForMerge(chunks, metadata.chunkInfo?.total ?? 0);
+      const validation = validateChunksForMerge(
+        chunks,
+        metadata.chunkInfo?.total ?? 0
+      );
       if (!validation.valid) {
         console.error(`[getMergedFile] ${validation.reason}`);
         return failResponse(validation.reason || "Invalid metadata", 425);
@@ -221,7 +226,7 @@ export class R2Adapter extends BaseAdapter {
       // 处理 Range 请求（使用通用工具函数）
       const rangeResult = parseRangeHeader(
         req?.headers.get("Range") || null,
-        totalSize,
+        totalSize
       );
       if (rangeResult) {
         const { start, end } = rangeResult;
@@ -240,7 +245,7 @@ export class R2Adapter extends BaseAdapter {
       headers.set("Content-Length", String(totalSize));
       headers.set(
         "Content-Disposition",
-        encodeContentDisposition(metadata.fileName),
+        encodeContentDisposition(metadata.fileName)
       );
 
       return new Response(this.createMergedStream(sortedChunks), {
@@ -300,7 +305,7 @@ export class R2Adapter extends BaseAdapter {
           const targetEnd = end + 1;
 
           console.log(
-            `[Range] Stream start: ${start}-${end}/${chunks.length} chunks`,
+            `[Range] Stream start: ${start}-${end}/${chunks.length} chunks`
           );
 
           for (const chunk of chunks) {
@@ -376,7 +381,7 @@ export class R2Adapter extends BaseAdapter {
       // 删除所有分片
       if (chunks.length > 0) {
         const deletePromises = chunks.map((chunk) =>
-          this.env[this.bucketName].delete(chunk.file_id),
+          this.env[this.bucketName].delete(chunk.file_id)
         );
         await Promise.all(deletePromises);
       }
