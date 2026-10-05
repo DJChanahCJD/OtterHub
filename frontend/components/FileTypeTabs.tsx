@@ -18,7 +18,7 @@ export function FileTypeTabs() {
   const setActiveType = useFileDataStore((s) => s.setActiveType);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-[clamp(1rem,1vw,5rem)] flex-wrap">
       {fileTypes.map((type) => {
         const Icon = type.icon;
 

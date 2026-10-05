@@ -18,7 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./ui/sheet";
-import { APP_NAME, APP_CATEGORY } from "@/lib/ui-text";
+import { APP_NAME } from "@/lib/ui-text";
 
 export function Header() {
   const { searchQuery, setSearchQuery } = useFileQueryStore();
@@ -168,9 +168,6 @@ export function Header() {
             <h1 className="text-xl font-black tracking-tighter text-foreground leading-none">
               {APP_NAME}
             </h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 mt-1">
-              {APP_CATEGORY}
-            </p>
           </div>
         </div>
 
@@ -181,13 +178,13 @@ export function Header() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative group hidden xl:block">
+          <div className="relative group hidden lg:block">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/30 group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="搜索文件..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-64 rounded-xl border-glass-border bg-secondary/20 pl-10 pr-10 text-sm focus-visible:ring-primary/40 placeholder:text-foreground/80"
+              className="h-10 w-54 rounded-xl border-glass-border bg-secondary/20 pl-10 pr-10 text-sm focus-visible:ring-primary/40 placeholder:text-foreground/80"
             />
             {searchQuery && (
               <Button

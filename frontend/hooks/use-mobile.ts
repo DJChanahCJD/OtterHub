@@ -1,6 +1,6 @@
 import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 1024;
 
 /** 判断当前浏览器是否为移动端浏览器。 */
 export function isMobileBrowser() {
