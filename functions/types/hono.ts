@@ -24,7 +24,8 @@ export interface WorkersAI {
 export type Env = {
   oh_file_url: KVNamespace;
   oh_file_r2?: R2Bucket;
-  JWT_SECRET?: string;
+  /** JWT 签名密钥，必填；缺失时登录与鉴权将拒绝服务，避免回退到弱密钥 */
+  JWT_SECRET: string;
   PASSWORD?: string;
   API_TOKEN?: string;
 

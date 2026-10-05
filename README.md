@@ -16,6 +16,19 @@
   <img src="https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript" />
 </p>
 
+> [!CAUTION]
+> **Breaking Change**
+>
+> `JWT_SECRET` 现为必需配置项。
+>
+> 升级前请在环境变量中配置：
+>
+> ```env
+> JWT_SECRET=your-secure-random-secret
+> ```
+>
+> 未配置 `JWT_SECRET` 将无法登录。
+
 ---
 
 ## 👋 为什么有 OtterHub？
@@ -130,6 +143,7 @@ Fork 本项目，然后在 Cloudflare Dashboard 创建 Pages 项目：
 
 ```env
 PASSWORD=your_password          # 密码
+JWT_SECRET=your_jwt_secret      # JWT 签名密钥（必填），建议 32 位以上随机字符串
 TG_CHAT_ID=your_tg_chat_id      # Telegram Chat ID
 TG_BOT_TOKEN=your_tg_bot_token  # Telegram Bot Token
 API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token

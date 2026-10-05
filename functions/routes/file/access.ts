@@ -22,7 +22,7 @@ function getAuthCookie(request: Request): string | null {
 export async function getAuthorizedFileAccess(
   env: Env,
   request: Request,
-  key: string,
+  key: string
 ): Promise<FileAccessResult | Response> {
   const db = DBAdapterFactory.getAdapter(env);
   const item = await db.getFileMetadataWithValue?.(key);
@@ -48,9 +48,10 @@ export async function getAuthorizedFileAccess(
 
   if (!authorized) {
     const token = getAuthCookie(request);
-    if (token) {
+    // 未配置 JWT_SECRET 时不做 cookie 鉴权，禁止回退到密码作为签名密钥
+    if (token && env.JWT_SECRET) {
       try {
-        await verifyJWT(token, env.JWT_SECRET ?? env.PASSWORD ?? "");
+        await verifyJWT(token, env.JWT_SECRET);
         authorized = true;
       } catch {
         // Ignore invalid token and return unauthorized below.

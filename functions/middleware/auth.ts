@@ -1,7 +1,7 @@
-import { createMiddleware } from 'hono/factory';
-import { verifyJWT } from '@utils/auth';
-import type { Env } from '../types/hono';
-import { fail } from '@utils/response';
+import { createMiddleware } from "hono/factory";
+import { verifyJWT } from "@utils/auth";
+import type { Env } from "../types/hono";
+import { fail } from "@utils/response";
 
 const PUBLIC_PATHS = [
   /^\/$/,
@@ -10,38 +10,43 @@ const PUBLIC_PATHS = [
   /\.(ico|png|svg|jpg|jpeg|css|js|webmanifest|json|woff|woff2|ttf|eot)$/,
 ];
 
-export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next) => {
-  const path = c.req.path;
-  if (PUBLIC_PATHS.some(pattern => pattern.test(path))) {
-    await next();
-    return;
-  }
-
-  const env = c.env;
-
-  // 1. 优先检查 API Token (Authorization Header)
-  const authHeader = c.req.header('Authorization');
-  if (authHeader && env.API_TOKEN) {
-    const token = authHeader.replace(/Bearer\s+/i, '');
-    if (token === env.API_TOKEN) {
+export const authMiddleware = createMiddleware<{ Bindings: Env }>(
+  async (c, next) => {
+    const path = c.req.path;
+    if (PUBLIC_PATHS.some((pattern) => pattern.test(path))) {
       await next();
       return;
     }
-  }
 
-  // 2. 检查 Cookie
-  const cookie = c.req.header('Cookie');
-  const authCookie = cookie?.match(/(?:^|;\s*)auth=([^;]+)/)?.[1];
+    const env = c.env;
 
-  if (!authCookie) {
-    return fail(c, `Unauthorized, cookie: ${cookie}`, 401);
-  }
+    // 1. 优先检查 API Token (Authorization Header)
+    const authHeader = c.req.header("Authorization");
+    if (authHeader && env.API_TOKEN) {
+      const token = authHeader.replace(/Bearer\s+/i, "");
+      if (token === env.API_TOKEN) {
+        await next();
+        return;
+      }
+    }
 
-  try {
-    const secret = env.JWT_SECRET || env.PASSWORD || 'secret';
-    await verifyJWT(authCookie, secret);
-    await next();
-  } catch (e) {
-    return fail(c, 'Unauthorized', 401);
+    // 2. 检查 Cookie
+    const cookie = c.req.header("Cookie");
+    const authCookie = cookie?.match(/(?:^|;\s*)auth=([^;]+)/)?.[1];
+
+    if (!authCookie) {
+      return fail(c, `Unauthorized, cookie: ${cookie}`, 401);
+    }
+
+    try {
+      // 未配置 JWT_SECRET 时直接拒绝，禁止回退到密码或硬编码密钥
+      if (!env.JWT_SECRET) {
+        return fail(c, "Server misconfigured: JWT_SECRET is required", 500);
+      }
+      await verifyJWT(authCookie, env.JWT_SECRET);
+      await next();
+    } catch (e) {
+      return fail(c, "Unauthorized", 401);
+    }
   }
-});
+);
